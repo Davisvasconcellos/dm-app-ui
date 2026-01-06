@@ -3,12 +3,16 @@
     <ul *ngIf="eventLinks && eventLinks.length > 0" class="list-none p-0">
       <li *ngFor="let link of eventLinks" class="mb-4 p-4 border border-gray-200 rounded-lg flex flex-col">
         <h6 class="font-medium text-black dark:text-white mb-2">{{ link.text }}</h6>
-        <div class="flex items-center space-x-2">
-          <input type="text" [value]="link.url" readonly class="flex-grow border border-gray-300 rounded-lg px-3 py-2 text-sm dark:bg-gray-800 dark:text-white">
-          <button (click)="copyToClipboard(link.url)" class="inline-flex items-center p-2 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600" aria-label="Copiar link">
-            <svg class="w-5 h-5 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1.5M9 3l2 2 2-2M9 19l2 2 2-2M15 5l2 2 2-2M15 19l2 2 2-2M12 11v6m0-3h6m-6 0H6"></path></svg>
-          </button>
-          <qrcode [qrdata]="link.url" [width]="120" [errorCorrectionLevel]="'M'" [allowEmptyString]="true"></qrcode>
+        <div class="flex flex-col space-y-4">
+          <div class="flex items-center space-x-2 w-full">
+            <input type="text" [value]="link.url" readonly class="flex-grow border border-gray-300 rounded-lg px-3 py-2 text-sm dark:bg-gray-800 dark:text-white">
+            <button (click)="copyToClipboard(link.url)" class="inline-flex items-center p-2 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600" aria-label="Copiar link">
+              <svg class="w-5 h-5 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1.5M9 3l2 2 2-2M9 19l2 2 2-2M15 5l2 2 2-2M15 19l2 2 2-2M12 11v6m0-3h6m-6 0H6"></path></svg>
+            </button>
+          </div>
+          <div *ngIf="link.text.includes('Check-in')" class="flex justify-center">
+            <qrcode [qrdata]="link.url" [width]="256" [errorCorrectionLevel]="'M'" [allowEmptyString]="true"></qrcode>
+          </div>
         </div>
       </li>
     </ul>

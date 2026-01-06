@@ -4,7 +4,7 @@ import { SidebarService } from '../../services/sidebar.service';
 import { AuthService } from '../../services/auth.service';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { NotificationDropdownComponent } from '../../components/header/notification-dropdown/notification-dropdown.component';
+// import { NotificationDropdownComponent } from '../../components/header/notification-dropdown/notification-dropdown.component';
 import { UserDropdownComponent } from '../../components/header/user-dropdown/user-dropdown.component';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { DropdownComponent } from '../../components/ui/dropdown/dropdown.component';
@@ -16,7 +16,7 @@ import { DropdownItemComponent } from '../../components/ui/dropdown/dropdown-ite
   imports: [
     CommonModule,
     RouterModule,
-    NotificationDropdownComponent,
+    // NotificationDropdownComponent,
     UserDropdownComponent,
     TranslateModule,
     DropdownComponent,

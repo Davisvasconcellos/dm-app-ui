@@ -83,21 +83,21 @@ export class EventListAdminComponent implements OnInit {
       const origin = typeof window !== 'undefined' && window.location ? window.location.origin : '';
 
       const primaryLinks: EventLink[] = [
-        {
-          text: 'Responder Perguntas do Evento',
-          url: `${origin}/events/answer-plain/${idCode}`,
-          variant: 'primary',
-        },
+        // {
+        //   text: 'Responder Perguntas do Evento',
+        //   url: `${origin}/events/answer-plain/${idCode}`,
+        //   variant: 'primary',
+        // },
         {
           text: 'Check-in do Evento',
           url: `${origin}/events/checkin/${idCode}`,
           variant: 'info',
         },
-        {
-          text: 'Página do Evento (Admin)',
-          url: `${origin}/events/event-view/${idCode}`,
-          variant: 'outline',
-        },
+        // {
+        //   text: 'Página do Evento (Admin)',
+        //   url: `${origin}/events/event-view/${idCode}`,
+        //   variant: 'outline',
+        // },
       ];
 
       const extraLinks = (event.links || []).filter(l => !!l?.text && !!l?.url);
