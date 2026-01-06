@@ -425,7 +425,7 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
   }
 
   get currentSong(): ApiSong | null {
-    return this.playingNowSongs.length > 0 ? this.playingNowSongs[0] : null;
+    return this.playingNowSongs.length > 0 && this.playingNowSongs[0].queue_position === 1 ? this.playingNowSongs[0] : null;
   }
 
   get nextSong(): ApiSong | null {
