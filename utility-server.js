@@ -20,18 +20,7 @@ console.log('🚀 Iniciando Frontend Utility Server...');
 
 // Configurar CORS para permitir requisições do Angular
 app.use(cors({
-  origin: (origin, callback) => {
-    const allowed = [
-      'http://localhost:4200',
-      'http://localhost:4300'
-    ];
-    // Permitir chamadas sem origin (ex.: ferramentas locais) e as portas permitidas
-    if (!origin || allowed.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+  origin: '*',
   credentials: true
 }));
 
@@ -530,7 +519,7 @@ function buildRichPdfHTML({
           <img class="shape-bottom" src="${gridUrl}" alt="grid" />
           <div class="hero" style="z-index:1;">
             <img class="logo" src="${logoUrl}" alt="Logo" width="231" height="48" />
-            <p class="strap">Vibe Sessions </p>
+            <p class="strap">Vibe Sessions Project</p>
           </div>
         </section>
       </div>

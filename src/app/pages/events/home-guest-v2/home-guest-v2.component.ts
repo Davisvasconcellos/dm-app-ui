@@ -103,10 +103,6 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.currentUser = this.authService.getCurrentUser();
-    this.tickHandle = setInterval(() => {
-      this.now = Date.now();
-      this.checkAndSubmitLockedSelections();
-    }, 100);
 
     this.route.paramMap.subscribe(pm => {
       this.eventIdCode = pm.get('id_code') || '';
@@ -358,70 +354,48 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
   toggleRequest(song: ApiSong, bucket: any): void {
     const songId = Number((song as any).id);
     const key = String(bucket.instrument);
-    const deadline = this.lockDeadline[songId] || 0;
-
-    // If locked, do nothing (or show message)
-    if (deadline && this.now >= deadline) return;
-
-    // Start lock if not started
-    if (!deadline) this.lockDeadline[songId] = this.now + 5000;
 
     const current = this.selections[songId] || null;
     this.selections[songId] = current === key ? null : key;
     this.submitted[songId] = false;
   }
 
-  private checkAndSubmitLockedSelections(): void {
-    const ids = Object.keys(this.lockDeadline).map((k) => Number(k));
-    ids.forEach((songId) => {
-      const deadline = this.lockDeadline[songId] || 0;
-      const sel = this.selections[songId] || null;
+  submitSelection(songId: number): void {
+    const sel = this.selections[songId] || null;
+    if (!sel) return;
+    if (this.submitted[songId] || this.attempting[songId]) return;
 
-      if (!sel) return;
-      if (!deadline || this.now < deadline) return;
-      if (this.submitted[songId] || this.attempting[songId]) return;
+    this.attempting[songId] = true;
+    const jamId = this.songJamMap[songId];
+    if (!jamId) return;
 
-      this.attempting[songId] = true;
-      const jamId = this.songJamMap[songId];
-      if (!jamId) return;
-
-      const valid: Record<string, true> = { vocals: true, guitar: true, bass: true, drums: true, keys: true, horns: true, percussion: true, strings: true, other: true };
-      // Note: we might need to normalize instrument name here if 'sel' comes from non-standard source
-      // But assuming it comes from bucket.instrument which should be standard.
-
-      this.eventService.applySongCandidate(this.eventIdCode, jamId, songId, sel).subscribe({
-        next: (ok) => {
-          this.submitted[songId] = !!ok;
-          this.submitError[songId] = !ok;
-          this.attempting[songId] = false;
-          if (ok) {
-            this.myStatusMap[songId] = 'pending';
-            this.triggerToast('warning', 'Candidatura enviada', 'Sua candidatura foi registrada e aguarda aprovação.');
-          }
-          else this.triggerToast('error', 'Falha ao enviar', 'Não foi possível enviar sua candidatura.');
-        },
-        error: (err) => {
-          const status = Number(err?.status || 0);
-          if (status === 409) {
-            this.submitted[songId] = true;
-            this.submitError[songId] = false;
-            this.myStatusMap[songId] = this.myStatusMap[songId] || 'pending';
-            this.triggerToast('error', 'Já candidatado', 'Você já possui candidatura para esta música.');
-          } else {
-            this.submitted[songId] = false;
-            this.submitError[songId] = true;
-            const msg = (err?.error?.message || err?.message || 'Erro ao enviar candidatura');
-            this.triggerToast('error', 'Erro', msg);
-          }
-          this.attempting[songId] = false;
+    this.eventService.applySongCandidate(this.eventIdCode, jamId, songId, sel).subscribe({
+      next: (ok) => {
+        this.submitted[songId] = !!ok;
+        this.submitError[songId] = !ok;
+        this.attempting[songId] = false;
+        if (ok) {
+          this.myStatusMap[songId] = 'pending';
+          this.triggerToast('warning', 'Candidatura enviada', 'Sua candidatura foi registrada e aguarda aprovação.');
         }
-      });
+        else this.triggerToast('error', 'Falha ao enviar', 'Não foi possível enviar sua candidatura.');
+      },
+      error: (err) => {
+        const status = Number(err?.status || 0);
+        if (status === 409) {
+          this.submitted[songId] = true;
+          this.submitError[songId] = false;
+          this.myStatusMap[songId] = this.myStatusMap[songId] || 'pending';
+          this.triggerToast('error', 'Já candidatado', 'Você já possui candidatura para esta música.');
+        } else {
+          this.submitted[songId] = false;
+          this.submitError[songId] = true;
+          const msg = (err?.error?.message || err?.message || 'Erro ao enviar candidatura');
+          this.triggerToast('error', 'Erro', msg);
+        }
+        this.attempting[songId] = false;
+      }
     });
-  }
-
-  isLocked(songId: number): boolean {
-    const d = this.lockDeadline[songId] || 0;
-    return !!d && this.now >= d;
   }
 
   get currentSong(): ApiSong | null {
@@ -430,18 +404,6 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
 
   get nextSong(): ApiSong | null {
     return this.goToStageSongs.length > 0 ? this.goToStageSongs[0] : null;
-  }
-
-  hasDeadline(songId: number): boolean {
-    const d = this.lockDeadline[songId] || 0;
-    return !!d && d > this.now;
-  }
-
-  getRemainingPercent(songId: number): string {
-    const d = this.lockDeadline[songId] || 0;
-    if (!d || d <= this.now) return '';
-    const diff = Math.ceil((d - this.now) / 1000);
-    return diff + 's';
   }
 
   getDisplayIndex(song: ApiSong, section: string): number {
