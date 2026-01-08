@@ -47,11 +47,11 @@
                 </div>
 
                 <div class="flex items-center gap-4 border-l border-white/10 pl-6">
-                  <div class="text-right">
-                    <p class="text-white font-oswald font-bold text-xs uppercase italic">{{ currentUser?.name || 'Convidado' }}</p>
-                    <p class="text-blue-500 font-black text-[8px] uppercase tracking-widest">Participante</p>
-                  </div>
-                  <div class="w-10 h-10 rounded-full border-2 border-blue-600 p-0.5 overflow-hidden shadow-[0_0_15px_rgba(37,99,235,0.3)]">
+                <div class="text-right">
+                  <p class="text-white font-oswald font-bold text-xs uppercase italic">{{ getFirstName(currentUser?.name) || 'Convidado' }}</p>
+                  <p class="text-blue-500 font-black text-[8px] uppercase tracking-widest">Participante</p>
+                </div>
+                <div class="w-10 h-10 rounded-full border-2 border-blue-600 p-0.5 overflow-hidden shadow-[0_0_15px_rgba(37,99,235,0.3)]">
                     <img [src]="selfieUrl || currentUser?.avatar_url || currentUser?.avatar || 'assets/images/avatar-placeholder.png'"
                          (error)="onImageError($event)"
                          class="w-full h-full rounded-full object-cover" alt="Profile" />
@@ -242,7 +242,7 @@
                           </div>
                           <div class="mt-2 md:mt-4 bg-white px-3 md:px-6 py-1 md:py-1.5 flex flex-col items-center min-w-[80px] md:min-w-[120px] skew-x-[-15deg] shadow-[4px_4px_0px_rgba(37,99,235,0.5)]">
                             <span class="text-black font-oswald font-black text-sm md:text-xl uppercase italic leading-none skew-x-[15deg]">
-                              {{ m.name }}
+                              {{ getFirstName(m.name) }}
                             </span>
                             <span class="text-blue-700 font-black text-[8px] md:text-[10px] uppercase tracking-tighter mt-0.5 md:mt-1 border-t border-blue-100 pt-0.5 md:pt-1 skew-x-[15deg]">
                               {{ m.instrument }}

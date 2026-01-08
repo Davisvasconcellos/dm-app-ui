@@ -90,6 +90,11 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
   currentUser: User | null = null;
   selfieUrl: string | null = null;
 
+  getFirstName(fullName: string | undefined | null): string {
+    if (!fullName) return '';
+    return fullName.split(' ')[0];
+  }
+
   constructor(
     private eventService: EventService,
     private route: ActivatedRoute,

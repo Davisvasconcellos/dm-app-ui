@@ -1,17 +1,54 @@
 <div class="space-y-6">
-  <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-    <div class="flex items-center justify-between mb-4">
-      <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Selecionar Evento</h2>
-      <span></span>
-    </div>
-    <div class="grid grid-cols-1 gap-4">
-      <div class="md:col-span-2">
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <!-- Card 1: Event Selector -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Selecionar Evento</h2>
+      </div>
+      <div>
         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Evento</label>
         <select [(ngModel)]="selectedEventIdCode" (ngModelChange)="onSelectEvent()" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
           <option value="">— Escolha o evento —</option>
           <option *ngFor="let e of events" [value]="e.id_code">{{ e.eventName }}</option>
         </select>
       </div>
+    </div>
+
+    <!-- Card 2: Event Details -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 relative overflow-hidden min-h-[160px] flex flex-col justify-center group">
+        <!-- Background Image -->
+        <div *ngIf="selectedEvent?.image" 
+             class="absolute inset-0 z-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
+             [style.backgroundImage]="'url(' + selectedEvent?.image + ')'">
+             <div class="absolute inset-0 bg-gradient-to-r from-black/90 via-black/70 to-transparent"></div>
+        </div>
+        
+        <!-- Placeholder Background if no image -->
+        <div *ngIf="!selectedEvent?.image" class="absolute inset-0 z-0 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800"></div>
+
+        <!-- Content -->
+        <div class="relative z-10" *ngIf="selectedEvent">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2" [class.text-white]="selectedEvent.image">{{ selectedEvent.eventName }}</h2>
+            <div class="flex flex-col gap-1">
+                <div class="flex items-center gap-2 text-gray-600 dark:text-gray-300" [class.text-gray-200]="selectedEvent.image">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span>{{ selectedEvent.startDate | date:'dd/MM/yyyy HH:mm' }}</span>
+                </div>
+                <div *ngIf="selectedEvent.description" class="mt-2 text-sm text-gray-500 dark:text-gray-400 line-clamp-2" [class.text-gray-300]="selectedEvent.image">
+                    {{ selectedEvent.description }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div class="relative z-10 flex flex-col items-center justify-center text-gray-400" *ngIf="!selectedEvent">
+            <svg class="w-12 h-12 mb-2 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+            </svg>
+            <span class="text-sm">Selecione um evento para ver os detalhes</span>
+        </div>
     </div>
   </div>
 

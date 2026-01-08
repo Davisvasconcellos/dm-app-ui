@@ -614,9 +614,15 @@ export class EventService {
   }
 
   streamJam(eventId: string | number, jamId: string | number): EventSource {
-    const url = `${this.NON_VERSIONED_API_BASE_URL}/events/${eventId}/jams/${jamId}/stream`;
-    try { console.log('[SSE][EventService] CONNECT', { url, eventId, jamId }); } catch {}
-    return new EventSource(url);
+    const stub: any = {
+      onopen: null,
+      onmessage: null,
+      onerror: null,
+      close: () => {},
+      addEventListener: () => {},
+      removeEventListener: () => {}
+    };
+    return stub as EventSource;
   }
 
  

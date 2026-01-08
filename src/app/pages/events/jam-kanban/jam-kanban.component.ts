@@ -26,6 +26,10 @@ export class JamKanbanComponent implements OnInit, OnDestroy {
   selectedEventIdCode = '';
   selectedJam: ApiJam | null = null;
 
+  get selectedEvent(): EventListItem | undefined {
+    return this.events.find(e => e.id_code === this.selectedEventIdCode);
+  }
+
   songs: ApiSong[] = [];
   tasks: Task[] = [];
   showAddModal = false;
