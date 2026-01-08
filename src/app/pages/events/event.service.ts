@@ -619,6 +619,8 @@ export class EventService {
     return new EventSource(url);
   }
 
+ 
+
   getEventJamId(eventId: string | number): Observable<number | null> {
     const token = this.authService.getAuthToken();
     const headers: HttpHeaders = new HttpHeaders(token ? { Authorization: `Bearer ${token}` } : {});
@@ -967,6 +969,9 @@ export class EventService {
         const checkInAt = data?.checkin_at ?? null;
         const guestId = data?.guest_id ?? 0;
         const minimal: Partial<ApiGuest> = { id: guestId, display_name: '', email: '', check_in_at: checkInAt };
+        // Adiciona selfie_url se existir no payload da API pública
+        const selfie = data?.selfie_url ?? data?.selfieUrl ?? null;
+        (minimal as any).selfie_url = selfie;
         return minimal as ApiGuest;
       }),
       catchError((err) => {

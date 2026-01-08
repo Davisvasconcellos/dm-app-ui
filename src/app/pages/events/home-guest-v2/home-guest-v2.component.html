@@ -52,7 +52,7 @@
                     <p class="text-blue-500 font-black text-[8px] uppercase tracking-widest">Participante</p>
                   </div>
                   <div class="w-10 h-10 rounded-full border-2 border-blue-600 p-0.5 overflow-hidden shadow-[0_0_15px_rgba(37,99,235,0.3)]">
-                    <img [src]="currentUser?.avatar_url || currentUser?.avatar || 'assets/images/avatar-placeholder.png'"
+                    <img [src]="selfieUrl || currentUser?.avatar_url || currentUser?.avatar || 'assets/images/avatar-placeholder.png'"
                          (error)="onImageError($event)"
                          class="w-full h-full rounded-full object-cover" alt="Profile" />
                   </div>

@@ -88,6 +88,7 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
   viewMode: 'playlist' | 'dashboard' = 'dashboard'; // Start with dashboard as it is fully implemented
   isSidebarOpen = false;
   currentUser: User | null = null;
+  selfieUrl: string | null = null;
 
   constructor(
     private eventService: EventService,
@@ -132,6 +133,14 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
             if (status === 403 && this.eventIdCode) {
                this.router.navigate([`/events/checkin/${this.eventIdCode}`], { queryParams: { returnUrl: `/events/home-guest-v2/${this.eventIdCode}` } });
             }
+          }
+        });
+
+        // Após carregar dados básicos, tenta obter selfie do convidado atual
+        this.eventService.getEventGuestMe(this.eventIdCode).subscribe({
+          next: (guest) => {
+            const url = (guest as any)?.selfie_url || null;
+            if (url) this.selfieUrl = url;
           }
         });
 
