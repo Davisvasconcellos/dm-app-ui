@@ -375,6 +375,12 @@ export class JamKanbanComponent implements OnInit, OnDestroy {
     });
   }
 
+  openPlaylistWindow(): void {
+    if (!this.selectedEventIdCode) return;
+    const url = `/events/home-guest-v2/${this.selectedEventIdCode}?view=playlist&standalone=1`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+  }
+
   resetForm(): void {
     this.newSong = { title: '', artist: '' };
     Object.keys(this.instrumentForm).forEach(k => { this.instrumentForm[k].enabled = false; this.instrumentForm[k].slots = 1; });

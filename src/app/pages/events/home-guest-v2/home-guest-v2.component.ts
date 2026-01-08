@@ -89,6 +89,8 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
   isSidebarOpen = false;
   currentUser: User | null = null;
   selfieUrl: string | null = null;
+  isStandalone = false;
+  isFullscreen = false;
 
   getFirstName(fullName: string | undefined | null): string {
     if (!fullName) return '';
@@ -115,6 +117,17 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
       if (!this.eventIdCode) {
         this.eventIdCode = this.route.snapshot.queryParamMap.get('id_code') || '';
       }
+      const qp = this.route.snapshot.queryParamMap;
+      const viewParam = qp.get('view') || '';
+      const standaloneParam = qp.get('standalone') || '';
+      this.isStandalone = standaloneParam === '1' || standaloneParam === 'true';
+      if (this.isStandalone || viewParam === 'playlist') this.viewMode = 'playlist';
+
+      try {
+        document.addEventListener('fullscreenchange', () => {
+          this.isFullscreen = !!document.fullscreenElement;
+        });
+      } catch {}
 
       if (this.eventIdCode) {
         this.eventService.getPublicEventByIdCodeDetail(this.eventIdCode).subscribe({
@@ -503,15 +516,42 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
     this.triggerFooterAnimation();
   }
 
+  lastOnStageId: number | null = null;
+
   loadPlaylist(): void {
     if (!this.eventIdCode) return;
     this.eventService.getEventPlaylist(this.eventIdCode).subscribe({
       next: (data) => {
         this.playlistSongs = Array.isArray(data) ? data : [];
-        let idx = this.playlistSongs.findIndex((s: any) => String(s?.status || '') === 'on_stage');
-        if (idx < 0) idx = 0;
-        this.selectedPlaylistIndex = idx;
-        this.triggerFooterAnimation();
+
+        // 1. Identificar a música que está NO PALCO agora (vindo do servidor)
+        const onStageIndex = this.playlistSongs.findIndex((s: any) => String(s?.status || '') === 'on_stage');
+        const onStageSong = onStageIndex >= 0 ? this.playlistSongs[onStageIndex] : null;
+        const currentOnStageId = onStageSong ? Number(onStageSong.id) : null;
+
+        let targetIndex = -1;
+
+        // 2. Lógica de Decisão:
+        // Se a música do palco MUDOU, força a visualização para ela (Prioridade Crítica)
+        if (currentOnStageId !== this.lastOnStageId) {
+           targetIndex = onStageIndex >= 0 ? onStageIndex : 0;
+           this.lastOnStageId = currentOnStageId;
+        } 
+        // Se a música do palco É A MESMA, tenta preservar a navegação do usuário
+        else {
+           const currentSelectedId = this.selectedSong?.id;
+           if (currentSelectedId) {
+             targetIndex = this.playlistSongs.findIndex((s: any) => s.id === currentSelectedId);
+           }
+           // Se não achou a seleção anterior, fallback para o palco atual
+           if (targetIndex < 0) targetIndex = onStageIndex >= 0 ? onStageIndex : 0;
+        }
+
+        // 3. Aplica a mudança
+        if (this.selectedPlaylistIndex !== targetIndex) {
+          this.selectedPlaylistIndex = targetIndex;
+          this.triggerFooterAnimation();
+        }
       },
       error: (err) => {
         console.error('Error loading playlist', err);
@@ -528,5 +568,19 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
 
   handleSelectSlot(songId: number, slotIdx: number) {
     this.selectedDraftSlots[songId] = slotIdx;
+  }
+
+  toggleFullscreen(): void {
+    try {
+      if (!document.fullscreenElement) {
+        const anyDoc: any = document as any;
+        const el: any = document.documentElement as any;
+        const req = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen || el.msRequestFullscreen;
+        if (typeof req === 'function') req.call(el);
+      } else {
+        const exit = document.exitFullscreen || (document as any).webkitExitFullscreen || (document as any).mozCancelFullScreen || (document as any).msExitFullscreen;
+        if (typeof exit === 'function') exit.call(document);
+      }
+    } catch {}
   }
 }

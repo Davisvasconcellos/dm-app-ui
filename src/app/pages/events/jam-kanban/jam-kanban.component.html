@@ -61,6 +61,7 @@
             <path d="M8 3.333a4.667 4.667 0 1 1-4.15 2.436.583.583 0 0 1 1.012-.579A3.5 3.5 0 1 0 8 4.5h1.333a.583.583 0 1 1 0 1.167H8A.583.583 0 0 1 7.417 5.083V3.917A.583.583 0 1 1 8 3.333Z"/>
           </svg>
         </button>
+        <button (click)="openPlaylistWindow()" [disabled]="!selectedEventIdCode" [class.opacity-50]="!selectedEventIdCode" [class.cursor-not-allowed]="!selectedEventIdCode" class="px-3 py-1.5 text-xs font-medium rounded-md border border-blue-500 text-blue-600 hover:bg-blue-50 dark:border-blue-600 dark:text-blue-400 dark:hover:bg-blue-900/20">Abrir Playlist</button>
         <button (click)="openAddModal()" [disabled]="!selectedEventIdCode" [class.opacity-50]="!selectedEventIdCode" [class.cursor-not-allowed]="!selectedEventIdCode" class="px-3 py-1.5 text-xs font-medium rounded-md bg-blue-500 text-white">Adicionar música</button>
       </div>
     </div>
