@@ -3,6 +3,7 @@ import { Component, OnInit, OnDestroy, ApplicationRef, Injector, EnvironmentInje
 import { trigger, state, style, transition, animate, stagger, query } from '@angular/animations';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { EventService, ApiJam, ApiSong, OnStageResponse } from '../event.service';
 import { AuthService, User } from '../../../shared/services/auth.service';
 import { NotificationComponent } from '../../../shared/components/ui/notification/notification/notification.component';
@@ -10,7 +11,7 @@ import { NotificationComponent } from '../../../shared/components/ui/notificatio
 @Component({
   selector: 'app-home-guest-v2',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslateModule],
   templateUrl: './home-guest-v2.component.html',
   styleUrl: './home-guest-v2.component.css',
   animations: [
@@ -87,6 +88,12 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
   // View State
   viewMode: 'playlist' | 'dashboard' = 'dashboard'; // Start with dashboard as it is fully implemented
   isSidebarOpen = false;
+  isProfileMenuOpen = false;
+  currentLang = 'pt-br';
+  languages: Array<{ code: 'pt-br' | 'en' | string; label: string; flag: string }> = [
+    { code: 'pt-br', label: 'Português (Brasil)', flag: '/images/flags/brazil.svg' },
+    { code: 'en', label: 'English (US)', flag: '/images/flags/united-states.svg' }
+  ];
   currentUser: User | null = null;
   selfieUrl: string | null = null;
   isStandalone = false;
@@ -106,7 +113,12 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
     return fullName.split(' ')[0];
   }
 
+  get currentFlag(): string {
+    return this.languages.find(l => l.code === this.currentLang)?.flag ?? '/images/flags/brazil.svg';
+  }
+
   constructor(
+    private translate: TranslateService,
     private eventService: EventService,
     private route: ActivatedRoute,
     private authService: AuthService,
@@ -116,6 +128,8 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
     private envInjector: EnvironmentInjector
   ) {
     this.useSse = false;
+    this.currentLang = localStorage.getItem('lang') || 'pt-br';
+    this.translate.use(this.currentLang);
   }
 
   ngOnInit(): void {
@@ -201,6 +215,17 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
     if (this.sseRefreshTimer) clearTimeout(this.sseRefreshTimer);
     if (this.pollingHandle) clearInterval(this.pollingHandle);
     if (this.sseWatchdogHandle) clearInterval(this.sseWatchdogHandle);
+  }
+
+  toggleProfileMenu() {
+    this.isProfileMenuOpen = !this.isProfileMenuOpen;
+  }
+
+  changeLanguage(lang: string) {
+    this.currentLang = lang;
+    localStorage.setItem('lang', lang);
+    this.translate.use(lang);
+    this.isProfileMenuOpen = false;
   }
 
   // Logic from HomeGuestComponent

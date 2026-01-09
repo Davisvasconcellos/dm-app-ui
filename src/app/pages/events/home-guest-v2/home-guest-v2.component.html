@@ -21,7 +21,7 @@
            [ngClass]="selectedSong?.queue_position === 1 ? 'border-green-500' : 'border-white/10'">
         <ng-container *ngIf="selectedSong?.queue_position === 1; else pageNumber">
             <div class="w-3 h-3 md:w-4 md:h-4 bg-red-600 rounded-full live-dot"></div>
-            <span class="text-lg md:text-2xl font-black tracking-[0.2em] uppercase italic text-white">NO PALCO AGORA</span>
+            <span class="text-lg md:text-2xl font-black tracking-[0.2em] uppercase italic text-white">{{ 'events.guestV2.dashboard.onStage' | translate }}</span>
         </ng-container>
         <ng-template #pageNumber>
              <span class="text-yellow-500 font-oswald font-black text-2xl md:text-3xl italic tracking-widest" [class.animate-number]="animateFooter">#{{ selectedSong?.queue_position }}</span>
@@ -39,7 +39,7 @@
               <!-- Header -->
               <header class="flex-none flex justify-between items-center px-4 py-6 md:px-10 md:py-8 border-b border-white/5 bg-[#050505] z-10">
                 <div>
-                  <h1 class="text-white font-oswald font-black italic text-3xl tracking-tighter uppercase leading-none">
+                  <h1 class="text-white font-oswald font-black italic text-xl md:text-3xl tracking-tighter uppercase leading-none">
                     JAM <span class="text-blue-600">DASHBOARD</span>
                   </h1>
                   <p class="text-gray-500 text-[10px] font-bold tracking-[0.2em] uppercase mt-1">
@@ -47,16 +47,50 @@
                   </p>
                 </div>
 
-                <div class="flex items-center gap-4 border-l border-white/10 pl-6">
-                <div class="text-right">
-                  <p class="text-white font-oswald font-bold text-xs uppercase italic">{{ getFirstName(currentUser?.name) || 'Convidado' }}</p>
-                  <p class="text-blue-500 font-black text-[8px] uppercase tracking-widest">Participante</p>
-                </div>
-                <div class="w-10 h-10 rounded-full border-2 border-blue-600 p-0.5 overflow-hidden shadow-[0_0_15px_rgba(37,99,235,0.3)]">
-                    <img [src]="selfieUrl || currentUser?.avatar_url || currentUser?.avatar || 'assets/images/avatar-placeholder.png'"
-                         (error)="onImageError($event)"
-                         class="w-full h-full rounded-full object-cover" alt="Profile" />
+                <div class="relative border-l border-white/10 pl-6">
+                  <button (click)="toggleProfileMenu()" class="flex items-center gap-4 hover:opacity-80 transition-opacity focus:outline-none">
+                    <div class="text-right">
+                      <p class="text-white font-oswald font-bold text-xs uppercase italic">{{ getFirstName(currentUser?.name) || 'Convidado' }}</p>
+                      <p class="text-blue-500 font-black text-[8px] uppercase tracking-widest">{{ 'events.guestV2.dashboard.participant' | translate }}</p>
+                    </div>
+                    <div class="w-10 h-10 rounded-full border-2 border-blue-600 p-0.5 overflow-hidden shadow-[0_0_15px_rgba(37,99,235,0.3)]">
+                      <img [src]="selfieUrl || currentUser?.avatar_url || currentUser?.avatar || 'assets/images/avatar-placeholder.png'"
+                           (error)="onImageError($event)"
+                           class="w-full h-full rounded-full object-cover" alt="Profile" />
+                    </div>
+                  </button>
+
+                  <!-- Dropdown Menu -->
+                  <div *ngIf="isProfileMenuOpen" 
+                       class="absolute top-full right-0 mt-4 w-56 bg-[#0a0a0a] border border-white/10 rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.8)] z-50 overflow-hidden backdrop-blur-xl ring-1 ring-white/5">
+                    
+                    <!-- Language Section -->
+                    <div class="p-4">
+                      <p class="text-gray-500 text-[9px] uppercase tracking-[0.2em] font-bold mb-3 pl-1">Idioma / Language</p>
+                      <div class="space-y-1">
+                        <button *ngFor="let lang of languages" 
+                                (click)="changeLanguage(lang.code)"
+                                class="w-full flex items-center gap-3 p-2.5 rounded-xl transition-all group"
+                                [ngClass]="currentLang === lang.code ? 'bg-blue-600/10 border border-blue-500/20' : 'hover:bg-white/5 border border-transparent'">
+                          
+                          <div class="w-6 h-6 rounded-full overflow-hidden shadow-sm shrink-0 relative">
+                             <img [src]="lang.flag" class="w-full h-full object-cover" alt="">
+                             <div *ngIf="currentLang === lang.code" class="absolute inset-0 bg-blue-500/20 ring-1 ring-inset ring-blue-500/30 rounded-full"></div>
+                          </div>
+                          
+                          <span class="font-oswald text-xs uppercase tracking-wider flex-grow text-left"
+                                [ngClass]="currentLang === lang.code ? 'text-blue-400 font-bold' : 'text-gray-300 group-hover:text-white'">
+                            {{ lang.label }}
+                          </span>
+                          
+                          <div *ngIf="currentLang === lang.code" class="w-1.5 h-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_#3b82f6]"></div>
+                        </button>
+                      </div>
+                    </div>
                   </div>
+
+                  <!-- Overlay to close on click outside -->
+                  <div *ngIf="isProfileMenuOpen" (click)="isProfileMenuOpen = false" class="fixed inset-0 z-40 bg-transparent cursor-default"></div>
                 </div>
               </header>
 
@@ -64,12 +98,12 @@
               <div class="max-w-4xl mx-auto space-y-10">
 
                 <!-- 1 - NO PALCO AGORA -->
-                <section class="relative bg-emerald-900/20 rounded-3xl p-6 border border-emerald-500/30 shadow-[0_0_50px_rgba(16,185,129,0.05)] mb-10">
+                <section class="relative bg-emerald-900/20 rounded-3xl px-2 py-6 md:p-6 border border-emerald-500/30 shadow-[0_0_50px_rgba(16,185,129,0.05)] mb-10">
                   <div class="flex justify-between items-end mb-6 border-b border-emerald-500/30 pb-2">
                     <!-- Header Left (Visible only if song exists) -->
                     <div *ngIf="currentSong" class="flex items-center gap-3">
                       <span class="w-2 h-2 md:w-3 md:h-3 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_15px_#10b981]"></span>
-                      <h2 class="text-emerald-500 font-oswald font-black italic text-2xl md:text-3xl uppercase tracking-tighter leading-none">NO PALCO AGORA</h2>
+                      <h2 class="text-emerald-500 font-oswald font-black italic text-2xl md:text-3xl uppercase tracking-tighter leading-none">{{ 'events.guestV2.dashboard.onStage' | translate }}</h2>
                     </div>
                     <div *ngIf="!currentSong"></div>
 
@@ -79,11 +113,11 @@
                       <svg class="w-3 h-3 text-blue-500 group-hover:rotate-180 transition-transform duration-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                       </svg>
-                      <span class="text-blue-500 font-bold text-[9px] uppercase tracking-widest">Atualizar</span>
+                      <span class="text-blue-500 font-bold text-[9px] uppercase tracking-widest">{{ 'events.guestV2.dashboard.refresh' | translate }}</span>
                     </button>
                   </div>
 
-                  <div *ngIf="currentSong" class="bg-[#121212] rounded-xl p-6 border-l-[6px] border-emerald-500 shadow-2xl relative overflow-hidden">
+                  <div *ngIf="currentSong" class="bg-[#121212] rounded-xl px-2 py-6 md:p-6 border-l-[6px] border-emerald-500 shadow-2xl relative overflow-hidden">
                     <div class="relative z-10">
                       <h3 class="text-white font-oswald font-black italic text-3xl md:text-4xl uppercase tracking-tighter leading-tight">
                         {{ currentSong.title }}
@@ -94,8 +128,8 @@
                 </section>
 
                 <!-- 2 - MINHA ESCALAÇÃO -->
-                <section class="relative bg-yellow-900/20 rounded-3xl p-6 border border-yellow-500/30 shadow-[0_0_50px_rgba(234,179,8,0.05)] mb-10">
-                  <h2 class="text-yellow-500 font-oswald font-black italic text-2xl md:text-3xl uppercase tracking-tighter mb-6 border-b border-yellow-500/30 pb-2">MINHA ESCALAÇÃO</h2>
+                <section class="relative bg-yellow-900/20 rounded-3xl px-2 py-6 md:p-6 border border-yellow-500/30 shadow-[0_0_50px_rgba(234,179,8,0.05)] mb-10">
+                  <h2 class="text-yellow-500 font-oswald font-black italic text-2xl md:text-3xl uppercase tracking-tighter mb-6 border-b border-yellow-500/30 pb-2">{{ 'events.guestV2.dashboard.myJams' | translate }}</h2>
                   <div class="space-y-4" [@listAnimation]="userQueue.length">
                     <ng-container *ngIf="userQueue.length > 0; else emptyQueue">
                       <div *ngFor="let song of userQueue; let i = index"
@@ -113,7 +147,7 @@
 
                         <div class="flex-grow min-w-0 ml-1">
                           <div class="flex flex-col">
-                            <h4 class="text-white font-oswald font-black italic text-xl md:text-3xl truncate uppercase leading-none tracking-tighter mb-1.5 group-hover:text-yellow-500 transition-colors">
+                            <h4 class="text-white font-oswald font-black italic text-lg md:text-3xl truncate uppercase leading-none tracking-tighter mb-1.5 group-hover:text-yellow-500 transition-colors">
                               {{ song.title }}
                             </h4>
                             <p class="text-yellow-500 font-oswald font-bold text-[10px] md:text-sm uppercase tracking-[0.15em] italic">
@@ -138,7 +172,7 @@
                 <!-- 3 - DISPONÍVEIS -->
                 <section class="relative bg-blue-900/20 rounded-3xl p-6 border border-blue-500/30 shadow-[0_0_50px_rgba(59,130,246,0.05)]">
                   <div class="flex justify-between items-end mb-6 border-b border-blue-500/30 pb-2">
-                    <h2 class="text-blue-500 font-oswald font-black italic text-2xl md:text-3xl uppercase tracking-tighter leading-none">DISPONÍVEIS</h2>
+                    <h2 class="text-blue-500 font-oswald font-black italic text-2xl md:text-3xl uppercase tracking-tighter leading-none">{{ 'events.guestV2.dashboard.openToJam' | translate }}</h2>
                   </div>
                   <div class="grid grid-cols-1 gap-4" [@listAnimation]="plannedSongs.length">
                     <div *ngFor="let song of plannedSongs"
@@ -148,7 +182,7 @@
                       <div class="p-5 md:p-6">
                         <div class="flex justify-between items-start mb-4">
                           <div class="flex-grow min-w-0 pr-4">
-                            <h3 class="text-white font-oswald font-black text-2xl md:text-3xl uppercase tracking-tighter leading-none mb-1 group-hover:text-blue-400 transition-colors truncate">
+                            <h3 class="text-white font-oswald font-black text-lg md:text-3xl uppercase tracking-tighter leading-none mb-1 group-hover:text-blue-400 transition-colors truncate">
                               {{ song.title }}
                             </h3>
                             <p class="text-gray-400 text-[10px] md:text-xs font-bold uppercase tracking-widest">{{ song.artist }}</p>
@@ -273,7 +307,7 @@
                   <ng-container *ngIf="selectedNextSong; else endOfList">
                       <div id="next-song-container" class="flex items-center gap-2 md:gap-10 flex-grow min-w-0 overflow-hidden cursor-pointer" (click)="nextPlaylistItem()">
                         <div *ngIf="selectedSong?.queue_position === 1" class="bg-blue-600 px-4 md:px-10 py-2 md:py-3 shrink-0 skew-x-[-15deg] shadow-[0_4px_15px_rgba(37,99,235,0.4)]">
-                        <span class="text-white font-oswald font-black text-[12px] md:text-2xl skew-x-[15deg] block leading-none tracking-tighter uppercase">PRÓXIMA</span>
+                        <span class="text-white font-oswald font-black text-[12px] md:text-2xl skew-x-[15deg] block leading-none tracking-tighter uppercase">{{ 'events.guestV2.playlist.next' | translate }}</span>
                       </div>
                       <div *ngIf="selectedSong?.queue_position !== 1" class="bg-blue-600 px-4 md:px-10 py-2 md:py-3 shrink-0 skew-x-[-15deg] shadow-[0_4px_15px_rgba(37,99,235,0.4)]">
                         <span class="text-white font-oswald font-black text-[12px] md:text-2xl skew-x-[15deg] block leading-none tracking-tighter uppercase">#{{ selectedNextSong.queue_position }}</span>
@@ -289,7 +323,7 @@
                       </div>
                   </ng-container>
                   <ng-template #endOfList>
-                    <span class="text-gray-700 font-oswald italic text-sm md:text-2xl uppercase tracking-widest font-bold w-full text-center">FIM DA LISTA</span>
+                    <span class="text-gray-700 font-oswald italic text-sm md:text-2xl uppercase tracking-widest font-bold w-full text-center">{{ 'events.guestV2.playlist.endOfList' | translate }}</span>
                   </ng-template>
               </div>
           </footer>
@@ -303,9 +337,9 @@
           <!-- Header -->
           <div class="p-6 pb-2 mt-20 md:mt-12 flex justify-between items-center shrink-0">
               <div>
-                  <h2 class="font-oswald text-2xl md:text-3xl font-black italic tracking-tighter text-blue-500 uppercase">FILA DE ESPERA</h2>
+                  <h2 class="font-oswald text-2xl md:text-3xl font-black italic tracking-tighter text-blue-500 uppercase">{{ 'events.guestV2.playlist.queueTitle' | translate }}</h2>
                   <p class="text-[9px] font-bold tracking-[0.2em] text-gray-500 uppercase mt-1">
-                      {{ playlistSongs.length }} MÚSICAS EM ESPERA
+                      {{ playlistSongs.length }} {{ 'events.guestV2.playlist.songsWaiting' | translate }}
                   </p>
               </div>
               <!-- Mobile Close Button -->
@@ -335,7 +369,7 @@
                               <!-- Logic: If queue_position is 2, it is Next. -->
                               <ng-container *ngIf="song.queue_position === 2; else justNumber">
                                 <div class="bg-blue-600 px-3 py-1 skew-x-[-15deg] shadow-lg">
-                                   <span class="text-white font-oswald font-black text-[10px] uppercase italic skew-x-[15deg] block leading-none">PRÓXIMA</span>
+                                   <span class="text-white font-oswald font-black text-[10px] uppercase italic skew-x-[15deg] block leading-none">{{ 'events.guestV2.playlist.next' | translate }}</span>
                                 </div>
                            </ng-container>
                            <ng-template #justNumber>
@@ -366,7 +400,7 @@
 
               <!-- Empty State -->
               <div *ngIf="playlistSongs.length === 0" class="p-8 text-center text-gray-500">
-                  <p class="font-oswald uppercase tracking-widest text-xs">Fila vazia</p>
+                  <p class="font-oswald uppercase tracking-widest text-xs">{{ 'events.guestV2.playlist.emptyQueue' | translate }}</p>
               </div>
           </div>
       </aside>
@@ -380,7 +414,7 @@
       [ngClass]="viewMode === 'dashboard' ? 'bg-blue-600/10' : ''">
       <div class="flex flex-col items-center">
         <span class="text-white font-oswald font-black italic text-2xl md:text-3xl leading-none">D</span>
-        <span class="text-blue-500 font-oswald font-bold text-[9px] uppercase tracking-[0.2em] mt-1 opacity-60 group-hover:opacity-100">Dashboard</span>
+        <span class="text-blue-500 font-oswald font-bold text-[9px] uppercase tracking-[0.2em] mt-1 opacity-60 group-hover:opacity-100">{{ 'events.guestV2.nav.dashboard' | translate }}</span>
       </div>
     </button>
     <button
@@ -389,7 +423,7 @@
       [ngClass]="viewMode === 'playlist' ? 'bg-blue-600/10' : ''">
       <div class="flex flex-col items-center">
         <span class="text-white font-oswald font-black italic text-2xl md:text-3xl leading-none">P</span>
-        <span class="text-blue-500 font-oswald font-bold text-[9px] uppercase tracking-[0.2em] mt-1 opacity-60 group-hover:opacity-100">Playlist</span>
+        <span class="text-blue-500 font-oswald font-bold text-[9px] uppercase tracking-[0.2em] mt-1 opacity-60 group-hover:opacity-100">{{ 'events.guestV2.nav.playlist' | translate }}</span>
       </div>
     </button>
   </nav>

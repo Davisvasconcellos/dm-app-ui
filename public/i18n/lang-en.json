@@ -79,6 +79,26 @@
     }
   },
   "events": {
+    "guestV2": {
+      "dashboard": {
+        "onStage": "ON STAGE",
+        "myJams": "MY JAMS",
+        "openToJam": "OPEN TO JAM",
+        "refresh": "Refresh",
+        "participant": "Viber"
+      },
+      "playlist": {
+        "queueTitle": "WAITING QUEUE",
+        "songsWaiting": "SONGS WAITING",
+        "next": "NEXT",
+        "emptyQueue": "Empty queue",
+        "endOfList": "END OF LIST"
+      },
+      "nav": {
+        "dashboard": "Dashboard",
+        "playlist": "Playlist"
+      }
+    },
     "admin": {
       "list": {
         "title": "Event List",

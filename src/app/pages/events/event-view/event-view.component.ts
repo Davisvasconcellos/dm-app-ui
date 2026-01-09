@@ -844,15 +844,6 @@ interface RespondentRowData {
         this.event.image = e.target.result;
       };
       reader.readAsDataURL(file);
-
-      // Log solicitado para debug detalhado
-      const slugName = this.slugify(this.event.name || '');
-      const folderPath = `events/${this.eventIdCode}_${slugName}`;
-      
-      console.group('🖼️ [EventEdit] Seleção de Imagem');
-      console.log('📄 Nome do Arquivo:', file.name);
-      console.log('📂 Pasta Remota:', folderPath);
-      console.groupEnd();
     }
   }
 
@@ -955,27 +946,15 @@ interface RespondentRowData {
     this.eventService.updateEvent(idOrCode, changes).subscribe({
       next: async () => {
         // Se a imagem foi alterada, fazer upload e atualizar banner_url em seguida
-        console.log('🔍 [EventEdit] Verificando necessidade de upload de imagem...');
-        console.log('   - imageDirty:', this.imageDirty);
-        console.log('   - imageFile:', this.imageFile ? this.imageFile.name : 'null');
-        console.log('   - eventIdCode:', this.eventIdCode);
-
         if (this.imageDirty && this.imageFile && this.eventIdCode) {
           try {
-            const uploadFolder = `events/${this.eventIdCode}_${slug}`;
-            console.log('🚀 [EventEdit] Iniciando upload da imagem...');
-            console.log('   - Folder destino:', uploadFolder);
-            console.log('   - Arquivo:', this.imageFile.name);
-
             const result = await this.imageUploadService.uploadImage(
               this.imageFile,
               'event-banner',
               this.eventIdCode,
               { maxWidth: 1200, maxHeight: 630, quality: 0.85 },
-              uploadFolder
+              `events/${this.eventIdCode}_${slug}`
             );
-
-            console.log('✅ [EventEdit] Resultado do upload:', result);
 
             if (result.success && result.filePath) {
               const bannerFullUrl = this.normalizeBannerUrl(result.filePath);
