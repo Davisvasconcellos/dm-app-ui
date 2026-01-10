@@ -81,7 +81,7 @@
   "events": {
     "guestV2": {
       "dashboard": {
-        "onStage": "NO PALCO AGORA",
+        "onStage": "NO PALCO",
         "myJams": "MINHA ESCALAÇÃO",
         "openToJam": "DISPONÍVEIS",
         "refresh": "Atualizar",
@@ -89,7 +89,7 @@
       },
       "playlist": {
         "queueTitle": "FILA DE ESPERA",
-        "songsWaiting": "MÚSICAS EM ESPERA",
+        "songsWaiting": "EM ESPERA",
         "next": "PRÓXIMA",
         "emptyQueue": "Fila vazia",
         "endOfList": "FIM DA LISTA"
