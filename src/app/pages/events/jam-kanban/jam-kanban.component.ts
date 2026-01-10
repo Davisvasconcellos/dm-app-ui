@@ -10,6 +10,7 @@ import { InputFieldComponent } from '../../../shared/components/form/input/input
 import { EventService, EventListItem, ApiJam, ApiSong } from '../event.service';
 import { NotificationComponent } from '../../../shared/components/ui/notification/notification/notification.component';
 import { forkJoin, of } from 'rxjs';
+import { TranslateModule } from '@ngx-translate/core';
 
 type SongStatus = 'planned' | 'open_for_candidates' | 'on_stage' | 'played' | 'canceled';
 
@@ -17,7 +18,7 @@ type SongStatus = 'planned' | 'open_for_candidates' | 'on_stage' | 'played' | 'c
 @Component({
   selector: 'app-jam-kanban',
   standalone: true,
-  imports: [CommonModule, FormsModule, BoardColumnComponent, DndModule, ModalComponent, LabelComponent, InputFieldComponent],
+  imports: [CommonModule, FormsModule, BoardColumnComponent, DndModule, ModalComponent, LabelComponent, InputFieldComponent, TranslateModule],
   templateUrl: './jam-kanban.component.html',
   styleUrl: './jam-kanban.component.css'
 })

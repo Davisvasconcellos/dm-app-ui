@@ -7,20 +7,20 @@
     </div>
 
     <h1 class="mb-2 font-bold text-gray-800 text-title-md dark:text-white/90 xl:text-title-2xl">
-      Respostas enviadas com sucesso!
+      {{ 'events.quest.success.title' | translate }}
     </h1>
 
     <p class="mt-6 mb-3 text-base text-gray-700 dark:text-gray-400 sm:text-lg">
-      Obrigado por participar. Suas respostas foram registradas.
+      {{ 'events.quest.success.message' | translate }}
     </p>
     <p class="mb-6 text-sm text-gray-500 dark:text-gray-400">
-      Você será redirecionado para a Home em 3 segundos.
+      {{ 'events.quest.success.redirect' | translate }}
     </p>
     <a
       [routerLink]="idCode ? '/events/home-guest-v2/' + idCode : '/events/home-guest-v2'"
       class="inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white px-5 py-3.5 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200"
     >
-      Ir para Home agora
+      {{ 'events.quest.success.button' | translate }}
     </a>
   </div>
   <!-- Footer -->

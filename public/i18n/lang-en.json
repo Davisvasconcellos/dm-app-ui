@@ -85,18 +85,29 @@
         "myJams": "MY JAMS",
         "openToJam": "OPEN TO JAM",
         "refresh": "Refresh",
-        "participant": "Viber"
+        "participant": "Viber",
+        "emptyQueueMessage": "No songs in your queue."
       },
       "playlist": {
         "queueTitle": "WAITING QUEUE",
         "songsWaiting": "SONGS WAITING",
         "next": "NEXT",
         "emptyQueue": "Empty queue",
-        "endOfList": "END OF LIST"
+        "endOfList": "END OF LIST",
+        "stageFree": "The stage is free",
+        "noMusicPlaying": "No music playing at the moment."
       },
       "nav": {
         "dashboard": "Dashboard",
         "playlist": "Playlist"
+      }
+    },
+    "quest": {
+      "success": {
+        "title": "Answers submitted successfully!",
+        "message": "Thank you for participating. Your answers have been recorded.",
+        "redirect": "You will be redirected to Home in 3 seconds.",
+        "button": "Go to Home now"
       }
     },
     "admin": {

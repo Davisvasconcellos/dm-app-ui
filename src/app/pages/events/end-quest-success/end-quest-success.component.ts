@@ -1,12 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { RouterModule } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
 import { GridShapeComponent } from '../../../shared/components/common/grid-shape/grid-shape.component';
 
 @Component({
   selector: 'app-end-quest-success',
   standalone: true,
-  imports: [RouterModule, GridShapeComponent],
+  imports: [RouterModule, GridShapeComponent, TranslateModule],
   templateUrl: './end-quest-success.component.html',
   styles: ``
 })

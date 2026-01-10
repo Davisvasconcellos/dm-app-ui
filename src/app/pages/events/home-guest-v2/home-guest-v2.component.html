@@ -163,7 +163,7 @@
                     </ng-container>
                     <ng-template #emptyQueue>
                       <div class="border-2 border-dashed border-white/5 rounded-2xl p-10 text-center">
-                        <p class="text-gray-600 font-oswald uppercase italic tracking-widest text-sm">Nenhuma música na sua fila.</p>
+                        <p class="text-gray-600 font-oswald uppercase italic tracking-widest text-sm">{{ 'events.guestV2.dashboard.emptyQueueMessage' | translate }}</p>
                       </div>
                     </ng-template>
                   </div>
@@ -290,8 +290,8 @@
               </ng-container>
               <ng-template #noMusicPlaying>
                 <div class="flex flex-col items-center justify-center h-full text-gray-500">
-                    <h2 class="font-oswald text-2xl uppercase">O palco está livre</h2>
-                    <p class="text-sm">Nenhuma música tocando no momento.</p>
+                    <h2 class="font-oswald text-2xl uppercase">{{ 'events.guestV2.playlist.stageFree' | translate }}</h2>
+                    <p class="text-sm">{{ 'events.guestV2.playlist.noMusicPlaying' | translate }}</p>
                 </div>
               </ng-template>
           </div>

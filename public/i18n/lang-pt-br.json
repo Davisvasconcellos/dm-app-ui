@@ -85,18 +85,29 @@
         "myJams": "MINHA ESCALAÇÃO",
         "openToJam": "DISPONÍVEIS",
         "refresh": "Atualizar",
-        "participant": "Participante"
+        "participant": "Participante",
+        "emptyQueueMessage": "Nenhuma música na sua fila."
       },
       "playlist": {
         "queueTitle": "FILA DE ESPERA",
         "songsWaiting": "EM ESPERA",
         "next": "PRÓXIMA",
         "emptyQueue": "Fila vazia",
-        "endOfList": "FIM DA LISTA"
+        "endOfList": "FIM DA LISTA",
+        "stageFree": "O palco está livre",
+        "noMusicPlaying": "Nenhuma música tocando no momento."
       },
       "nav": {
         "dashboard": "Dashboard",
         "playlist": "Playlist"
+      }
+    },
+    "quest": {
+      "success": {
+        "title": "Respostas enviadas com sucesso!",
+        "message": "Obrigado por participar. Suas respostas foram registradas.",
+        "redirect": "Você será redirecionado para a Home em 3 segundos.",
+        "button": "Ir para Home agora"
       }
     },
     "admin": {
