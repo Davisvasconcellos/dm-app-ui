@@ -1,5 +1,9 @@
 import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { environment } from '../../environments/environment';
+import { AuthService } from '../shared/services/auth.service';
 import { ContaPagar } from './models/conta-pagar';
 import { ContaReceber } from './models/conta-receber';
 import { Fornecedor } from './models/fornecedor';
@@ -11,7 +15,14 @@ import { Pagamento } from './models/pagamento';
 
 @Injectable({ providedIn: 'root' })
 export class FinancialService {
-  constructor() {}
+  private readonly API_BASE_URL = `${environment.apiUrl}/api/v1`;
+
+  constructor(private http: HttpClient, private authService: AuthService) {}
+
+  createTransaction(transactionData: any): Observable<any> {
+    const headers = { 'Authorization': `Bearer ${this.authService.getAuthToken()}` };
+    return this.http.post(`${this.API_BASE_URL}/financial/transactions`, transactionData, { headers });
+  }
 
   // Mocked data
   getFornecedores(): Observable<Fornecedor[]> {
@@ -46,91 +57,23 @@ export class FinancialService {
     ]);
   }
 
-  getContasPagar(): Observable<ContaPagar[]> {
-    return of([
-      {
-        id_code: 'cp-001',
-        vendor_id: 'forn-001',
-        nf: 'NF-1234',
-        description: 'Compra de papel A4',
-        amount: 350.5,
-        currency: 'BRL',
-        issue_date: new Date(),
-        due_date: new Date(),
-        status: 'pending',
-        category: 'Materiais',
-        cost_center: 'Escritório',
-        created_by: 'user-001',
-        type: 'PAYABLE',
-        attachment_url: 'https://via.placeholder.com/150/0000FF/FFFFFF?Text=Nota+Fiscal.png'
-      },
-      {
-        id_code: 'cp-002',
-        vendor_id: 'forn-002',
-        nf: 'NF-5678',
-        description: 'Produtos de limpeza',
-        amount: 580.0,
-        currency: 'BRL',
-        issue_date: new Date(),
-        due_date: new Date(),
-        status: 'approved',
-        category: 'Serviços',
-        cost_center: 'Manutenção',
-        created_by: 'user-002',
-        type: 'PAYABLE',
-        attachment_url: 'https://via.placeholder.com/150/FF0000/FFFFFF?Text=Recibo.jpg'
-      },
-      {
-        id_code: 'cp-003',
-        vendor_id: 'forn-001',
-        nf: 'NF-9012',
-        description: 'Compra de canetas',
-        amount: 120.0,
-        currency: 'BRL',
-        issue_date: new Date('2024-10-01'),
-        due_date: new Date('2024-10-15'),
-        status: 'paid',
-        category: 'Materiais',
-        cost_center: 'Escritório',
-        created_by: 'user-001',
-        paid_at: new Date('2024-10-14'),
-        type: 'PAYABLE',
-        attachment_url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf'
-      },
-      {
-        id_code: 'cp-004',
-        vendor_id: 'cli-001',
-        nf: 'NFS-e-202',
-        description: 'Venda de pacote anual',
-        amount: 2400.0,
-        currency: 'BRL',
-        issue_date: new Date('2024-09-01'),
-        due_date: new Date('2024-09-30'),
-        status: 'overdue',
-        category: 'Vendas',
-        cost_center: 'Operacional',
-        created_by: 'user-002',
-        type: 'RECEIVABLE',
-        attachment_url: 'https://via.placeholder.com/150/00FF00/FFFFFF?Text=Contrato.png'
-      },
-      {
-        id_code: 'cp-005',
-        vendor_id: 'acc-bb',
-        nf: 'TRF-5678',
-        description: 'Transferência entre contas',
-        amount: 5000.0,
-        currency: 'BRL',
-        issue_date: new Date('2024-10-05'),
-        due_date: new Date('2024-10-05'),
-        status: 'paid',
-        category: 'Transferência',
-        cost_center: 'Operacional',
-        created_by: 'user-003',
-        paid_at: new Date('2024-10-05'),
-        type: 'TRANSFER',
-        attachment_url: 'https://via.placeholder.com/150/FFFF00/000000?Text=Comprovante.jpg'
-      }
-    ]);
+  getContasPagar(storeId?: string): Observable<ContaPagar[]> {
+    if (!storeId) {
+      // Fallback para mock se não tiver storeId (comportamento legado para evitar quebra imediata, ou retornar vazio)
+      // Por enquanto, retornando vazio para forçar o uso do storeId
+      return of([]);
+    }
+
+    const headers = { 'Authorization': `Bearer ${this.authService.getAuthToken()}` };
+    return this.http.get<any>(`${this.API_BASE_URL}/financial/transactions`, { 
+      headers,
+      params: { store_id: storeId }
+    }).pipe(
+      map(response => {
+        // Tenta extrair de response.data.transactions ou response.data ou retorna array vazio
+        return (response.data?.transactions || response.data || []) as ContaPagar[];
+      })
+    );
   }
 
   getContasReceber(): Observable<ContaReceber[]> {

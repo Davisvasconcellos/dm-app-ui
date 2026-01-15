@@ -4,6 +4,8 @@ import { RouterModule } from '@angular/router';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { FinancialService } from '../../financial.service';
 import { ContaPagar, StatusConta } from '../../models/conta-pagar';
+import { LocalStorageService } from '../../../shared/services/local-storage.service';
+import { Store } from '../../../pages/pub/admin/home-admin/store.service';
 
 // Material Imports
 import { MatDatepickerModule } from '@angular/material/datepicker';
@@ -69,14 +71,28 @@ export class LancamentosListComponent implements OnInit {
   
   searchTerm: string = '';
 
-  // Filters similares a invoices
-  statusFilter: 'all' | 'pending' | 'paid' | 'overdue' | 'canceled' = 'all';
+  // Filtros inspirados em /invoices: Todos | Não pagos | Pagos
+  statusFilter: 'all' | 'unpaid' | 'paid' = 'all';
 
   evidenceFiles: { name: string; url: string; file: File }[] = [];
 
   isEvidenceSidebarOpen = false;
   selectedTransaction: ContaPagar | null = null;
   selectedEvidenceItems: { name: string; url?: string; type: 'image' | 'pdf' | 'file'; extension?: string }[] = [];
+  
+  private readonly STORE_KEY = 'selectedStore';
+  selectedStore: Store | null = null;
+
+  isFormVisible = false;
+
+  statusLabelMap: Record<StatusConta, string> = {
+    pending: 'Pendente',
+    approved: 'Aprovado',
+    scheduled: 'Agendado',
+    paid: 'Pago',
+    overdue: 'Vencido',
+    canceled: 'Cancelado'
+  };
 
   get paymentMethodRequiresBank(): boolean {
     const method = this.transactionForm.get('payment_method')?.value;
@@ -84,7 +100,36 @@ export class LancamentosListComponent implements OnInit {
     return !!def?.requiresBankAccount;
   }
 
-  constructor(private financial: FinancialService, private fb: FormBuilder, private cdr: ChangeDetectorRef) {
+  get totalPayablePending(): number {
+    return this.allData
+      .filter(t => t.type === 'PAYABLE' && t.status === 'pending')
+      .reduce((acc, t) => acc + t.amount, 0);
+  }
+
+  get totalReceivablePending(): number {
+    return this.allData
+      .filter(t => t.type === 'RECEIVABLE' && t.status === 'pending')
+      .reduce((acc, t) => acc + t.amount, 0);
+  }
+
+  get totalOverdue(): number {
+    return this.allData
+      .filter(t => t.status === 'overdue')
+      .reduce((acc, t) => acc + t.amount, 0);
+  }
+
+  get totalPaid(): number {
+    return this.allData
+      .filter(t => t.status === 'paid')
+      .reduce((acc, t) => acc + t.amount, 0);
+  }
+
+  constructor(
+    private financial: FinancialService, 
+    private fb: FormBuilder, 
+    private cdr: ChangeDetectorRef,
+    private localStorageService: LocalStorageService
+  ) {
     this.initForm();
   }
 
@@ -153,6 +198,10 @@ export class LancamentosListComponent implements OnInit {
       }
       bankAccountControl?.updateValueAndValidity();
     });
+  }
+
+  toggleForm() {
+    this.isFormVisible = !this.isFormVisible;
   }
 
   updateEntitiesList(type: string) {
@@ -234,48 +283,89 @@ export class LancamentosListComponent implements OnInit {
   }
 
   saveTransaction() {
-    if (this.transactionForm.invalid) return;
+    if (this.transactionForm.valid) {
+      if (!this.selectedStore || !this.selectedStore.id_code) {
+        alert('Nenhuma empresa selecionada!');
+        return;
+      }
 
-    const formVal = this.transactionForm.value;
-    
-    // Determine status based on is_paid checkbox
-    const status: StatusConta = formVal.is_paid ? 'paid' : 'pending';
+      const formValue = this.transactionForm.value;
+      
+      // Prepare payload based on documentation
+      const payload: any = {
+        type: formValue.type,
+        description: formValue.description,
+        amount: formValue.amount,
+        due_date: new Date(formValue.due_date).toISOString().split('T')[0], // YYYY-MM-DD
+        is_paid: formValue.is_paid,
+        status: formValue.is_paid ? 'paid' : 'pending',
+        store_id: this.selectedStore.id_code
+      };
 
-    const newTransaction: ContaPagar = {
-      id_code: `txn-${Date.now()}`,
-      vendor_id: formVal.party_id || 'N/A',
-      nf: formVal.nf || undefined,
-      amount: formVal.amount,
-      description: formVal.description,
-      due_date: new Date(formVal.due_date),
-      paid_at: formVal.is_paid ? new Date(formVal.paid_at) : undefined,
-      issue_date: new Date(),
-      status: status,
-      currency: 'BRL',
-      type: formVal.type,
-      cost_center: formVal.cost_center,
-      category: formVal.category || 'Geral'
-    };
+      // Optional fields
+      if (formValue.nf) payload.nf = formValue.nf;
+      if (formValue.party_id) payload.party_id = formValue.party_id;
+      if (formValue.cost_center) payload.cost_center = formValue.cost_center;
+      if (formValue.category) payload.category = formValue.category;
+      if (formValue.attachment_url) payload.attachment_url = formValue.attachment_url;
 
-    // Add to top
-    this.allData.unshift(newTransaction);
-    this.updatePagination();
+      // Conditional fields for PAID status
+      if (formValue.is_paid) {
+        payload.paid_at = new Date(formValue.paid_at).toISOString().split('T')[0]; // YYYY-MM-DD
+        payload.payment_method = formValue.payment_method;
+        
+        // Conditional bank_account_id
+        if (['pix', 'bank_transfer', 'boleto'].includes(formValue.payment_method)) {
+          payload.bank_account_id = formValue.bank_account_id;
+        }
+      }
 
-    // Reset form preserving type
-    this.transactionForm.reset({
-      type: formVal.type,
-      due_date: new Date().toISOString().split('T')[0],
-      paid_at: null,
-      status: 'pending',
-      is_paid: false
-    });
+      console.log('Enviando payload:', payload);
+
+      this.financial.createTransaction(payload).subscribe({
+        next: (response) => {
+          console.log('Transação criada com sucesso', response);
+          this.toggleForm();
+          this.initForm(); // Reset form
+          
+          // Refresh list
+          if (this.selectedStore?.id_code) {
+            this.financial.getContasPagar(this.selectedStore.id_code).subscribe(rows => {
+              this.allData = this.normalizeRows(rows);
+              this.updatePagination();
+            });
+          }
+          alert('Lançamento criado com sucesso!');
+        },
+        error: (err) => {
+          console.error('Erro ao criar transação', err);
+          alert('Erro ao criar lançamento. Verifique os dados e tente novamente.');
+        }
+      });
+    } else {
+      // Mark all fields as touched to show errors
+      Object.keys(this.transactionForm.controls).forEach(key => {
+        this.transactionForm.get(key)?.markAsTouched();
+      });
+      alert('Por favor, preencha todos os campos obrigatórios corretamente.');
+    }
   }
 
   ngOnInit() {
-    this.financial.getContasPagar().subscribe(rows => {
-      this.allData = rows;
+    this.selectedStore = this.localStorageService.getData<Store>(this.STORE_KEY);
+
+    if (this.selectedStore && this.selectedStore.id_code) {
+      this.financial.getContasPagar(this.selectedStore.id_code).subscribe({
+        next: (rows) => {
+          this.allData = this.normalizeRows(rows);
+          this.updatePagination();
+        },
+        error: (err) => console.error('Erro ao buscar lançamentos', err)
+      });
+    } else {
+      this.allData = [];
       this.updatePagination();
-    });
+    }
 
     // Load dependencies
     this.financial.getFornecedores().subscribe(data => {
@@ -305,20 +395,57 @@ export class LancamentosListComponent implements OnInit {
   get filteredData() {
     let data = this.allData;
 
-    if (this.statusFilter !== 'all') {
-      data = data.filter(item => item.status === this.statusFilter);
+    if (this.statusFilter === 'paid') {
+      data = data.filter(item => item.status === 'paid');
+    } else if (this.statusFilter === 'unpaid') {
+      data = data.filter(item => item.status !== 'paid' && item.status !== 'canceled');
     }
 
     if (this.searchTerm) {
       const lowerTerm = this.searchTerm.toLowerCase();
       data = data.filter(item =>
+        ((item as any).party_id && ((item as any).party_id as string).toLowerCase().includes(lowerTerm)) ||
         (item.vendor_id && item.vendor_id.toLowerCase().includes(lowerTerm)) ||
         (item.description && item.description.toLowerCase().includes(lowerTerm)) ||
-        (item.nf && item.nf.toLowerCase().includes(lowerTerm))
+        (item.nf && item.nf.toLowerCase().includes(lowerTerm)) ||
+        (item.category && item.category.toLowerCase().includes(lowerTerm)) ||
+        (item.cost_center && item.cost_center.toLowerCase().includes(lowerTerm)) ||
+        (item.id_code && item.id_code.toLowerCase().includes(lowerTerm))
       );
     }
 
     return data;
+  }
+
+  isDelayed(row: ContaPagar): boolean {
+    if (!row.due_date || row.status !== 'pending') {
+      return false;
+    }
+    const due = new Date(row.due_date);
+    if (isNaN(due.getTime())) {
+      return false;
+    }
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    due.setHours(0, 0, 0, 0);
+    return due < today;
+  }
+
+  private normalizeRows(rows: ContaPagar[]): ContaPagar[] {
+    return rows.map(row => {
+      const amount = typeof row.amount === 'string' ? parseFloat(row.amount as any) : row.amount;
+      const statusValue = ((row.status as unknown as string) || 'pending').toLowerCase() as StatusConta;
+      return {
+        ...row,
+        amount: isNaN(amount as number) ? 0 : (amount as number),
+        status: statusValue
+      };
+    });
+  }
+
+  getStatusLabel(status: StatusConta | string | null | undefined): string {
+    const key = (status || 'pending').toString().toLowerCase() as StatusConta;
+    return this.statusLabelMap[key] || (status as string) || '';
   }
 
   // Pagination Logic
@@ -357,7 +484,7 @@ export class LancamentosListComponent implements OnInit {
     this.updatePagination();
   }
 
-  onStatusFilterChange(status: 'all' | 'pending' | 'paid' | 'overdue' | 'canceled') {
+  onStatusFilterChange(status: 'all' | 'unpaid' | 'paid') {
     this.statusFilter = status;
     this.currentPage = 1;
     this.updatePagination();

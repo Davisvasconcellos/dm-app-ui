@@ -38,12 +38,12 @@ export class AppHeaderComponent implements OnInit, AfterViewInit {
   isLangOpen = false;
 
   languages: Array<{ code: 'pt-br' | 'en'; label: string; flag: string }> = [
-    { code: 'pt-br', label: 'Português (Brasil)', flag: 'https://flagcdn.com/w40/br.png' },
-    { code: 'en', label: 'English (US)', flag: 'https://flagcdn.com/w40/us.png' },
+    { code: 'pt-br', label: 'Português (Brasil)', flag: 'https://hatscripts.github.io/circle-flags/flags/br.svg' },
+    { code: 'en', label: 'English (US)', flag: 'https://hatscripts.github.io/circle-flags/flags/us.svg' },
   ];
 
   get currentFlag(): string {
-    return this.languages.find(l => l.code === this.currentLang)?.flag ?? 'https://flagcdn.com/w40/br.png';
+    return this.languages.find(l => l.code === this.currentLang)?.flag ?? 'https://hatscripts.github.io/circle-flags/flags/br.svg';
   }
 
   constructor(

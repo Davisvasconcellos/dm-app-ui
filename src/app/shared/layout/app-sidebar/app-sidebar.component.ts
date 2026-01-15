@@ -76,6 +76,23 @@ export class AppSidebarComponent {
       ],
     },
     {
+      icon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" fill="currentColor"></path></svg>`,
+      name: "Pub",
+      subItems: [
+        { name: "Check User Status", path: "/check-user-status" },
+        { name: "Dashboard Admin", path: "/pub/admin/admin-dashboard" },
+        { name: "Home Admin", path: "/pub/admin" },
+        { name: "Lista de Produtos", path: "/pub/admin/product-list" },
+        { name: "Cadastro de Produto", path: "/pub/admin/add-product" },
+        { name: "Clientes", path: "/pub/admin/clients" },
+        { name: "Garçons", path: "/pub/admin/waiters" },
+        { name: "Configurações", path: "/pub/admin/config" },
+        { name: "Home Master", path: "/pub/master" },
+        { name: "Home User", path: "/pub/user" },
+        { name: "Home Waiter", path: "/pub/waiter" },
+      ],
+    },
+    {
       icon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 10a7 7 0 1114 0 7 7 0 01-14 0zm7-5a5 5 0 100 10A5 5 0 0010 5zm9 13a1 1 0 10-2 0 3 3 0 01-3 3H7a3 3 0 01-3-3 1 1 0 10-2 0 5 5 0 005 5h7a5 5 0 005-5z" fill="currentColor"/></svg>`,
       name: 'Financeiro',
       new: true,

@@ -1,17 +1,47 @@
 <div>
-  <app-page-breadcrumb [pageTitle]="'Configurações Financeiras'"></app-page-breadcrumb>
+  <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
+            <h2 class="text-xl font-semibold text-gray-800 dark:text-white/90">
+              Configurações Financeiras
+            </h2>
+            <button type="button" (click)="onAddNewStore()" class="flex items-center justify-center rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-white hover:bg-brand-600">
+              Adicionar Nova Empresa
+            </button>
+          </div>
 
-  <div class="mt-5 rounded-2xl border border-gray-200 bg-white px-5 py-5 dark:border-gray-800 dark:bg-white/[0.03] lg:px-6">
-    <!-- Tab Navigation -->
-    <div class="mb-6 border-b border-gray-200 dark:border-gray-700">
-      <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+  <div class="mt-5 rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+    <div class="relative h-35 md:h-45 rounded-t-2xl bg-gray-200 dark:bg-gray-800">
+      <img [src]="banner_url || '/images/stores/default-store-banner.jpg'" alt="Banner" class="w-full h-full object-cover rounded-t-2xl">
+      <div class="absolute bottom-0 left-6 transform translate-y-1/2">
+        <div class="relative h-20 w-20 rounded-full border-4 border-white dark:border-gray-900 md:h-25 md:w-25">
+          <img [src]="logo_url || '/images/stores/default-store-logo.png'" alt="Logo" class="w-full h-full object-cover rounded-full">
+          <button type="button" (click)="triggerLogoInput()" class="absolute bottom-0 right-0 flex h-7 w-7 items-center justify-center rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 6H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+          </button>
+          <input type="file" id="logoInput" class="hidden" (change)="onLogoSelected($event)" accept="image/png, image/jpeg">
+        </div>
+      </div>
+    </div>
+
+    <div class="border-b border-gray-200 px-6 pt-12 pb-4 dark:border-gray-800">
+      <nav class="flex space-x-8" aria-label="Tabs">
+        <button
+          (click)="setActiveTab('stores')"
+          [class.border-brand-500]="activeTab === 'stores'"
+          [class.text-brand-500]="activeTab === 'stores'"
+          [class.border-transparent]="activeTab !== 'stores'"
+          [class.text-gray-500]="activeTab !== 'stores'"
+          class="whitespace-nowrap border-b-2 py-2 px-1 text-sm font-medium hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+        >
+          Lojas
+        </button>
+
         <button
           (click)="setActiveTab('apis')"
           [class.border-brand-500]="activeTab === 'apis'"
           [class.text-brand-500]="activeTab === 'apis'"
           [class.border-transparent]="activeTab !== 'apis'"
           [class.text-gray-500]="activeTab !== 'apis'"
-          class="whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+          class="whitespace-nowrap border-b-2 py-2 px-1 text-sm font-medium hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
         >
           APIs
         </button>
@@ -22,7 +52,7 @@
           [class.text-brand-500]="activeTab === 'categories'"
           [class.border-transparent]="activeTab !== 'categories'"
           [class.text-gray-500]="activeTab !== 'categories'"
-          class="whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+          class="whitespace-nowrap border-b-2 py-2 px-1 text-sm font-medium hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
         >
           Categorias
         </button>
@@ -33,7 +63,7 @@
           [class.text-brand-500]="activeTab === 'tags'"
           [class.border-transparent]="activeTab !== 'tags'"
           [class.text-gray-500]="activeTab !== 'tags'"
-          class="whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+          class="whitespace-nowrap border-b-2 py-2 px-1 text-sm font-medium hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
         >
           Tags
         </button>
@@ -44,15 +74,98 @@
           [class.text-brand-500]="activeTab === 'bank-accounts'"
           [class.border-transparent]="activeTab !== 'bank-accounts'"
           [class.text-gray-500]="activeTab !== 'bank-accounts'"
-          class="whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+          class="whitespace-nowrap border-b-2 py-2 px-1 text-sm font-medium hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
         >
           Contas Bancárias
         </button>
       </nav>
     </div>
 
-    <!-- APIs Tab Content -->
-    <div *ngIf="activeTab === 'apis'" class="space-y-6">
+    <div class="px-5 py-5 lg:px-6">
+      <div *ngIf="activeTab === 'stores'" class="space-y-6">
+        <form [formGroup]="storeForm" (ngSubmit)="onSubmitStore()">
+          <div class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <label class="mb-2.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Nome da Empresa *</label>
+                        <input formControlName="name" type="text" class="w-full rounded-lg border border-gray-300 bg-transparent py-3 px-5 text-sm text-gray-800 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white">
+                      </div>
+              <div>
+                <label class="mb-2.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Tipo</label>
+                <input formControlName="type" type="text" class="w-full rounded-lg border border-gray-300 bg-transparent py-3 px-5 text-sm text-gray-800 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white">
+              </div>
+              <div class="md:col-span-2">
+                <label class="mb-2.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Descrição</label>
+                <textarea formControlName="description" rows="3" class="w-full rounded-lg border border-gray-300 bg-transparent py-3 px-5 text-sm text-gray-800 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white"></textarea>
+              </div>
+            </div>
+
+            <h4 class="text-base font-medium text-gray-800 dark:text-white pt-4">Redes Sociais</h4>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <label class="mb-2.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Instagram</label>
+                <input formControlName="instagram_handle" type="text" class="w-full rounded-lg border border-gray-300 bg-transparent py-3 px-5 text-sm text-gray-800 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white">
+              </div>
+              <div>
+                <label class="mb-2.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Facebook</label>
+                <input formControlName="facebook_handle" type="text" class="w-full rounded-lg border border-gray-300 bg-transparent py-3 px-5 text-sm text-gray-800 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white">
+              </div>
+              <div>
+                <label class="mb-2.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Website</label>
+                <input formControlName="website" type="text" class="w-full rounded-lg border border-gray-300 bg-transparent py-3 px-5 text-sm text-gray-800 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white">
+              </div>
+            </div>
+
+            <h4 class="text-base font-medium text-gray-800 dark:text-white pt-4">Dados da Empresa</h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label class="mb-2.5 block text-sm font-medium text-gray-700 dark:text-gray-400">CNPJ *</label>
+                <input formControlName="cnpj" type="text" class="w-full rounded-lg border border-gray-300 bg-transparent py-3 px-5 text-sm text-gray-800 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white">
+              </div>
+              <div>
+                <label class="mb-2.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Email *</label>
+                <input formControlName="email" type="email" class="w-full rounded-lg border border-gray-300 bg-transparent py-3 px-5 text-sm text-gray-800 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white">
+              </div>
+              <div>
+                <label class="mb-2.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Telefone</label>
+                <input formControlName="phone" type="text" class="w-full rounded-lg border border-gray-300 bg-transparent py-3 px-5 text-sm text-gray-800 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white">
+              </div>
+            </div>
+
+            <h4 class="text-base font-medium text-gray-800 dark:text-white pt-4">Endereço</h4>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <label class="mb-2.5 block text-sm font-medium text-gray-700 dark:text-gray-400">CEP</label>
+                <input formControlName="zip_code" type="text" class="w-full rounded-lg border border-gray-300 bg-transparent py-3 px-5 text-sm text-gray-800 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white">
+              </div>
+              <div class="md:col-span-2">
+                <label class="mb-2.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Logradouro</label>
+                <input formControlName="address_street" type="text" class="w-full rounded-lg border border-gray-300 bg-transparent py-3 px-5 text-sm text-gray-800 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white">
+              </div>
+              <div>
+                <label class="mb-2.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Número</label>
+                <input formControlName="address_number" type="text" class="w-full rounded-lg border border-gray-300 bg-transparent py-3 px-5 text-sm text-gray-800 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white">
+              </div>
+              <div>
+                <label class="mb-2.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Bairro</label>
+                <input formControlName="address_neighborhood" type="text" class="w-full rounded-lg border border-gray-300 bg-transparent py-3 px-5 text-sm text-gray-800 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white">
+              </div>
+              <div>
+                <label class="mb-2.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Cidade</label>
+                <input formControlName="address_city" type="text" class="w-full rounded-lg border border-gray-300 bg-transparent py-3 px-5 text-sm text-gray-800 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white">
+              </div>
+            </div>
+          </div>
+
+          <div class="flex justify-end gap-4.5 pt-6 border-t border-gray-200 dark:border-gray-800">
+                    <button type="submit" [disabled]="isSubmitting" class="flex justify-center rounded-lg bg-brand-500 py-2 px-6 font-medium text-white hover:bg-opacity-90">
+                      {{ isSubmitting ? 'Salvando...' : 'Salvar Empresa' }}
+                    </button>
+                  </div>
+        </form>
+      </div>
+
+      <div *ngIf="activeTab === 'apis'" class="space-y-6">
       <div>
         <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90">Integrações de API</h3>
         <p class="text-sm text-gray-500 dark:text-gray-400">Configure suas chaves de API para serviços bancários e gateways de pagamento.</p>

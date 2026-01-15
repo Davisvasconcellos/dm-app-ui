@@ -17,8 +17,11 @@ import { ComissoesListComponent } from './pages/comissoes/comissoes-list.compone
 import { FinancialReportsComponent } from './pages/relatorios/financial-reports.component';
 import { SaldosBancariosListComponent } from './pages/saldos-bancarios/saldos-bancarios-list.component';
 
+import { HomeFinancialComponent } from './pages/home-financial/home-financial.component';
+
 const routes: Routes = [
-  { path: '', component: FinancialDashboardComponent },
+  { path: '', component: HomeFinancialComponent },
+  { path: 'dashboard', component: FinancialDashboardComponent },
   // Lançamentos (antes: Contas a Pagar)
   { path: 'lancamentos', component: LancamentosListComponent },
   { path: 'lancamentos/novo', component: LancamentosFormComponent },
