@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectorRef, AfterViewInit } from '@angular/core';
 import { SidebarService } from '../../services/sidebar.service';
 import { CommonModule } from '@angular/common';
 import { AppSidebarComponent } from '../app-sidebar/app-sidebar.component';
@@ -20,15 +20,20 @@ import { MobileFooterComponent } from '../mobile-footer/mobile-footer.component'
   templateUrl: './app-layout.component.html',
 })
 
-export class AppLayoutComponent {
+export class AppLayoutComponent implements AfterViewInit {
   readonly isExpanded$;
   readonly isHovered$;
   readonly isMobileOpen$;
 
-  constructor(public sidebarService: SidebarService) {
+  constructor(public sidebarService: SidebarService, private cdr: ChangeDetectorRef) {
     this.isExpanded$ = this.sidebarService.isExpanded$;
     this.isHovered$ = this.sidebarService.isHovered$;
     this.isMobileOpen$ = this.sidebarService.isMobileOpen$;
+  }
+
+  ngAfterViewInit() {
+    // Forçar atualização do layout para garantir que as margens estejam corretas
+    setTimeout(() => this.cdr.detectChanges(), 0);
   }
 
   get containerClasses() {

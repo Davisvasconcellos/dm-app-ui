@@ -1,8 +1,8 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { FinancialDashboardComponent } from './pages/dashboard/financial-dashboard.component';
-import { ContasPagarListComponent } from './pages/contas-pagar/contas-pagar-list.component';
-import { ContasPagarFormComponent } from './pages/contas-pagar/contas-pagar-form.component';
+import { LancamentosListComponent } from './pages/lancamentos/lancamentos-list.component';
+import { LancamentosFormComponent } from './pages/lancamentos/lancamentos-form.component';
 import { ContasReceberListComponent } from './pages/contas-receber/contas-receber-list.component';
 import { ContasReceberFormComponent } from './pages/contas-receber/contas-receber-form.component';
 import { FornecedoresListComponent } from './pages/fornecedores/fornecedores-list.component';
@@ -19,10 +19,10 @@ import { SaldosBancariosListComponent } from './pages/saldos-bancarios/saldos-ba
 
 const routes: Routes = [
   { path: '', component: FinancialDashboardComponent },
-  // Contas a Pagar
-  { path: 'contas-pagar', component: ContasPagarListComponent },
-  { path: 'contas-pagar/novo', component: ContasPagarFormComponent },
-  { path: 'contas-pagar/:id_code', component: ContasPagarFormComponent },
+  // Lançamentos (antes: Contas a Pagar)
+  { path: 'lancamentos', component: LancamentosListComponent },
+  { path: 'lancamentos/novo', component: LancamentosFormComponent },
+  { path: 'lancamentos/:id_code', component: LancamentosFormComponent },
   // Contas a Receber
   { path: 'contas-receber', component: ContasReceberListComponent },
   { path: 'contas-receber/novo', component: ContasReceberFormComponent },
@@ -53,4 +53,3 @@ const routes: Routes = [
   exports: [RouterModule],
 })
 export class FinancialRoutingModule {}
-

@@ -1,19 +1,21 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { FinancialService } from '../../financial.service';
 
 @Component({
-  selector: 'app-contas-pagar-form',
-  templateUrl: './contas-pagar-form.component.html',
+  selector: 'app-lancamentos-form',
+  templateUrl: './lancamentos-form.component.html',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule, FormsModule],
 })
-export class ContasPagarFormComponent {
+export class LancamentosFormComponent {
   form: FormGroup;
+  evidenceFileNames: string[] = [];
 
   constructor(private fb: FormBuilder, public financial: FinancialService) {
+    console.log('LancamentosFormComponent initialized');
     this.form = this.fb.group({
       vendor_id: ['', Validators.required],
       nf: [''],
@@ -33,5 +35,10 @@ export class ContasPagarFormComponent {
     if (this.form.invalid) return;
     console.log('Salvar conta a pagar', this.form.value);
   }
-}
 
+  onEvidenceFilesSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const files = input.files ? Array.from(input.files) : [];
+    this.evidenceFileNames = files.map(f => f.name);
+  }
+}

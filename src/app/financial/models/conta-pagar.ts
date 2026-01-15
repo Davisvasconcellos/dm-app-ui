@@ -9,11 +9,13 @@ export interface ContaPagar {
   currency?: string; // 'BRL' default
   issue_date?: Date | string;
   due_date: Date | string;
+  paid_at?: Date | string;
   status: StatusConta;
   category?: string;
   cost_center?: string;
   created_by?: string; // user id
   approved_by?: string; // user id
   attachment_url?: string;
+  type?: 'PAYABLE' | 'RECEIVABLE' | 'TRANSFER' | 'ADJUSTMENT';
 }
 

@@ -1,5 +1,5 @@
 // AppHeaderComponent
-import { Component, ElementRef, ViewChild, Input } from '@angular/core';
+import { Component, ElementRef, ViewChild, Input, ChangeDetectorRef, OnInit, AfterViewInit } from '@angular/core';
 import { SidebarService } from '../../services/sidebar.service';
 import { AuthService } from '../../services/auth.service';
 import { CommonModule } from '@angular/common';
@@ -24,7 +24,7 @@ import { DropdownItemComponent } from '../../components/ui/dropdown/dropdown-ite
   ],
   templateUrl: './app-header.component.html',
 })
-export class AppHeaderComponent {
+export class AppHeaderComponent implements OnInit, AfterViewInit {
   readonly isMobileOpen$;
 
   roleHomeLink: string = '/';
@@ -38,18 +38,19 @@ export class AppHeaderComponent {
   isLangOpen = false;
 
   languages: Array<{ code: 'pt-br' | 'en'; label: string; flag: string }> = [
-    { code: 'pt-br', label: 'Português (Brasil)', flag: '/images/flags/brazil.svg' },
-    { code: 'en', label: 'English (US)', flag: '/images/flags/united-states.svg' },
+    { code: 'pt-br', label: 'Português (Brasil)', flag: 'https://flagcdn.com/w40/br.png' },
+    { code: 'en', label: 'English (US)', flag: 'https://flagcdn.com/w40/us.png' },
   ];
 
   get currentFlag(): string {
-    return this.languages.find(l => l.code === this.currentLang)?.flag ?? '/images/flags/brazil.svg';
+    return this.languages.find(l => l.code === this.currentLang)?.flag ?? 'https://flagcdn.com/w40/br.png';
   }
 
   constructor(
     public sidebarService: SidebarService,
     private translate: TranslateService,
     private authService: AuthService,
+    private cdr: ChangeDetectorRef
   ) {
     this.isMobileOpen$ = this.sidebarService.isMobileOpen$;
     this.currentLang = (localStorage.getItem('lang') as 'pt-br' | 'en') || 'pt-br';
@@ -75,6 +76,15 @@ export class AppHeaderComponent {
         default:
           this.roleHomeLink = '/';
       }
+      // Forçar atualização da view quando o usuário/role mudar
+      this.cdr.detectChanges();
+    });
+  }
+
+  ngOnInit() {
+    // Inscrever-se nas mudanças de estado do sidebar para forçar atualização
+    this.sidebarService.isMobileOpen$.subscribe(() => {
+      this.cdr.detectChanges();
     });
   }
 
@@ -88,6 +98,8 @@ export class AppHeaderComponent {
 
   ngAfterViewInit() {
     document.addEventListener('keydown', this.handleKeyDown);
+    // Forçar verificação após inicialização da view para garantir que ícones e estado inicial sejam renderizados
+    setTimeout(() => this.cdr.detectChanges(), 0);
   }
 
   ngOnDestroy() {

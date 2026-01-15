@@ -1,0 +1,71 @@
+<div class="bg-white dark:bg-boxdark rounded-lg shadow-lg p-6">
+  <h2 class="text-2xl font-bold mb-6">Conta a Pagar</h2>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <form [formGroup]="form" class="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-6">
+      <div class="relative z-20 bg-transparent dark:bg-form-input">
+        <label class="mb-3 block text-black dark:text-white">Fornecedor</label>
+        <input type="text" formControlName="vendor_id" placeholder="ID / Nome" class="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary">
+      </div>
+
+      <div class="relative z-20 bg-transparent dark:bg-form-input">
+        <label class="mb-3 block text-black dark:text-white">NF</label>
+        <input type="text" formControlName="nf" class="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary">
+      </div>
+
+      <div class="md:col-span-2">
+        <label class="mb-3 block text-black dark:text-white">Descrição</label>
+        <textarea rows="2" formControlName="description" class="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary"></textarea>
+      </div>
+
+      <div class="relative z-20 bg-transparent dark:bg-form-input">
+        <label class="mb-3 block text-black dark:text-white">Valor</label>
+        <input type="number" formControlName="amount" class="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary">
+      </div>
+
+      <div class="relative z-20 bg-transparent dark:bg-form-input">
+        <label class="mb-3 block text-black dark:text-white">Vencimento</label>
+        <input type="date" formControlName="due_date" class="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary">
+      </div>
+
+      <div class="relative z-20 bg-transparent dark:bg-form-input">
+        <label class="mb-3 block text-black dark:text-white">Categoria</label>
+        <input type="text" formControlName="category" class="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary">
+      </div>
+
+      <div class="relative z-20 bg-transparent dark:bg-form-input">
+        <label class="mb-3 block text-black dark:text-white">Centro de Custo</label>
+        <input type="text" formControlName="cost_center" class="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary">
+      </div>
+
+      <div class="md:col-span-2 flex gap-3 mt-4">
+        <button type="button" (click)="save()" class="inline-flex items-center justify-center rounded-md bg-primary py-3 px-6 text-center font-medium text-white hover:bg-opacity-90">Salvar</button>
+        <a routerLink="/financial/lancamentos" class="inline-flex items-center justify-center rounded-md border border-primary py-3 px-6 text-center font-medium text-primary hover:bg-opacity-90">Cancelar</a>
+      </div>
+    </form>
+
+    <div class="space-y-4">
+      <h3 class="text-lg font-semibold text-black dark:text-white">Evidências</h3>
+      <p class="text-sm text-gray-600 dark:text-gray-400">
+        Anexe comprovantes, notas fiscais digitalizadas ou outros documentos relacionados a este lançamento.
+      </p>
+      <div class="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 px-4 py-6 text-center dark:border-gray-700 dark:bg-gray-900/40">
+        <input type="file" class="hidden" #evidenceInput (change)="onEvidenceFilesSelected($event)" multiple>
+        <button type="button" class="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-opacity-90" (click)="evidenceInput.click()">
+          Selecionar arquivos
+        </button>
+        <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+          Formatos aceitos: PDF, imagens ou outros documentos relevantes.
+        </p>
+
+        <div *ngIf="evidenceFileNames.length > 0" class="mt-4 w-full text-left">
+          <p class="mb-1 text-xs font-semibold text-gray-600 dark:text-gray-400">Arquivos selecionados:</p>
+          <ul class="max-h-40 space-y-1 overflow-y-auto text-xs text-gray-700 dark:text-gray-300">
+            <li *ngFor="let name of evidenceFileNames" class="truncate">
+              {{ name }}
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

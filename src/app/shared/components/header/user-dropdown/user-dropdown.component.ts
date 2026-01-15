@@ -89,7 +89,10 @@ export class UserDropdownComponent implements OnInit, OnDestroy {
   }
 
   get userAvatar(): string {
-    return this.user?.avatar || this.user?.avatar_url || '/images/user/default-avatar.jpg';
+    if (this.user?.avatar) return this.user.avatar;
+    if (this.user?.avatar_url) return this.user.avatar_url;
+    const name = this.user?.name || 'Usuário';
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`;
   }
 
   get userName(): string {
@@ -102,7 +105,8 @@ export class UserDropdownComponent implements OnInit, OnDestroy {
 
   onAvatarError(event: Event): void {
     const element = event.target as HTMLImageElement;
-    element.src = '/images/user/default-avatar.jpg';
+    const name = this.user?.name || 'Usuário';
+    element.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`;
   }
 
   toggleDropdown() {

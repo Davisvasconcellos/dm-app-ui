@@ -879,3 +879,76 @@ pre[class*="language-"].line-numbers {
     /* max-width: 350px; */
   }
 }
+
+/* Angular Material Datepicker Overrides */
+.mat-datepicker-content {
+  @apply !bg-white dark:!bg-gray-dark !shadow-theme-xl !rounded-xl !border !border-gray-200 dark:!border-white/5;
+}
+
+.mat-calendar-table-header {
+  @apply !text-gray-500 dark:!text-gray-400;
+}
+
+.mat-calendar-body-label {
+  @apply !text-gray-700 dark:!text-white/90;
+}
+
+.mat-calendar-body-cell-content {
+  @apply !text-gray-700 dark:!text-white/90 !border-none;
+}
+
+.mat-calendar-body-cell:hover .mat-calendar-body-cell-content {
+  @apply !bg-gray-100 dark:!bg-white/5;
+}
+
+.mat-calendar-body-selected {
+  @apply !bg-brand-500 !text-white !shadow-none;
+}
+
+.mat-calendar-body-today:not(.mat-calendar-body-selected) {
+  @apply !border-brand-500;
+}
+
+.mat-calendar-arrow {
+  @apply !fill-gray-500 dark:!fill-gray-400;
+}
+
+.mat-calendar-previous-button,
+.mat-calendar-next-button {
+  @apply !text-gray-500 dark:!text-gray-400;
+}
+
+.mat-calendar-period-button {
+  @apply !text-gray-700 dark:!text-white/90;
+}
+
+.mat-calendar-table-header-divider::after {
+  @apply !bg-gray-200 dark:!bg-gray-700;
+}
+
+/* Ensure the calendar popup background is dark in dark mode */
+.dark .mat-datepicker-content {
+  background-color: #1a2231 !important;
+  color: #ffffff !important;
+}
+
+.dark .mat-calendar-body-cell-content,
+.dark .mat-date-range-input-separator {
+  color: #e4e7ec !important;
+}
+
+.dark .mat-calendar-body-label {
+  color: #e4e7ec !important;
+}
+
+.dark .mat-calendar-table-header th {
+  color: #98a2b3 !important;
+}
+
+.dark .mat-icon-button {
+  color: #98a2b3 !important;
+}
+
+.dark .mat-calendar-period-button {
+  color: #e4e7ec !important;
+}

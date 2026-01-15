@@ -91,8 +91,8 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
   isProfileMenuOpen = false;
   currentLang = 'pt-br';
   languages: Array<{ code: 'pt-br' | 'en' | string; label: string; flag: string }> = [
-    { code: 'pt-br', label: 'Português (Brasil)', flag: '/images/flags/brazil.svg' },
-    { code: 'en', label: 'English (US)', flag: '/images/flags/united-states.svg' }
+    { code: 'pt-br', label: 'Português (Brasil)', flag: 'https://flagcdn.com/w40/br.png' },
+    { code: 'en', label: 'English (US)', flag: 'https://flagcdn.com/w40/us.png' }
   ];
   currentUser: User | null = null;
   selfieUrl: string | null = null;
@@ -114,7 +114,7 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
   }
 
   get currentFlag(): string {
-    return this.languages.find(l => l.code === this.currentLang)?.flag ?? '/images/flags/brazil.svg';
+    return this.languages.find(l => l.code === this.currentLang)?.flag ?? 'https://flagcdn.com/w40/br.png';
   }
 
   constructor(

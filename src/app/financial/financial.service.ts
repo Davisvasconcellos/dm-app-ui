@@ -28,6 +28,24 @@ export class FinancialService {
     ]);
   }
 
+  getCategorias(): Observable<{ id: string; name: string }[]> {
+    return of([
+      { id: 'cat-vendas', name: 'Vendas' },
+      { id: 'cat-servicos', name: 'Serviços' },
+      { id: 'cat-aluguel', name: 'Aluguel' },
+      { id: 'cat-fornecedores', name: 'Fornecedores' },
+      { id: 'cat-marketing', name: 'Marketing' },
+    ]);
+  }
+
+  getCentrosDeCusto(): Observable<{ id: string; name: string }[]> {
+    return of([
+      { id: 'cc-escritorio', name: 'Escritório' },
+      { id: 'cc-manutencao', name: 'Manutenção' },
+      { id: 'cc-operacional', name: 'Operacional' },
+    ]);
+  }
+
   getContasPagar(): Observable<ContaPagar[]> {
     return of([
       {
@@ -43,6 +61,8 @@ export class FinancialService {
         category: 'Materiais',
         cost_center: 'Escritório',
         created_by: 'user-001',
+        type: 'PAYABLE',
+        attachment_url: 'https://via.placeholder.com/150/0000FF/FFFFFF?Text=Nota+Fiscal.png'
       },
       {
         id_code: 'cp-002',
@@ -57,7 +77,59 @@ export class FinancialService {
         category: 'Serviços',
         cost_center: 'Manutenção',
         created_by: 'user-002',
+        type: 'PAYABLE',
+        attachment_url: 'https://via.placeholder.com/150/FF0000/FFFFFF?Text=Recibo.jpg'
       },
+      {
+        id_code: 'cp-003',
+        vendor_id: 'forn-001',
+        nf: 'NF-9012',
+        description: 'Compra de canetas',
+        amount: 120.0,
+        currency: 'BRL',
+        issue_date: new Date('2024-10-01'),
+        due_date: new Date('2024-10-15'),
+        status: 'paid',
+        category: 'Materiais',
+        cost_center: 'Escritório',
+        created_by: 'user-001',
+        paid_at: new Date('2024-10-14'),
+        type: 'PAYABLE',
+        attachment_url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf'
+      },
+      {
+        id_code: 'cp-004',
+        vendor_id: 'cli-001',
+        nf: 'NFS-e-202',
+        description: 'Venda de pacote anual',
+        amount: 2400.0,
+        currency: 'BRL',
+        issue_date: new Date('2024-09-01'),
+        due_date: new Date('2024-09-30'),
+        status: 'overdue',
+        category: 'Vendas',
+        cost_center: 'Operacional',
+        created_by: 'user-002',
+        type: 'RECEIVABLE',
+        attachment_url: 'https://via.placeholder.com/150/00FF00/FFFFFF?Text=Contrato.png'
+      },
+      {
+        id_code: 'cp-005',
+        vendor_id: 'acc-bb',
+        nf: 'TRF-5678',
+        description: 'Transferência entre contas',
+        amount: 5000.0,
+        currency: 'BRL',
+        issue_date: new Date('2024-10-05'),
+        due_date: new Date('2024-10-05'),
+        status: 'paid',
+        category: 'Transferência',
+        cost_center: 'Operacional',
+        created_by: 'user-003',
+        paid_at: new Date('2024-10-05'),
+        type: 'TRANSFER',
+        attachment_url: 'https://via.placeholder.com/150/FFFF00/000000?Text=Comprovante.jpg'
+      }
     ]);
   }
 
@@ -109,4 +181,3 @@ export class FinancialService {
   //   ]);
   // }
 }
-
