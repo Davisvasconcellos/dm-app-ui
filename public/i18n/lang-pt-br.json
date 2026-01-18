@@ -209,5 +209,159 @@
         }
       }
     }
+  },
+  "financial": {
+    "transactions": {
+      "title": "Lançamentos Financeiros",
+      "overview": {
+        "title": "Visão Geral",
+        "toPay": "A Pagar",
+        "toReceive": "A Receber",
+        "paid": "Pago",
+        "received": "Recebido"
+      },
+      "type": {
+        "payable": "Pagar",
+        "receivable": "Receber",
+        "transfer": "Transferência",
+        "adjustment": "Ajuste"
+      },
+      "status": {
+        "pending": "Pendente",
+        "approved": "Aprovado",
+        "scheduled": "Agendado",
+        "paid": "Pago",
+        "overdue": "Vencido",
+        "canceled": "Cancelado"
+      },
+      "form": {
+        "fields": {
+          "type": "Tipo",
+          "supplier": "Fornecedor",
+          "customer": "Cliente",
+          "nf": "NF",
+          "costCenter": "Centro de Custo",
+          "category": "Categoria",
+          "description": "Descrição",
+          "amount": "Valor",
+          "dueDate": "Vencimento",
+          "receivedAt": "Data Recebimento",
+          "paidAt": "Data Pagamento",
+          "paymentMethod": "Método de Pagamento",
+          "bankAccount": "Conta Bancária"
+        },
+        "placeholders": {
+          "select": "Selecione...",
+          "description": "Ex: Pagamento fornecedor",
+          "amount": "0,00"
+        }
+      },
+      "formLabels": {
+        "isPaidReceived": "Marcar como recebido",
+        "isPaidPaid": "Marcar como pago"
+      },
+      "formPayment": {
+        "cash": "Dinheiro",
+        "pix": "PIX",
+        "creditCard": "Cartão de Crédito",
+        "debitCard": "Cartão de Débito",
+        "bankTransfer": "Transferência Bancária",
+        "billet": "Boleto Pago"
+      },
+      "filters": {
+        "all": "Todos",
+        "unpaid": "Pendente",
+        "paid": "Pago"
+      },
+      "table": {
+        "headers": {
+          "type": "Tipo",
+          "nf": "NF",
+          "description": "Descrição",
+          "amount": "Valor",
+          "dueDate": "Vencimento",
+          "status": "Status",
+          "category": "Categoria",
+          "costCenter": "Centro de Custo",
+          "actions": "Ações"
+        },
+        "pagination": {
+          "show": "Mostrar",
+          "entries": "entradas"
+        },
+        "searchPlaceholder": "Buscar..."
+      },
+      "actions": {
+        "new": "Novo Lançamento",
+        "newTitle": "Novo Lançamento",
+        "edit": "Editar",
+        "editTitle": "Editar Lançamento",
+        "pay": "Pagar",
+        "payTitle": "Pagar Lançamento",
+        "cancel": "Cancelar",
+        "cancelTitle": "Cancelar Lançamento",
+        "confirmCancel": "Confirmar Cancelamento",
+        "delete": "Excluir",
+        "confirmDelete": "Sim, excluir",
+        "add": "Adicionar",
+        "exportCsv": "Exportar CSV"
+      },
+      "offcanvas": {
+        "subtitle": "Detalhes do Lançamento",
+        "titleFallback": "Lançamento financeiro",
+        "fields": {
+          "nf": "NF",
+          "amount": "Valor",
+          "dueDate": "Vencimento",
+          "category": "Categoria",
+          "costCenter": "Centro de Custo"
+        }
+      },
+      "deleteModal": {
+        "title": "Confirmar exclusão",
+        "message": "Tem certeza que deseja excluir este lançamento? Essa ação não pode ser desfeita.",
+        "transactionLabel": "Lançamento:"
+      },
+      "csv": {
+        "nothingToExportTitle": "Nada para exportar",
+        "nothingToExportMessage": "Nenhum lançamento encontrado com os filtros atuais.",
+        "headers": {
+          "id": "ID",
+          "type": "Tipo",
+          "nf": "NF",
+          "description": "Descrição",
+          "amount": "Valor",
+          "dueDate": "Vencimento",
+          "status": "Status",
+          "category": "Categoria",
+          "costCenter": "Centro de Custo",
+          "paidAt": "Pago/Recebido em",
+          "paymentMethod": "Método de Pagamento",
+          "bankAccountId": "Conta Bancária (ID)"
+        }
+      }
+    },
+    "evidence": {
+      "title": "Evidências",
+      "existingFiles": "Arquivos já anexados:",
+      "table": {
+        "name": "Nome",
+        "actions": "Ações"
+      },
+      "actions": {
+        "view": "Visualizar"
+      },
+      "selectFiles": "Selecionar arquivos",
+      "allowedTypes": "Formatos aceitos: .jpg, .jpeg, .pdf, .txt e .csv.",
+      "selectedFiles": "Arquivos selecionados:",
+      "noEvidence": "Nenhuma evidência vinculada a este lançamento.",
+      "warning": {
+        "fileLimit": "limite máximo de 5 arquivos por lançamento",
+        "fileSize": "tamanho máximo de 2MB por arquivo",
+        "fileType": "tipos permitidos: .jpg, .jpeg, .pdf, .txt, .csv",
+        "ignoredFiles": "Alguns arquivos foram ignorados: {{reasons}}.",
+        "andSeparator": " e "
+      }
+    }
   }
 }

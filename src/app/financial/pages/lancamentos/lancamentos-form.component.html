@@ -49,12 +49,12 @@
         Anexe comprovantes, notas fiscais digitalizadas ou outros documentos relacionados a este lançamento.
       </p>
       <div class="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 px-4 py-6 text-center dark:border-gray-700 dark:bg-gray-900/40">
-        <input type="file" class="hidden" #evidenceInput (change)="onEvidenceFilesSelected($event)" multiple>
+        <input type="file" class="hidden" #evidenceInput (change)="onEvidenceFilesSelected($event)" multiple accept=".jpg,.jpeg,.pdf,.txt,.csv">
         <button type="button" class="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-opacity-90" (click)="evidenceInput.click()">
           Selecionar arquivos
         </button>
         <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
-          Formatos aceitos: PDF, imagens ou outros documentos relevantes.
+          Formatos aceitos: .jpg, .jpeg, .pdf, .txt e .csv.
         </p>
 
         <div *ngIf="evidenceFileNames.length > 0" class="mt-4 w-full text-left">

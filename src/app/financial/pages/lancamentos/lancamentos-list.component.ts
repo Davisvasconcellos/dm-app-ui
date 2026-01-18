@@ -8,10 +8,11 @@ import { ContaPagar, StatusConta, TransactionsSummary } from '../../models/conta
 import { LocalStorageService } from '../../../shared/services/local-storage.service';
 import { Store } from '../../../pages/pub/admin/home-admin/store.service';
 import { PopoverComponent } from '../../../shared/components/ui/popover/popover/popover.component';
-import { ButtonComponent } from '../../../shared/components/ui/button/button.component';
 import { ModalComponent } from '../../../shared/components/ui/modal/modal.component';
+import { UploadService } from '../../../services/upload.service';
+import { forkJoin } from 'rxjs';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
-// Material Imports
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -25,12 +26,12 @@ import { MatInputModule } from '@angular/material/input';
     RouterModule,
     FormsModule,
     ReactiveFormsModule,
+    TranslateModule,
     MatDatepickerModule,
     MatNativeDateModule,
     MatFormFieldModule,
     MatInputModule,
     PopoverComponent,
-    ButtonComponent,
     ModalComponent
   ],
   templateUrl: './lancamentos-list.component.html',
@@ -40,18 +41,18 @@ export class LancamentosListComponent implements OnInit {
 
   transactionForm!: FormGroup;
   transactionTypes = [
-    { value: 'PAYABLE', label: 'Conta a Pagar' },
-    { value: 'RECEIVABLE', label: 'Conta a Receber' },
-    { value: 'TRANSFER', label: 'Transferência' },
-    { value: 'ADJUSTMENT', label: 'Ajuste' }
+    { value: 'PAYABLE', labelKey: 'financial.transactions.type.payable' },
+    { value: 'RECEIVABLE', labelKey: 'financial.transactions.type.receivable' },
+    { value: 'TRANSFER', labelKey: 'financial.transactions.type.transfer' },
+    { value: 'ADJUSTMENT', labelKey: 'financial.transactions.type.adjustment' }
   ];
   paymentMethods = [
-    { value: 'cash', label: 'Dinheiro', requiresBankAccount: false },
-    { value: 'pix', label: 'PIX', requiresBankAccount: true },
-    { value: 'credit_card', label: 'Cartão de Crédito', requiresBankAccount: false },
-    { value: 'debit_card', label: 'Cartão de Débito', requiresBankAccount: false },
-    { value: 'bank_transfer', label: 'Transferência Bancária', requiresBankAccount: true },
-    { value: 'boleto', label: 'Boleto Pago', requiresBankAccount: true }
+    { value: 'cash', labelKey: 'financial.transactions.form.payment.cash', requiresBankAccount: false },
+    { value: 'pix', labelKey: 'financial.transactions.form.payment.pix', requiresBankAccount: true },
+    { value: 'credit_card', labelKey: 'financial.transactions.form.payment.creditCard', requiresBankAccount: false },
+    { value: 'debit_card', labelKey: 'financial.transactions.form.payment.debitCard', requiresBankAccount: false },
+    { value: 'bank_transfer', labelKey: 'financial.transactions.form.payment.bankTransfer', requiresBankAccount: true },
+    { value: 'boleto', labelKey: 'financial.transactions.form.payment.billet', requiresBankAccount: true }
   ];
   bankAccounts = [
     { id: 'acc-bb', label: 'Banco do Brasil • Ag 1234-5 • CC 99999-9' },
@@ -82,6 +83,8 @@ export class LancamentosListComponent implements OnInit {
   statusFilter: 'all' | 'unpaid' | 'paid' = 'all';
 
   evidenceFiles: { name: string; url: string; file: File }[] = [];
+  existingEvidenceFiles: { name: string; url: string; type: 'image' | 'pdf' | 'file' }[] = [];
+  evidenceWarningMessage: string | null = null;
 
   isEvidenceSidebarOpen = false;
   selectedTransaction: ContaPagar | null = null;
@@ -100,12 +103,12 @@ export class LancamentosListComponent implements OnInit {
   editingTransaction: ContaPagar | null = null;
 
   statusLabelMap: Record<StatusConta, string> = {
-    pending: 'Pendente',
-    approved: 'Aprovado',
-    scheduled: 'Agendado',
-    paid: 'Pago',
-    overdue: 'Vencido',
-    canceled: 'Cancelado'
+    pending: 'financial.transactions.status.pending',
+    approved: 'financial.transactions.status.approved',
+    scheduled: 'financial.transactions.status.scheduled',
+    paid: 'financial.transactions.status.paid',
+    overdue: 'financial.transactions.status.overdue',
+    canceled: 'financial.transactions.status.canceled'
   };
 
   get paymentMethodRequiresBank(): boolean {
@@ -173,7 +176,9 @@ export class LancamentosListComponent implements OnInit {
     private fb: FormBuilder, 
     private cdr: ChangeDetectorRef,
     private localStorageService: LocalStorageService,
-    private toastService: FinancialToastService
+    private toastService: FinancialToastService,
+    private uploadService: UploadService,
+    private translate: TranslateService
   ) {
     this.initForm();
   }
@@ -277,12 +282,112 @@ export class LancamentosListComponent implements OnInit {
     });
   }
 
+  private inferEvidenceType(input: string): 'image' | 'pdf' | 'file' {
+    const lower = input.toLowerCase();
+    if (lower.endsWith('.jpg') || lower.endsWith('.jpeg') || lower.endsWith('.png') || lower.endsWith('.gif') || lower.endsWith('.webp')) {
+      return 'image';
+    }
+    if (lower.endsWith('.pdf')) {
+      return 'pdf';
+    }
+    return 'file';
+  }
+
+  private parseAttachmentsJson(raw: string): { url: string; filename: string }[] {
+    const text = raw.trim();
+    if (!text.startsWith('[') && !text.startsWith('{')) {
+      return [];
+    }
+    try {
+      const parsed = JSON.parse(text);
+      const list = Array.isArray(parsed) ? parsed : [parsed];
+      return list
+        .filter(item => item && typeof item.url === 'string')
+        .map(item => {
+          const url = item.url as string;
+          const filename =
+            (item.filename as string | undefined) ||
+            (item.name as string | undefined) ||
+            url.split('/').pop() ||
+            'Evidência';
+          return { url, filename };
+        });
+    } catch {
+      return [];
+    }
+  }
+
+  private getRowAttachments(row: ContaPagar): { url: string; filename: string }[] {
+    const fromRow = (row as any).attachments as { url?: string; filename?: string }[] | undefined;
+    const attachments: { url: string; filename: string }[] = [];
+
+    if (Array.isArray(fromRow) && fromRow.length > 0) {
+      fromRow.forEach(item => {
+        if (!item) {
+          return;
+        }
+        if (typeof item.url === 'string') {
+          const urlText = item.url.trim();
+          const nested = this.parseAttachmentsJson(urlText);
+          if (nested.length > 0) {
+            attachments.push(...nested);
+            return;
+          }
+          if (!urlText) {
+            return;
+          }
+          const filename = item.filename || urlText.split('/').pop() || 'Evidência';
+          attachments.push({
+            url: urlText,
+            filename
+          });
+          return;
+        }
+        if ((item as any).url && typeof (item as any).url === 'string') {
+          const url = String((item as any).url);
+          const filename =
+            (item as any).filename ||
+            url.split('/').pop() ||
+            'Evidência';
+          attachments.push({ url, filename });
+        }
+      });
+      if (attachments.length > 0) {
+        return attachments;
+      }
+    }
+
+    if (row.attachment_url) {
+      const raw = row.attachment_url.trim();
+      const fromJson = this.parseAttachmentsJson(raw);
+      if (fromJson.length > 0) {
+        attachments.push(...fromJson);
+      } else {
+        const urls = raw
+          .split(/[;,]/)
+          .map(part => part.trim())
+          .filter(part => part.length > 0);
+
+        urls.forEach(url => {
+          const filename = url.split('/').pop() || 'Evidência';
+          attachments.push({
+            url,
+            filename
+          });
+        });
+      }
+    }
+
+    return attachments;
+  }
+
   toggleForm() {
     this.isFormVisible = !this.isFormVisible;
 
     if (this.isFormVisible && this.transactionForm) {
       this.formMode = 'create';
       this.editingTransaction = null;
+      this.existingEvidenceFiles = [];
 
       Object.keys(this.transactionForm.controls).forEach(key => {
         this.transactionForm.get(key)?.enable({ emitEvent: false });
@@ -324,11 +429,63 @@ export class LancamentosListComponent implements OnInit {
   onEvidenceFilesSelected(event: Event) {
     const input = event.target as HTMLInputElement;
     const files = input.files ? Array.from(input.files) : [];
-    const mapped = files.map(file => ({
-      name: file.name,
-      url: URL.createObjectURL(file),
-      file
-    }));
+
+    if (!files.length) {
+      return;
+    }
+
+    const maxFiles = 5;
+    const maxSizeBytes = 2 * 1024 * 1024;
+    const allowedExtensions = ['jpg', 'jpeg', 'pdf', 'txt', 'csv'];
+
+    const remainingSlots = maxFiles - this.evidenceFiles.length;
+    const filesWithinLimit = remainingSlots > 0 ? files.slice(0, remainingSlots) : [];
+
+    let rejectedByCount = files.length - filesWithinLimit.length;
+    let rejectedBySize = 0;
+    let rejectedByType = 0;
+
+    const mapped = filesWithinLimit.reduce<{ name: string; url: string; file: File }[]>((acc, file) => {
+      const name = file.name || '';
+      const extension = name.includes('.') ? name.split('.').pop() || '' : '';
+      const normalizedExtension = extension.toLowerCase();
+
+      if (!allowedExtensions.includes(normalizedExtension)) {
+        rejectedByType++;
+        return acc;
+      }
+
+      if (file.size > maxSizeBytes) {
+        rejectedBySize++;
+        return acc;
+      }
+
+      acc.push({
+        name,
+        url: URL.createObjectURL(file),
+        file
+      });
+      return acc;
+    }, []);
+
+    if (rejectedByCount > 0 || rejectedBySize > 0 || rejectedByType > 0) {
+      const reasons: string[] = [];
+      if (rejectedByCount > 0) {
+        reasons.push(this.translate.instant('financial.evidence.warning.fileLimit'));
+      }
+      if (rejectedBySize > 0) {
+        reasons.push(this.translate.instant('financial.evidence.warning.fileSize'));
+      }
+      if (rejectedByType > 0) {
+        reasons.push(this.translate.instant('financial.evidence.warning.fileType'));
+      }
+      this.evidenceWarningMessage = this.translate.instant('financial.evidence.warning.ignoredFiles', {
+        reasons: reasons.join(this.translate.instant('financial.evidence.warning.andSeparator'))
+      });
+    } else {
+      this.evidenceWarningMessage = null;
+    }
+
     this.evidenceFiles = [...this.evidenceFiles, ...mapped];
     this.cdr.detectChanges();
   }
@@ -345,32 +502,32 @@ export class LancamentosListComponent implements OnInit {
     this.evidenceFiles = this.evidenceFiles.filter((_, i) => i !== index);
   }
 
-  private inferEvidenceType(url: string): 'image' | 'pdf' | 'file' {
-    const lower = url.toLowerCase();
-    if (lower.endsWith('.jpg') || lower.endsWith('.jpeg') || lower.endsWith('.png') || lower.endsWith('.gif') || lower.endsWith('.webp')) {
-      return 'image';
-    }
-    if (lower.endsWith('.pdf')) {
-      return 'pdf';
-    }
-    return 'file';
-  }
-
   openEvidenceSidebar(row: ContaPagar) {
     this.selectedTransaction = row;
     const items: { name: string; url?: string; type: 'image' | 'pdf' | 'file'; extension?: string }[] = [];
 
-    if (row.attachment_url) {
-      const type = this.inferEvidenceType(row.attachment_url);
-      const extensionMatch = row.attachment_url.split('.').pop();
-      const extension = extensionMatch ? extensionMatch.toUpperCase() : undefined;
+    const attachments = this.getRowAttachments(row);
+
+    attachments.forEach(att => {
+      const sourceForType = att.url || att.filename;
+      const type = this.inferEvidenceType(sourceForType);
+      const extensionSource = att.filename || att.url;
+      const extensionMatch = extensionSource.split('.').pop() || '';
+      const sanitizedExtension =
+        extensionMatch &&
+        !extensionMatch.includes('/') &&
+        extensionMatch.length > 0 &&
+        extensionMatch.length <= 6
+          ? extensionMatch.toUpperCase()
+          : undefined;
+
       items.push({
-        name: row.attachment_url.split('/').pop() || 'Evidência',
-        url: row.attachment_url,
+        name: att.filename,
+        url: att.url,
         type,
-        extension
+        extension: sanitizedExtension
       });
-    }
+    });
 
     this.selectedEvidenceItems = items;
     this.isEvidenceSidebarOpen = true;
@@ -475,6 +632,16 @@ export class LancamentosListComponent implements OnInit {
     });
 
     this.updateEntitiesList(this.transactionForm.get('type')?.value || 'PAYABLE');
+
+    const attachments = this.getRowAttachments(row);
+    this.existingEvidenceFiles = attachments.map(att => {
+      const type = this.inferEvidenceType(att.url || att.filename);
+      return {
+        name: att.filename,
+        url: att.url,
+        type
+      };
+    });
 
     if (mode === 'pay') {
       const controlsToDisable = [
@@ -585,7 +752,9 @@ export class LancamentosListComponent implements OnInit {
 
       console.log('Enviando payload:', payload);
 
-      const request$ = (['edit', 'pay', 'cancel'].includes(this.formMode) && this.editingTransaction?.id_code)
+      const isEditMode = ['edit', 'pay', 'cancel'].includes(this.formMode) && this.editingTransaction?.id_code;
+
+      const request$ = isEditMode
         ? (() => {
             const { due_date, ...updatePayload } = payload;
 
@@ -607,14 +776,62 @@ export class LancamentosListComponent implements OnInit {
       request$.subscribe({
         next: (response) => {
           const action = this.formMode === 'cancel' ? 'cancelado' : (['edit', 'pay'].includes(this.formMode) ? 'atualizado' : 'criado');
-          console.log(`Transação ${action} com sucesso`, response);
+          console.log('[FINANCIAL] Resposta da API do lançamento', response);
+          console.log(`Transação ${action} com sucesso`);
+
+          const wasCreate = !isEditMode;
+          const hasEvidence = this.evidenceFiles.length > 0;
+          console.log('[FINANCIAL] Pós-processamento lançamento', {
+            wasCreate,
+            evidenceFilesCount: this.evidenceFiles.length
+          });
+
           this.toggleForm();
           this.initForm();
           
           if (this.selectedStore?.id_code) {
             this.loadTransactions();
           }
-          this.toastService.triggerToast('success', 'Lançamento processado', `O lançamento financeiro foi ${action} com sucesso no sistema.`);
+
+          if (wasCreate && this.evidenceFiles.length > 0) {
+            this.toastService.triggerToast(
+              'info',
+              '1/2 Lançamento registrado',
+              `O lançamento foi ${action} e as evidências serão enviadas em seguida. Não feche o navegador até concluir.`,
+              5000
+            );
+            const createdId = this.extractTransactionIdFromResponse(response);
+            console.log('[FINANCIAL] ID extraído para upload de evidências', createdId);
+            if (createdId) {
+              this.uploadEvidenceFilesForTransaction(createdId);
+            } else {
+              this.toastService.triggerToast(
+                'warning',
+                'Evidências não anexadas',
+                'O lançamento foi criado, mas não foi possível identificar o ID para anexar os arquivos.'
+              );
+              this.clearEvidenceFiles();
+            }
+          } else if (!wasCreate && this.evidenceFiles.length > 0) {
+            this.toastService.triggerToast(
+              'info',
+              '1/2 Lançamento atualizado',
+              'As evidências deste lançamento serão enviadas em seguida. Não feche o navegador até concluir.',
+              5000
+            );
+            // Incremental upload for edit/pay
+            if (this.editingTransaction?.id_code) {
+              this.uploadEvidenceFilesForTransaction(this.editingTransaction.id_code);
+            }
+          }
+
+          if (!hasEvidence) {
+            this.toastService.triggerToast(
+              'success',
+              'Lançamento processado',
+              `O lançamento financeiro foi ${action} com sucesso no sistema.`
+            );
+          }
         },
         error: (err) => {
           console.error('Erro ao processar transação', err);
@@ -720,8 +937,131 @@ export class LancamentosListComponent implements OnInit {
   }
 
   getStatusLabel(status: StatusConta | string | null | undefined): string {
-    const key = (status || 'pending').toString().toLowerCase() as StatusConta;
-    return this.statusLabelMap[key] || (status as string) || '';
+    const normalized = (status || 'pending').toString().toLowerCase() as StatusConta;
+    const translationKey = this.statusLabelMap[normalized];
+    if (translationKey) {
+      return this.translate.instant(translationKey);
+    }
+    return status ? status.toString() : '';
+  }
+
+  exportToCsv() {
+    const rows = this.filteredData;
+
+    if (!rows.length) {
+      this.toastService.triggerToast(
+        'info',
+        this.translate.instant('financial.transactions.csv.nothingToExportTitle'),
+        this.translate.instant('financial.transactions.csv.nothingToExportMessage')
+      );
+      return;
+    }
+
+    const headers = [
+      this.translate.instant('financial.transactions.csv.headers.id'),
+      this.translate.instant('financial.transactions.csv.headers.type'),
+      this.translate.instant('financial.transactions.csv.headers.nf'),
+      this.translate.instant('financial.transactions.csv.headers.description'),
+      this.translate.instant('financial.transactions.csv.headers.amount'),
+      this.translate.instant('financial.transactions.csv.headers.dueDate'),
+      this.translate.instant('financial.transactions.csv.headers.status'),
+      this.translate.instant('financial.transactions.csv.headers.category'),
+      this.translate.instant('financial.transactions.csv.headers.costCenter'),
+      this.translate.instant('financial.transactions.csv.headers.paidAt'),
+      this.translate.instant('financial.transactions.csv.headers.paymentMethod'),
+      this.translate.instant('financial.transactions.csv.headers.bankAccountId')
+    ];
+
+    const lines = rows.map(row => {
+      const typeLabelKey =
+        row.type === 'PAYABLE'
+          ? 'financial.transactions.type.payable'
+          : row.type === 'RECEIVABLE'
+          ? 'financial.transactions.type.receivable'
+          : row.type === 'TRANSFER'
+          ? 'financial.transactions.type.transfer'
+          : row.type === 'ADJUSTMENT'
+          ? 'financial.transactions.type.adjustment'
+          : '';
+
+      const typeLabel = typeLabelKey ? this.translate.instant(typeLabelKey) : '';
+
+      const amount =
+        typeof row.amount === 'number'
+          ? row.amount.toFixed(2)
+          : row.amount;
+
+      const dueDate = row.due_date
+        ? new Date(row.due_date).toISOString().split('T')[0]
+        : '';
+
+      const statusLabel = this.getStatusLabel(row.status);
+
+      const paidDate = row.paid_at
+        ? new Date(row.paid_at as any).toISOString().split('T')[0]
+        : '';
+
+      const paymentMethodRaw = (row as any).payment_method as string | undefined;
+      const paymentMethodLabelKey =
+        this.paymentMethods.find(m => m.value === paymentMethodRaw)?.labelKey || '';
+
+      const paymentMethodLabel =
+        (paymentMethodLabelKey && this.translate.instant(paymentMethodLabelKey)) ||
+        paymentMethodRaw ||
+        '';
+
+      const bankAccountId = (row as any).bank_account_id || '';
+
+      const values = [
+        row.id_code || '',
+        typeLabel,
+        (row as any).nf || '',
+        row.description || '',
+        amount || '',
+        dueDate,
+        statusLabel,
+        row.category || '',
+        row.cost_center || '',
+        paidDate,
+        paymentMethodLabel,
+        bankAccountId
+      ];
+
+      return values
+        .map(value => {
+          const str = value != null ? String(value) : '';
+          const escaped = str.replace(/"/g, '""');
+          return `"${escaped}"`;
+        })
+        .join(';');
+    });
+
+    const csvContent = [headers.join(';'), ...lines].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+
+    const storeCode = this.selectedStore?.id_code || 'empresa';
+    const timestamp = new Date().toISOString().split('T')[0];
+    const fileName = `lancamentos_${storeCode}_${timestamp}.csv`;
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    link.style.display = 'none';
+
+    document.body.appendChild(link);
+    link.click();
+
+    setTimeout(() => {
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }, 0);
+
+    this.toastService.triggerToast(
+      'success',
+      'Exportação iniciada',
+      'O arquivo CSV foi gerado com os lançamentos filtrados.'
+    );
   }
 
   // Pagination Logic
@@ -810,5 +1150,159 @@ export class LancamentosListComponent implements OnInit {
       pages.push(i);
     }
     return pages;
+  }
+
+  private clearEvidenceFiles() {
+    this.evidenceFiles.forEach(file => {
+      URL.revokeObjectURL(file.url);
+    });
+    this.evidenceFiles = [];
+  }
+
+  private extractTransactionIdFromResponse(response: any): string | null {
+    if (!response) {
+      return null;
+    }
+
+    const candidateFromData = response.data || response.transaction || response.item;
+
+    if (candidateFromData) {
+      if (typeof candidateFromData.id_code === 'string') {
+        return candidateFromData.id_code;
+      }
+      if (typeof candidateFromData.id === 'string') {
+        return candidateFromData.id;
+      }
+      if (typeof candidateFromData.id === 'number') {
+        return String(candidateFromData.id);
+      }
+    }
+
+    if (typeof response.id_code === 'string') {
+      return response.id_code;
+    }
+    if (typeof response.id === 'string') {
+      return response.id;
+    }
+    if (typeof response.id === 'number') {
+      return String(response.id);
+    }
+
+    return null;
+  }
+
+  private uploadEvidenceFilesForTransaction(transactionId: string) {
+    if (!this.selectedStore || !this.selectedStore.id_code) {
+      this.toastService.triggerToast(
+        'warning',
+        'Empresa não selecionada',
+        'É obrigatório selecionar uma empresa para anexar evidências ao lançamento.'
+      );
+      this.clearEvidenceFiles();
+      return;
+    }
+
+    if (!this.evidenceFiles.length) {
+      return;
+    }
+
+    const folder = `FINANCIAL/${this.selectedStore.id_code}`;
+
+    console.log('[FINANCIAL] Iniciando upload de evidências', {
+      transactionId,
+      folder,
+      files: this.evidenceFiles.map(f => f.name)
+    });
+
+    this.toastService.triggerToast(
+      'info',
+      '2/2 Enviando evidências',
+      'Estamos enviando as evidências deste lançamento. Não feche o navegador até concluir.'
+    );
+
+    const uploads$ = this.evidenceFiles.map(wrapper =>
+      this.uploadService.uploadImage(wrapper.file, {
+        folder,
+        type: 'financial-evidence',
+        entityId: transactionId
+      })
+    );
+
+    forkJoin(uploads$).subscribe({
+      next: (results) => {
+        console.log('[FINANCIAL] Resultado upload evidências', results);
+        const newAttachments = results
+          .filter(result => result.success && result.url)
+          .map(result => {
+            const url = result.url as string;
+            const filename =
+              result.filename ||
+              url.split('/').pop() ||
+              'Evidência';
+            return { url, filename };
+          });
+
+        this.clearEvidenceFiles();
+
+        if (!newAttachments.length) {
+          this.toastService.triggerToast(
+            'error',
+            'Erro no upload de evidências',
+            'Não foi possível enviar as evidências do lançamento.'
+          );
+          return;
+        }
+
+        const existingAttachments = this.existingEvidenceFiles.map(file => ({
+          url: file.url,
+          filename: file.name
+        }));
+
+        const merged = [...existingAttachments, ...newAttachments];
+        const byUrl = new Map<string, { url: string; filename: string }>();
+
+        merged.forEach(att => {
+          if (!att.url) {
+            return;
+          }
+          if (!byUrl.has(att.url)) {
+            byUrl.set(att.url, att);
+          }
+        });
+
+        const attachments = Array.from(byUrl.values());
+
+        this.financial.updateTransaction(transactionId, { attachments }).subscribe({
+          next: () => {
+            if (this.selectedStore?.id_code) {
+              this.loadTransactions();
+            }
+            this.toastService.triggerToast(
+              'success',
+              '2/2 Evidências anexadas',
+              'As evidências foram anexadas ao lançamento com sucesso.'
+            );
+          },
+          error: (err) => {
+            console.error('Erro ao atualizar lançamento com evidências', err);
+            const msg = err?.error?.message || err?.message || 'Erro ao atualizar o lançamento com as evidências enviadas.';
+            this.toastService.triggerToast(
+              'error',
+              'Erro ao salvar evidências',
+              msg
+            );
+          }
+        });
+      },
+      error: (error) => {
+        console.error('Erro no upload de evidências', error);
+        this.clearEvidenceFiles();
+        this.toastService.triggerToast(
+          'error',
+          'Erro no upload de evidências',
+          'Não foi possível enviar as evidências do lançamento.'
+        );
+      }
+    });
   }
 }

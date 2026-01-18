@@ -39,6 +39,13 @@ export class LancamentosFormComponent {
   onEvidenceFilesSelected(event: Event) {
     const input = event.target as HTMLInputElement;
     const files = input.files ? Array.from(input.files) : [];
-    this.evidenceFileNames = files.map(f => f.name);
+    const allowedExtensions = ['jpg', 'jpeg', 'pdf', 'txt', 'csv'];
+    const filtered = files.filter(file => {
+      const name = file.name || '';
+      const extension = name.includes('.') ? name.split('.').pop() || '' : '';
+      const normalizedExtension = extension.toLowerCase();
+      return allowedExtensions.includes(normalizedExtension);
+    });
+    this.evidenceFileNames = filtered.map(f => f.name);
   }
 }

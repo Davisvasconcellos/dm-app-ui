@@ -209,5 +209,159 @@
         }
       }
     }
+  },
+  "financial": {
+    "transactions": {
+      "title": "Financial Transactions",
+      "overview": {
+        "title": "Overview",
+        "toPay": "Payables",
+        "toReceive": "Receivables",
+        "paid": "Paid",
+        "received": "Received"
+      },
+      "type": {
+        "payable": "Payable",
+        "receivable": "Receivable",
+        "transfer": "Transfer",
+        "adjustment": "Adjustment"
+      },
+      "status": {
+        "pending": "Pending",
+        "approved": "Approved",
+        "scheduled": "Scheduled",
+        "paid": "Paid",
+        "overdue": "Overdue",
+        "canceled": "Canceled"
+      },
+      "form": {
+        "fields": {
+          "type": "Type",
+          "supplier": "Supplier",
+          "customer": "Customer",
+          "nf": "Invoice",
+          "costCenter": "Cost Center",
+          "category": "Category",
+          "description": "Description",
+          "amount": "Amount",
+          "dueDate": "Due date",
+          "receivedAt": "Received at",
+          "paidAt": "Paid at",
+          "paymentMethod": "Payment method",
+          "bankAccount": "Bank account"
+        },
+        "placeholders": {
+          "select": "Select...",
+          "description": "Ex: Supplier payment",
+          "amount": "0.00"
+        }
+      },
+      "formLabels": {
+        "isPaidReceived": "Mark as received",
+        "isPaidPaid": "Mark as paid"
+      },
+      "formPayment": {
+        "cash": "Cash",
+        "pix": "PIX",
+        "creditCard": "Credit card",
+        "debitCard": "Debit card",
+        "bankTransfer": "Bank transfer",
+        "billet": "Paid boleto"
+      },
+      "filters": {
+        "all": "All",
+        "unpaid": "Pending",
+        "paid": "Paid"
+      },
+      "table": {
+        "headers": {
+          "type": "Type",
+          "nf": "Invoice",
+          "description": "Description",
+          "amount": "Amount",
+          "dueDate": "Due date",
+          "status": "Status",
+          "category": "Category",
+          "costCenter": "Cost center",
+          "actions": "Actions"
+        },
+        "pagination": {
+          "show": "Show",
+          "entries": "entries"
+        },
+        "searchPlaceholder": "Search..."
+      },
+      "actions": {
+        "new": "New Transaction",
+        "newTitle": "New Transaction",
+        "edit": "Edit",
+        "editTitle": "Edit Transaction",
+        "pay": "Pay",
+        "payTitle": "Pay Transaction",
+        "cancel": "Cancel",
+        "cancelTitle": "Cancel Transaction",
+        "confirmCancel": "Confirm cancellation",
+        "delete": "Delete",
+        "confirmDelete": "Yes, delete",
+        "add": "Add",
+        "exportCsv": "Export CSV"
+      },
+      "offcanvas": {
+        "subtitle": "Transaction details",
+        "titleFallback": "Financial transaction",
+        "fields": {
+          "nf": "Invoice",
+          "amount": "Amount",
+          "dueDate": "Due date",
+          "category": "Category",
+          "costCenter": "Cost center"
+        }
+      },
+      "deleteModal": {
+        "title": "Confirm deletion",
+        "message": "Are you sure you want to delete this transaction? This action cannot be undone.",
+        "transactionLabel": "Transaction:"
+      },
+      "csv": {
+        "nothingToExportTitle": "Nothing to export",
+        "nothingToExportMessage": "No transactions found with the current filters.",
+        "headers": {
+          "id": "ID",
+          "type": "Type",
+          "nf": "Invoice",
+          "description": "Description",
+          "amount": "Amount",
+          "dueDate": "Due date",
+          "status": "Status",
+          "category": "Category",
+          "costCenter": "Cost center",
+          "paidAt": "Paid/Received at",
+          "paymentMethod": "Payment method",
+          "bankAccountId": "Bank account (ID)"
+        }
+      }
+    },
+    "evidence": {
+      "title": "Evidence",
+      "existingFiles": "Already attached files:",
+      "table": {
+        "name": "Name",
+        "actions": "Actions"
+      },
+      "actions": {
+        "view": "View"
+      },
+      "selectFiles": "Select files",
+      "allowedTypes": "Allowed formats: .jpg, .jpeg, .pdf, .txt and .csv.",
+      "selectedFiles": "Selected files:",
+      "noEvidence": "No evidence linked to this transaction.",
+      "warning": {
+        "fileLimit": "maximum limit of 5 files per transaction",
+        "fileSize": "maximum size of 2MB per file",
+        "fileType": "allowed types: .jpg, .jpeg, .pdf, .txt, .csv",
+        "ignoredFiles": "Some files were ignored: {{reasons}}.",
+        "andSeparator": " and "
+      }
+    }
   }
 }

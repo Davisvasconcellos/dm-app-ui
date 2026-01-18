@@ -1,7 +1,7 @@
 <div>
   <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
     <h2 class="text-title-md2 font-semibold text-black dark:text-white">
-      Lançamentos Financeiros
+      {{ 'financial.transactions.title' | translate }}
     </h2>
     <div class="flex items-center gap-4">
       <button
@@ -38,7 +38,7 @@
           <line x1="18" y1="6" x2="6" y2="18"></line>
           <line x1="6" y1="6" x2="18" y2="18"></line>
         </svg>
-        {{ isFormVisible ? 'Cancelar' : 'Novo Lançamento' }}
+        {{ isFormVisible ? ('financial.transactions.actions.cancel' | translate) : ('financial.transactions.actions.new' | translate) }}
       </button>
     </div>
   </div>
@@ -48,32 +48,32 @@
     <div class="mb-6 flex items-center justify-between">
       <div>
         <h2 class="font-semibold text-gray-800 dark:text-white/90">
-          Visão Geral
+          {{ 'financial.transactions.overview.title' | translate }}
         </h2>
       </div>
     </div>
     <div class="grid grid-cols-1 rounded-xl border border-gray-200 sm:grid-cols-2 lg:grid-cols-4 lg:divide-x lg:divide-y-0 dark:divide-gray-800 dark:border-gray-800">
       <div class="border-b p-5 sm:border-r lg:border-b-0">
         <p class="mb-1.5 text-sm text-gray-400 dark:text-gray-500">
-          A Pagar
+          {{ 'financial.transactions.overview.toPay' | translate }}
         </p>
         <h3 class="text-3xl text-gray-800 dark:text-white/90">{{ totalPayablePending | currency:'BRL' }}</h3>
       </div>
       <div class="border-b p-5 lg:border-b-0">
         <p class="mb-1.5 text-sm text-gray-400 dark:text-gray-500">
-          A Receber
+          {{ 'financial.transactions.overview.toReceive' | translate }}
         </p>
         <h3 class="text-3xl text-gray-800 dark:text-white/90">{{ totalReceivablePending | currency:'BRL' }}</h3>
       </div>
       <div class="border-b p-5 sm:border-r sm:border-b-0">
         <p class="mb-1.5 text-sm text-gray-400 dark:text-gray-500">
-          Pago
+          {{ 'financial.transactions.overview.paid' | translate }}
         </p>
         <h3 class="text-3xl text-gray-800 dark:text-white/90">{{ totalPayablePaid | currency:'BRL' }}</h3>
       </div>
       <div class="p-5">
         <p class="mb-1.5 text-sm text-gray-400 dark:text-gray-500">
-          Recebido
+          {{ 'financial.transactions.overview.received' | translate }}
         </p>
         <h3 class="text-3xl text-gray-800 dark:text-white/90">
           {{ totalReceivablePaid | currency:'BRL' }}
@@ -92,35 +92,37 @@
             *ngSwitchCase="'pay'"
             class="inline-block rounded-r-full bg-green-500 px-4 py-1.5 text-sm font-semibold text-white dark:bg-green-600"
           >
-            Pagar Lançamento
+            {{ 'financial.transactions.actions.payTitle' | translate }}
           </span>
           <span
             *ngSwitchCase="'edit'"
             class="inline-block rounded-r-full bg-blue-500 px-4 py-1.5 text-sm font-semibold text-white dark:bg-blue-600"
           >
-            Editar Lançamento
+            {{ 'financial.transactions.actions.editTitle' | translate }}
           </span>
           <span
             *ngSwitchCase="'cancel'"
             class="inline-block rounded-r-full bg-red-500 px-4 py-1.5 text-sm font-semibold text-white dark:bg-red-600"
           >
-            Cancelar Lançamento
+            {{ 'financial.transactions.actions.cancelTitle' | translate }}
           </span>
           <span
             *ngSwitchDefault
             class="inline-block rounded-r-full bg-brand-500 px-4 py-1.5 text-sm font-semibold text-white dark:bg-brand-600"
           >
-            Novo Lançamento
+            {{ 'financial.transactions.actions.newTitle' | translate }}
           </span>
         </ng-container>
       </h3>
       <form [formGroup]="transactionForm" (ngSubmit)="saveTransaction()">
         <div class="grid grid-cols-1 gap-4 md:grid-cols-6 items-end">
           <div class="md:col-span-2">
-            <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Tipo</label>
+            <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
+              {{ 'financial.transactions.form.fields.type' | translate }}
+            </label>
             <div class="relative z-20 bg-transparent">
               <select formControlName="type" class="w-full py-2 pl-3 pr-8 text-sm text-gray-800 bg-transparent border border-gray-300 rounded-lg appearance-none h-11 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 disabled:bg-brand-50 disabled:text-gray-700 disabled:cursor-not-allowed disabled:opacity-100 dark:disabled:bg-brand-500/15 dark:disabled:text-gray-100">
-                <option *ngFor="let t of transactionTypes" [value]="t.value">{{ t.label }}</option>
+                <option *ngFor="let t of transactionTypes" [value]="t.value">{{ t.labelKey | translate }}</option>
               </select>
               <span class="absolute z-30 text-gray-500 -translate-y-1/2 right-2 top-1/2 dark:text-gray-400">
                  <svg class="stroke-current" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3.8335 5.9165L8.00016 10.0832L12.1668 5.9165" stroke="" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
@@ -130,7 +132,11 @@
 
           <div class="md:col-span-2" *ngIf="transactionForm.get('type')?.value === 'PAYABLE' || transactionForm.get('type')?.value === 'RECEIVABLE'">
             <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
-              {{ transactionForm.get('type')?.value === 'PAYABLE' ? 'Fornecedor' : 'Cliente' }}
+              {{
+                transactionForm.get('type')?.value === 'PAYABLE'
+                  ? ('financial.transactions.form.fields.supplier' | translate)
+                  : ('financial.transactions.form.fields.customer' | translate)
+              }}
             </label>
             <div class="relative z-20 bg-transparent">
               <select formControlName="party_id" class="w-full py-2 pl-3 pr-8 text-sm text-gray-800 bg-transparent border border-gray-300 rounded-lg appearance-none h-11 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 disabled:bg-brand-50 disabled:text-gray-700 disabled:cursor-not-allowed disabled:opacity-100 dark:disabled:bg-brand-500/15 dark:disabled:text-gray-100">
@@ -144,7 +150,9 @@
           </div>
 
           <div class="md:col-span-2">
-            <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">NF</label>
+            <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
+              {{ 'financial.transactions.form.fields.nf' | translate }}
+            </label>
             <input
               type="text"
               formControlName="nf"
@@ -153,10 +161,12 @@
           </div>
 
           <div class="md:col-span-3">
-            <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Centro de Custo</label>
+            <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
+              {{ 'financial.transactions.form.fields.costCenter' | translate }}
+            </label>
             <div class="relative z-20 bg-transparent">
               <select formControlName="cost_center" class="w-full py-2 pl-3 pr-8 text-sm text-gray-800 bg-transparent border border-gray-300 rounded-lg appearance-none h-11 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 disabled:bg-brand-50 disabled:text-gray-700 disabled:cursor-not-allowed disabled:opacity-100 dark:disabled:bg-brand-500/15 dark:disabled:text-gray-100">
-                <option value="">Selecione...</option>
+                <option value="">{{ 'financial.transactions.form.placeholders.select' | translate }}</option>
                 <option *ngFor="let cc of costCenters" [value]="cc.name">{{ cc.name }}</option>
               </select>
               <span class="absolute z-30 text-gray-500 -translate-y-1/2 right-2 top-1/2 dark:text-gray-400">
@@ -166,10 +176,12 @@
           </div>
 
           <div class="md:col-span-3">
-            <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Categoria</label>
+            <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
+              {{ 'financial.transactions.form.fields.category' | translate }}
+            </label>
             <div class="relative z-20 bg-transparent">
               <select formControlName="category" class="w-full py-2 pl-3 pr-8 text-sm text-gray-800 bg-transparent border border-gray-300 rounded-lg appearance-none h-11 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 disabled:bg-brand-50 disabled:text-gray-700 disabled:cursor-not-allowed disabled:opacity-100 dark:disabled:bg-brand-500/15 dark:disabled:text-gray-100">
-                <option value="">Selecione...</option>
+                <option value="">{{ 'financial.transactions.form.placeholders.select' | translate }}</option>
                 <option *ngFor="let cat of categories" [value]="cat.name">{{ cat.name }}</option>
               </select>
               <span class="absolute z-30 text-gray-500 -translate-y-1/2 right-2 top-1/2 dark:text-gray-400">
@@ -179,19 +191,25 @@
           </div>
 
           <div class="md:col-span-6">
-            <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Descrição</label>
+            <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
+              {{ 'financial.transactions.form.fields.description' | translate }}
+            </label>
             <input type="text" formControlName="description" class="h-11 w-full rounded-lg border border-gray-300 bg-transparent py-2.5 px-4 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 disabled:bg-brand-50 disabled:text-gray-700 disabled:cursor-not-allowed disabled:opacity-100 dark:disabled:bg-brand-500/15 dark:disabled:text-gray-100"
-              placeholder="Ex: Pagamento fornecedor">
+              [placeholder]="'financial.transactions.form.placeholders.description' | translate">
           </div>
 
           <div class="md:col-span-2">
-            <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Valor</label>
+            <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
+              {{ 'financial.transactions.form.fields.amount' | translate }}
+            </label>
             <input type="number" formControlName="amount" class="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent py-2.5 px-4 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 disabled:bg-brand-50 disabled:text-gray-700 disabled:cursor-not-allowed disabled:opacity-100 dark:disabled:bg-brand-500/15 dark:disabled:text-gray-100"
-              placeholder="0,00" step="0.01" min="0">
+              [placeholder]="'financial.transactions.form.placeholders.amount' | translate" step="0.01" min="0">
           </div>
 
           <div class="md:col-span-2">
-            <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Vencimento</label>
+            <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
+              {{ 'financial.transactions.form.fields.dueDate' | translate }}
+            </label>
             <div class="relative">
               <input [matDatepicker]="picker" formControlName="due_date" (click)="picker.open()" class="h-11 w-full rounded-lg border border-gray-300 bg-transparent py-2.5 px-4 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 disabled:bg-brand-50 disabled:text-gray-700 disabled:cursor-not-allowed disabled:opacity-100 dark:disabled:bg-brand-500/15 dark:disabled:text-gray-100">
               <mat-datepicker-toggle matIconSuffix [for]="picker" class="absolute right-2 top-1/2 -translate-y-1/2"></mat-datepicker-toggle>
@@ -201,7 +219,11 @@
 
           <div class="md:col-span-2" *ngIf="transactionForm.get('is_paid')?.value">
             <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
-              {{ transactionForm.get('type')?.value === 'RECEIVABLE' ? 'Data Recebimento' : 'Data Pagamento' }}
+              {{
+                transactionForm.get('type')?.value === 'RECEIVABLE'
+                  ? ('financial.transactions.form.fields.receivedAt' | translate)
+                  : ('financial.transactions.form.fields.paidAt' | translate)
+              }}
             </label>
             <div class="relative">
               <input [matDatepicker]="pickerPaid" formControlName="paid_at" (click)="pickerPaid.open()" class="h-11 w-full rounded-lg border border-gray-300 bg-transparent py-2.5 px-4 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 disabled:bg-brand-50 disabled:text-gray-700 disabled:cursor-not-allowed disabled:opacity-100 dark:disabled:bg-brand-500/15 dark:disabled:text-gray-100">
@@ -211,11 +233,13 @@
           </div>
 
           <div class="md:col-span-3" *ngIf="transactionForm.get('is_paid')?.value">
-            <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Método de Pagamento</label>
+            <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
+              {{ 'financial.transactions.form.fields.paymentMethod' | translate }}
+            </label>
             <div class="relative z-20 bg-transparent">
               <select formControlName="payment_method" class="w-full py-2 pl-3 pr-8 text-sm text-gray-800 bg-transparent border border-gray-300 rounded-lg appearance-none h-11 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 disabled:bg-brand-50 disabled:text-gray-700 disabled:cursor-not-allowed disabled:opacity-100 dark:disabled:bg-brand-500/15 dark:disabled:text-gray-100">
-                <option value="">Selecione...</option>
-                <option *ngFor="let m of paymentMethods" [value]="m.value">{{ m.label }}</option>
+                <option value="">{{ 'financial.transactions.form.placeholders.select' | translate }}</option>
+                <option *ngFor="let m of paymentMethods" [value]="m.value">{{ m.labelKey | translate }}</option>
               </select>
               <span class="absolute z-30 text-gray-500 -translate-y-1/2 right-2 top-1/2 dark:text-gray-400">
                  <svg class="stroke-current" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3.8335 5.9165L8.00016 10.0832L12.1668 5.9165" stroke="" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" /></svg>
@@ -224,10 +248,12 @@
           </div>
 
           <div class="md:col-span-3" *ngIf="transactionForm.get('is_paid')?.value && paymentMethodRequiresBank">
-            <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Conta Bancária</label>
+            <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
+              {{ 'financial.transactions.form.fields.bankAccount' | translate }}
+            </label>
             <div class="relative z-20 bg-transparent">
               <select formControlName="bank_account_id" class="w-full py-2 pl-3 pr-8 text-sm text-gray-800 bg-transparent border border-gray-300 rounded-lg appearance-none h-11 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 disabled:bg-brand-50 disabled:text-gray-700 disabled:cursor-not-allowed disabled:opacity-100 dark:disabled:bg-brand-500/15 dark:disabled:text-gray-100">
-                <option value="">Selecione...</option>
+                <option value="">{{ 'financial.transactions.form.placeholders.select' | translate }}</option>
                 <option *ngFor="let acc of bankAccounts" [value]="acc.id">{{ acc.label }}</option>
               </select>
               <span class="absolute z-30 text-gray-500 -translate-y-1/2 right-2 top-1/2 dark:text-gray-400">
@@ -241,12 +267,24 @@
           <div class="flex items-center gap-2">
              <input type="checkbox" id="is_paid" formControlName="is_paid" class="w-4 h-4 text-brand-500 border-gray-300 rounded focus:ring-brand-500 dark:focus:ring-brand-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 disabled:bg-brand-50 disabled:border-brand-200 disabled:cursor-not-allowed disabled:opacity-70 dark:disabled:bg-brand-500/15 dark:disabled:border-brand-500">
              <label for="is_paid" class="text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer select-none">
-               Marcar como {{ transactionForm.get('type')?.value === 'RECEIVABLE' ? 'recebido' : 'pago' }}
+               {{
+                 transactionForm.get('type')?.value === 'RECEIVABLE'
+                   ? ('financial.transactions.form.markAsReceived' | translate)
+                   : ('financial.transactions.form.markAsPaid' | translate)
+               }}
              </label>
           </div>
 
           <button type="submit" [disabled]="transactionForm.invalid && formMode !== 'cancel'" class="flex items-center justify-center rounded-lg bg-brand-500 px-6 py-2 text-center text-sm font-medium text-white hover:bg-brand-600 focus:outline-none focus:ring-4 focus:ring-brand-500/50 disabled:opacity-50 disabled:cursor-not-allowed w-full md:w-auto">
-            {{ formMode === 'pay' ? 'Pagar' : (formMode === 'edit' ? 'Atualizar' : (formMode === 'cancel' ? 'Confirmar Cancelamento' : 'Adicionar')) }}
+            {{
+              formMode === 'pay'
+                ? ('financial.transactions.actions.pay' | translate)
+                : formMode === 'edit'
+                ? ('financial.transactions.actions.update' | translate)
+                : formMode === 'cancel'
+                ? ('financial.transactions.actions.confirmCancel' | translate)
+                : ('financial.transactions.actions.add' | translate)
+            }}
           </button>
         </div>
       </form>
@@ -254,18 +292,55 @@
 
     <!-- Card de upload -->
     <div class="rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
-      <h3 class="mb-4 text-lg font-semibold text-gray-800 dark:text-white/90">Evidências</h3>
+      <h3 class="mb-4 text-lg font-semibold text-gray-800 dark:text-white/90">
+        {{ 'financial.evidence.title' | translate }}
+      </h3>
+
+      <!-- Existing Files List -->
+      <div *ngIf="existingEvidenceFiles.length > 0" class="mb-6 w-full text-left">
+        <p class="mb-2 text-xs font-semibold text-gray-600 dark:text-gray-400">
+          {{ 'financial.evidence.existingFiles' | translate }}
+        </p>
+        <div class="rounded-lg border border-gray-200 bg-white text-xs dark:border-gray-800 dark:bg-gray-900">
+          <div class="grid grid-cols-[1fr_auto] items-center border-b border-gray-100 px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:border-gray-800 dark:text-gray-400">
+            <span>{{ 'financial.evidence.table.name' | translate }}</span>
+            <span class="text-right">{{ 'financial.evidence.table.actions' | translate }}</span>
+          </div>
+          <div class="max-h-40 overflow-y-auto">
+            <div *ngFor="let file of existingEvidenceFiles" class="grid grid-cols-[1fr_auto] items-center border-b border-gray-50 px-3 py-2 last:border-b-0 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors">
+              <span class="truncate text-gray-700 dark:text-gray-300 cursor-pointer hover:text-brand-500" (click)="viewEvidence(file)" title="{{ file.name }}">
+                {{ file.name }}
+              </span>
+              <div class="flex justify-end">
+                <button type="button" class="text-gray-400 hover:text-brand-500 p-1" (click)="viewEvidence(file)" [attr.title]="'financial.evidence.actions.view' | translate">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div class="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 px-4 py-6 text-center dark:border-gray-700 dark:bg-gray-900/40">
-        <input type="file" class="hidden" #evidenceInput (change)="onEvidenceFilesSelected($event)" multiple>
+        <input type="file" class="hidden" #evidenceInput (change)="onEvidenceFilesSelected($event)" multiple accept=".jpg,.jpeg,.pdf,.txt,.csv">
         <button type="button" class="inline-flex items-center justify-center rounded-md bg-brand-500 px-4 py-2 text-sm font-medium text-white hover:bg-brand-600" (click)="evidenceInput.click()">
-          Selecionar arquivos
+          {{ 'financial.evidence.selectFiles' | translate }}
         </button>
         <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
-          Formatos aceitos: PDF, imagens e outros documentos.
+          {{ 'financial.evidence.allowedTypes' | translate }}
         </p>
 
+        <div
+          *ngIf="evidenceWarningMessage"
+          class="mt-3 w-full rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-left text-xs text-amber-800 dark:border-amber-500/50 dark:bg-amber-900/30 dark:text-amber-100"
+        >
+          {{ evidenceWarningMessage }}
+        </div>
+
         <div *ngIf="evidenceFiles.length > 0" class="mt-4 w-full text-left">
-          <p class="mb-2 text-xs font-semibold text-gray-600 dark:text-gray-400">Arquivos selecionados:</p>
+          <p class="mb-2 text-xs font-semibold text-gray-600 dark:text-gray-400">
+            {{ 'financial.evidence.selectedFiles' | translate }}
+          </p>
           <div class="rounded-lg border border-gray-200 bg-white text-xs dark:border-gray-800 dark:bg-gray-900">
             <div class="grid grid-cols-[1fr_auto_auto] items-center border-b border-gray-100 px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:border-gray-800 dark:text-gray-400">
               <span>Nome</span>
@@ -300,7 +375,9 @@
   <div class="mt-0 rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
     <div class="flex flex-col gap-2 px-4 py-4 border-b border-gray-200 dark:border-gray-800 sm:flex-row sm:items-center sm:justify-between">
       <div class="flex items-center gap-3">
-        <span class="text-gray-500 dark:text-gray-400"> Show </span>
+        <span class="text-gray-500 dark:text-gray-400">
+          {{ 'financial.transactions.table.pagination.show' | translate }}
+        </span>
         <div class="relative z-20 bg-transparent">
           <select
             [(ngModel)]="itemsPerPage"
@@ -318,7 +395,9 @@
             </svg>
           </span>
         </div>
-        <span class="text-gray-500 dark:text-gray-400"> entries </span>
+        <span class="text-gray-500 dark:text-gray-400">
+          {{ 'financial.transactions.table.pagination.entries' | translate }}
+        </span>
       </div>
 
       <div class="flex flex-col sm:flex-row gap-3 items-center">
@@ -328,21 +407,21 @@
             (click)="onStatusFilterChange('all')"
             class="text-theme-sm h-10 rounded-md px-3 py-2 font-medium hover:text-gray-900 dark:hover:text-white"
             [ngClass]="{'shadow-theme-xs text-gray-900 dark:text-white bg-white dark:bg-gray-800': statusFilter === 'all', 'text-gray-500 dark:text-gray-400': statusFilter !== 'all'}">
-            Todos
+            {{ 'financial.transactions.filters.all' | translate }}
           </button>
           <button
             type="button"
             (click)="onStatusFilterChange('unpaid')"
             class="text-theme-sm h-10 rounded-md px-3 py-2 font-medium hover:text-gray-900 dark:hover:text-white"
             [ngClass]="{'shadow-theme-xs text-gray-900 dark:text-white bg-white dark:bg-gray-800': statusFilter === 'unpaid', 'text-gray-500 dark:text-gray-400': statusFilter !== 'unpaid'}">
-            Pendente
+            {{ 'financial.transactions.filters.unpaid' | translate }}
           </button>
           <button
             type="button"
             (click)="onStatusFilterChange('paid')"
             class="text-theme-sm h-10 rounded-md px-3 py-2 font-medium hover:text-gray-900 dark:hover:text-white"
             [ngClass]="{'shadow-theme-xs text-gray-900 dark:text-white bg-white dark:bg-gray-800': statusFilter === 'paid', 'text-gray-500 dark:text-gray-400': statusFilter !== 'paid'}">
-            Pago
+            {{ 'financial.transactions.filters.paid' | translate }}
           </button>
         </div>
         <div class="relative w-full sm:w-auto">
@@ -355,17 +434,18 @@
             type="text"
             [(ngModel)]="searchTerm"
             (ngModelChange)="onSearchChange()"
-            placeholder="Buscar..."
+            [placeholder]="'financial.transactions.table.searchPlaceholder' | translate"
             class="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent py-2.5 pl-11 pr-4 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800 xl:w-[300px]"
           />
         </div>
         <button
           type="button"
+          (click)="exportToCsv()"
           class="shadow-theme-xs flex w-full items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-[11px] text-sm font-medium text-gray-700 sm:w-auto dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
             <path d="M16.6671 13.3333V15.4166C16.6671 16.1069 16.1074 16.6666 15.4171 16.6666H4.58301C3.89265 16.6666 3.33301 16.1069 3.33301 15.4166V13.3333M10.0013 3.33325L10.0013 13.3333M6.14553 7.18708L9.99958 3.33549L13.8539 7.18708" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
           </svg>
-          Exportar
+          {{ 'financial.transactions.actions.exportCsv' | translate }}
         </button>
       </div>
     </div>
@@ -375,31 +455,49 @@
         <thead>
           <tr class="border-b border-gray-200 dark:divide-gray-800 dark:border-gray-800">
             <th class="p-4 text-left text-xs font-medium text-gray-700 dark:text-gray-400 cursor-pointer" (click)="handleSort('type')">
-              <span class="text-theme-xs font-medium text-gray-700 dark:text-gray-400">Tipo</span>
+              <span class="text-theme-xs font-medium text-gray-700 dark:text-gray-400">
+                {{ 'financial.transactions.table.headers.type' | translate }}
+              </span>
             </th>
             <th class="p-4 text-left text-xs font-medium text-gray-700 dark:text-gray-400 cursor-pointer" (click)="handleSort('nf')">
-              <span class="text-theme-xs font-medium text-gray-700 dark:text-gray-400">NF</span>
+              <span class="text-theme-xs font-medium text-gray-700 dark:text-gray-400">
+                {{ 'financial.transactions.table.headers.nf' | translate }}
+              </span>
             </th>
             <th class="p-4 text-left text-xs font-medium text-gray-700 dark:text-gray-400">
-              <span class="text-theme-xs font-medium text-gray-700 dark:text-gray-400">Descrição</span>
+              <span class="text-theme-xs font-medium text-gray-700 dark:text-gray-400">
+                {{ 'financial.transactions.table.headers.description' | translate }}
+              </span>
             </th>
             <th class="p-4 text-left text-xs font-medium text-gray-700 dark:text-gray-400 cursor-pointer" (click)="handleSort('amount')">
-              <span class="text-theme-xs font-medium text-gray-700 dark:text-gray-400">Valor</span>
+              <span class="text-theme-xs font-medium text-gray-700 dark:text-gray-400">
+                {{ 'financial.transactions.table.headers.amount' | translate }}
+              </span>
             </th>
             <th class="p-4 text-left text-xs font-medium text-gray-700 dark:text-gray-400 cursor-pointer" (click)="handleSort('due_date')">
-              <span class="text-theme-xs font-medium text-gray-700 dark:text-gray-400">Vencimento</span>
+              <span class="text-theme-xs font-medium text-gray-700 dark:text-gray-400">
+                {{ 'financial.transactions.table.headers.dueDate' | translate }}
+              </span>
             </th>
             <th class="p-4 text-left text-xs font-medium text-gray-700 dark:text-gray-400">
-              <span class="text-theme-xs font-medium text-gray-700 dark:text-gray-400">Status</span>
+              <span class="text-theme-xs font-medium text-gray-700 dark:text-gray-400">
+                {{ 'financial.transactions.table.headers.status' | translate }}
+              </span>
             </th>
             <th class="p-4 text-left text-xs font-medium text-gray-700 dark:text-gray-400">
-              <span class="text-theme-xs font-medium text-gray-700 dark:text-gray-400">Categoria</span>
+              <span class="text-theme-xs font-medium text-gray-700 dark:text-gray-400">
+                {{ 'financial.transactions.table.headers.category' | translate }}
+              </span>
             </th>
             <th class="p-4 text-left text-xs font-medium text-gray-700 dark:text-gray-400">
-              <span class="text-theme-xs font-medium text-gray-700 dark:text-gray-400">Centro de Custo</span>
+              <span class="text-theme-xs font-medium text-gray-700 dark:text-gray-400">
+                {{ 'financial.transactions.table.headers.costCenter' | translate }}
+              </span>
             </th>
             <th class="p-4 text-left text-xs font-medium text-gray-700 dark:text-gray-400">
-              <span class="sr-only">Ações</span>
+              <span class="sr-only">
+                {{ 'financial.transactions.table.headers.actions' | translate }}
+              </span>
             </th>
           </tr>
         </thead>
@@ -414,10 +512,17 @@
                 }"
                 class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
               >
-                {{ row.type === 'PAYABLE' ? 'Pagar' : 
-                   row.type === 'RECEIVABLE' ? 'Receber' :
-                   row.type === 'TRANSFER' ? 'Transferência' :
-                   row.type === 'ADJUSTMENT' ? 'Ajuste' : 'Pagar' }}
+                {{
+                  row.type === 'PAYABLE'
+                    ? ('financial.transactions.type.payable' | translate)
+                    : row.type === 'RECEIVABLE'
+                    ? ('financial.transactions.type.receivable' | translate)
+                    : row.type === 'TRANSFER'
+                    ? ('financial.transactions.type.transfer' | translate)
+                    : row.type === 'ADJUSTMENT'
+                    ? ('financial.transactions.type.adjustment' | translate)
+                    : ('financial.transactions.type.payable' | translate)
+                }}
               </span>
             </td>
             <td class="p-4 whitespace-nowrap">
@@ -502,7 +607,7 @@
                         (click)="onSelectRowAction($event, row, 'edit'); rowActionsPopover.close()"
                         class="flex w-full px-2 py-1.5 text-left text-xs font-medium text-gray-600 rounded-lg hover:bg-gray-100 hover:text-gray-800 dark:text-gray-300 dark:hover:bg-white/5 dark:hover:text-gray-100"
                       >
-                        Editar
+                        {{ 'financial.transactions.actions.edit' | translate }}
                       </button>
                       <button
                         *ngIf="canPay(row)"
@@ -510,7 +615,7 @@
                         (click)="onSelectRowAction($event, row, 'pay'); rowActionsPopover.close()"
                         class="flex w-full px-2 py-1.5 text-left text-xs font-medium text-gray-600 rounded-lg hover:bg-gray-100 hover:text-gray-800 dark:text-gray-300 dark:hover:bg-white/5 dark:hover:text-gray-100"
                       >
-                        Pagar
+                        {{ 'financial.transactions.actions.pay' | translate }}
                       </button>
                       <button
                         *ngIf="canCancel(row)"
@@ -518,7 +623,7 @@
                         (click)="onSelectRowAction($event, row, 'cancel'); rowActionsPopover.close()"
                         class="flex w-full px-2 py-1.5 text-left text-xs font-medium text-gray-600 rounded-lg hover:bg-gray-100 hover:text-gray-800 dark:text-gray-300 dark:hover:bg-white/5 dark:hover:text-gray-100"
                       >
-                        Cancelar
+                        {{ 'financial.transactions.actions.cancel' | translate }}
                       </button>
                       <button
                         *ngIf="canDelete(row)"
@@ -526,7 +631,7 @@
                         (click)="onSelectRowAction($event, row, 'delete'); rowActionsPopover.close()"
                         class="flex w-full px-2 py-1.5 text-left text-xs font-medium text-gray-600 rounded-lg hover:bg-gray-100 hover:text-gray-800 dark:text-gray-300 dark:hover:bg-white/5 dark:hover:text-gray-100"
                       >
-                        Excluir
+                        {{ 'financial.transactions.actions.delete' | translate }}
                       </button>
                     </div>
                   </ng-template>
@@ -609,10 +714,10 @@
     <div class="flex items-center justify-between border-b border-gray-200 px-5 py-4 dark:border-gray-800">
       <div>
         <p class="text-xs font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500">
-          Detalhes do Lançamento
+          {{ 'financial.transactions.offcanvas.subtitle' | translate }}
         </p>
         <h3 class="mt-1 text-base font-semibold text-gray-800 dark:text-white/90">
-          {{ selectedTransaction?.description || 'Lançamento financeiro' }}
+          {{ selectedTransaction?.description || ('financial.transactions.offcanvas.titleFallback' | translate) }}
         </h3>
       </div>
       <button
@@ -659,31 +764,41 @@
 
         <dl class="grid grid-cols-1 gap-y-2 text-sm text-gray-600 dark:text-gray-300">
           <div class="flex items-center justify-between gap-4">
-            <dt class="text-xs font-medium text-gray-500 dark:text-gray-400">NF</dt>
+            <dt class="text-xs font-medium text-gray-500 dark:text-gray-400">
+              {{ 'financial.transactions.offcanvas.fields.nf' | translate }}
+            </dt>
             <dd class="text-sm text-gray-800 dark:text-white/90 truncate max-w-[220px]">
               {{ selectedTransaction?.nf || '-' }}
             </dd>
           </div>
           <div class="flex items-center justify-between gap-4">
-            <dt class="text-xs font-medium text-gray-500 dark:text-gray-400">Valor</dt>
+            <dt class="text-xs font-medium text-gray-500 dark:text-gray-400">
+              {{ 'financial.transactions.offcanvas.fields.amount' | translate }}
+            </dt>
             <dd class="text-sm text-gray-800 dark:text-white/90">
               {{ selectedTransaction?.amount | currency:'BRL':'symbol':'1.2-2':'pt' }}
             </dd>
           </div>
           <div class="flex items-center justify-between gap-4">
-            <dt class="text-xs font-medium text-gray-500 dark:text-gray-400">Vencimento</dt>
+            <dt class="text-xs font-medium text-gray-500 dark:text-gray-400">
+              {{ 'financial.transactions.offcanvas.fields.dueDate' | translate }}
+            </dt>
             <dd class="text-sm text-gray-800 dark:text-white/90">
               {{ selectedTransaction?.due_date | date:'shortDate' }}
             </dd>
           </div>
           <div class="flex items-center justify-between gap-4">
-            <dt class="text-xs font-medium text-gray-500 dark:text-gray-400">Categoria</dt>
+            <dt class="text-xs font-medium text-gray-500 dark:text-gray-400">
+              {{ 'financial.transactions.offcanvas.fields.category' | translate }}
+            </dt>
             <dd class="text-sm text-gray-800 dark:text-white/90 truncate max-w-[220px]">
               {{ selectedTransaction?.category || '-' }}
             </dd>
           </div>
           <div class="flex items-center justify-between gap-4">
-            <dt class="text-xs font-medium text-gray-500 dark:text-gray-400">Centro de Custo</dt>
+            <dt class="text-xs font-medium text-gray-500 dark:text-gray-400">
+              {{ 'financial.transactions.offcanvas.fields.costCenter' | translate }}
+            </dt>
             <dd class="text-sm text-gray-800 dark:text-white/90 truncate max-w-[220px]">
               {{ selectedTransaction?.cost_center || '-' }}
             </dd>
@@ -694,7 +809,7 @@
       <div class="space-y-3">
         <div class="flex items-center justify-between">
           <h4 class="text-sm font-semibold text-gray-800 dark:text-white/90">
-            Evidências
+            {{ 'financial.evidence.title' | translate }}
           </h4>
         </div>
 
@@ -739,7 +854,7 @@
 
         <ng-template #noEvidence>
           <div class="rounded-lg border border-dashed border-gray-300 bg-gray-50 px-4 py-3 text-xs text-gray-500 dark:border-gray-700 dark:bg-gray-900/40 dark:text-gray-400">
-            Nenhuma evidência vinculada a este lançamento.
+            {{ 'financial.evidence.noEvidence' | translate }}
           </div>
         </ng-template>
       </div>
@@ -751,28 +866,77 @@
     (close)="closeDeleteModal()"
     className="max-w-[600px] p-5 lg:p-10"
   >
-    <h4 class="font-semibold text-gray-800 mb-3 text-title-sm dark:text-white/90">
-      Confirmar exclusão
-    </h4>
-    <p class="text-sm leading-6 text-gray-500 dark:text-gray-400">
-      Tem certeza que deseja excluir este lançamento? Essa ação não pode ser desfeita.
-    </p>
-    <p
-      *ngIf="transactionToDelete"
-      class="mt-4 text-sm text-gray-700 dark:text-gray-300"
-    >
-      <span class="font-medium">Lançamento:</span>
-      <span class="ml-1">
-        {{ transactionToDelete.description || transactionToDelete.id_code }}
-      </span>
-    </p>
-    <div class="flex items-center justify-end w-full gap-3 mt-8">
-      <app-button size="sm" variant="outline" (btnClick)="closeDeleteModal()">
-        Cancelar
-      </app-button>
-      <app-button size="sm" (btnClick)="confirmDelete()">
-        Excluir
-      </app-button>
+    <div class="text-center">
+      <div class="relative flex items-center justify-center z-1 mb-7">
+        <svg
+          class="fill-error-50 dark:fill-error-500/15"
+          width="90"
+          height="90"
+          viewBox="0 0 90 90"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M34.364 6.85053C38.6205 -2.28351 51.3795 -2.28351 55.636 6.85053C58.0129 11.951 63.5594 14.6722 68.9556 13.3853C78.6192 11.0807 86.5743 21.2433 82.2185 30.3287C79.7862 35.402 81.1561 41.5165 85.5082 45.0122C93.3019 51.2725 90.4628 63.9451 80.7747 66.1403C75.3648 67.3661 71.5265 72.2695 71.5572 77.9156C71.6123 88.0265 60.1169 93.6664 52.3918 87.3184C48.0781 83.7737 41.9219 83.7737 37.6082 87.3184C29.8831 93.6664 18.3877 88.0266 18.4428 77.9156C18.4735 72.2695 14.6352 67.3661 9.22531 66.1403C-0.462787 63.9451 -3.30193 51.2725 4.49185 45.0122C8.84391 41.5165 10.2138 35.402 7.78151 30.3287C3.42572 21.2433 11.3808 11.0807 21.0444 13.3853C26.4406 14.6722 31.9871 11.951 34.364 6.85053Z"
+            fill=""
+            fill-opacity=""
+          />
+        </svg>
+
+        <span
+          class="absolute -translate-x-1/2 -translate-y-1/2 left-1/2 top-1/2"
+        >
+          <svg
+            class="fill-error-600 dark:fill-error-500"
+            width="38"
+            height="38"
+            viewBox="0 0 38 38"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              fill-rule="evenodd"
+              clip-rule="evenodd"
+              d="M9.62684 11.7496C9.04105 11.1638 9.04105 10.2141 9.62684 9.6283C10.2126 9.04252 11.1624 9.04252 11.7482 9.6283L18.9985 16.8786L26.2485 9.62851C26.8343 9.04273 27.7841 9.04273 28.3699 9.62851C28.9556 10.2143 28.9556 11.164 28.3699 11.7498L21.1198 18.9999L28.3699 26.25C28.9556 26.8358 28.9556 27.7855 28.3699 28.3713C27.7841 28.9571 26.8343 28.9571 26.2485 28.3713L18.9985 21.1212L11.7482 28.3715C11.1624 28.9573 10.2126 28.9573 9.62684 28.3715C9.04105 27.7857 9.04105 26.836 9.62684 26.2502L16.8771 18.9999L9.62684 11.7496Z"
+              fill=""
+            />
+          </svg>
+        </span>
+      </div>
+
+      <h4 class="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90 sm:text-title-sm">
+        {{ 'financial.transactions.deleteModal.title' | translate }}
+      </h4>
+      <p class="text-sm leading-6 text-gray-500 dark:text-gray-400">
+        {{ 'financial.transactions.deleteModal.message' | translate }}
+      </p>
+      <p
+        *ngIf="transactionToDelete"
+        class="mt-4 text-sm text-gray-700 dark:text-gray-300"
+      >
+        <span class="font-medium">
+          {{ 'financial.transactions.deleteModal.transactionLabel' | translate }}
+        </span>
+        <span class="ml-1">
+          {{ transactionToDelete.description || transactionToDelete.id_code }}
+        </span>
+      </p>
+      <div class="flex items-center justify-center w-full gap-3 mt-7">
+        <button
+          type="button"
+          class="flex justify-center w-full px-4 py-3 text-sm font-medium text-gray-700 rounded-lg bg-white ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:ring-gray-700 dark:hover:bg-white/[0.03] sm:w-auto"
+          (click)="closeDeleteModal()"
+        >
+          {{ 'financial.transactions.actions.cancel' | translate }}
+        </button>
+        <button
+          type="button"
+          class="flex justify-center w-full px-4 py-3 text-sm font-medium text-white rounded-lg bg-error-500 shadow-theme-xs hover:bg-error-600 sm:w-auto"
+          (click)="confirmDelete()"
+        >
+          {{ 'financial.transactions.actions.confirmDelete' | translate }}
+        </button>
+      </div>
     </div>
   </app-modal>
 </div>
