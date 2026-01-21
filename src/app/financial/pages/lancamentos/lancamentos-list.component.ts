@@ -9,10 +9,13 @@ import { LocalStorageService } from '../../../shared/services/local-storage.serv
 import { Store } from '../../../pages/pub/admin/home-admin/store.service';
 import { PopoverComponent } from '../../../shared/components/ui/popover/popover/popover.component';
 import { ModalComponent } from '../../../shared/components/ui/modal/modal.component';
+import { MultiSelectComponent, Option } from '../../../shared/components/form/multi-select/multi-select.component';
+import { SelectComponent } from '../../../shared/components/form/select/select.component';
 import { UploadService } from '../../../services/upload.service';
 import { forkJoin } from 'rxjs';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
+import { Party } from '../../models/party';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -32,7 +35,9 @@ import { MatInputModule } from '@angular/material/input';
     MatFormFieldModule,
     MatInputModule,
     PopoverComponent,
-    ModalComponent
+    ModalComponent,
+    MultiSelectComponent,
+    SelectComponent
   ],
   templateUrl: './lancamentos-list.component.html',
 })
@@ -54,17 +59,18 @@ export class LancamentosListComponent implements OnInit {
     { value: 'bank_transfer', labelKey: 'financial.transactions.form.payment.bankTransfer', requiresBankAccount: true },
     { value: 'boleto', labelKey: 'financial.transactions.form.payment.billet', requiresBankAccount: true }
   ];
-  bankAccounts = [
-    { id: 'acc-bb', label: 'Banco do Brasil • Ag 1234-5 • CC 99999-9' },
-    { id: 'acc-nb', label: 'Nubank • Ag 0001 • CC 123456-7' }
-  ];
+  bankAccounts: any[] = [];
+  selectedBankAccountBalance: number | null = null;
   
   // Data Sources
   suppliers: any[] = [];
   customers: any[] = [];
+  allParties: any[] = []; // Store all parties for flexible filtering
   entities: any[] = []; // Dynamic list based on type
   costCenters: any[] = [];
   categories: any[] = [];
+  tags: any[] = [];
+  tagOptions: Option[] = [];
   
   allData: ContaPagar[] = [];
   paginatedData: ContaPagar[] = [];
@@ -79,8 +85,22 @@ export class LancamentosListComponent implements OnInit {
   
   searchTerm: string = '';
 
-  // Filtros inspirados em /invoices: Todos | Não pagos | Pagos
+  // Filtros
+  typeFilter: 'all' | 'PAYABLE' | 'RECEIVABLE' = 'all';
   statusFilter: 'all' | 'unpaid' | 'paid' = 'all';
+  tagFilter: string[] = [];
+
+  typeOptions = [
+    { value: 'all', label: 'Todos' },
+    { value: 'PAYABLE', label: 'A Pagar' },
+    { value: 'RECEIVABLE', label: 'A Receber' }
+  ];
+
+  statusOptions = [
+    { value: 'all', label: 'Todos' },
+    { value: 'paid', label: 'Pago' },
+    { value: 'unpaid', label: 'Pendente' }
+  ];
 
   evidenceFiles: { name: string; url: string; file: File }[] = [];
   existingEvidenceFiles: { name: string; url: string; type: 'image' | 'pdf' | 'file' }[] = [];
@@ -200,6 +220,9 @@ export class LancamentosListComponent implements OnInit {
         const rows = result.transactions || [];
         this.allData = this.normalizeRows(rows);
         this.summary = result.summary || null;
+
+        // Load bank accounts
+        this.loadBankAccounts();
         
         // Atualiza paginação com os dados carregados
         this.updatePagination();
@@ -215,6 +238,33 @@ export class LancamentosListComponent implements OnInit {
     });
   }
 
+  private loadBankAccounts() {
+    if (this.selectedStore && this.selectedStore.id_code) {
+      this.financial.getBankAccounts(this.selectedStore.id_code).subscribe({
+        next: (bankAccounts) => {
+          this.bankAccounts = bankAccounts.map(account => ({
+            id: account.id_code,
+            label: `${account.bank_name} • Ag ${account.agency} • CC ${account.account_number}`,
+            balance: account.current_balance !== undefined ? account.current_balance : (account.balance !== undefined ? account.balance : parseFloat(account.initial_balance))
+          }));
+          
+          // Update balance if there's a selected account (e.g. during edit)
+          const currentId = this.transactionForm.get('bank_account_id')?.value;
+          if (currentId) {
+            const account = this.bankAccounts.find(a => a.id === currentId);
+            this.selectedBankAccountBalance = account ? account.balance : null;
+          }
+
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          console.error('Erro ao buscar contas bancárias', err);
+          this.toastService.triggerToast('error', 'Erro', 'Erro ao buscar contas bancárias.');
+        }
+      });
+    }
+  }
+
   initForm() {
     this.transactionForm = this.fb.group({
       type: ['PAYABLE', Validators.required],
@@ -226,6 +276,7 @@ export class LancamentosListComponent implements OnInit {
       party_id: [''],
       cost_center: [''],
       category: [''],
+      tag: [[]],
       is_paid: [false],
       status: ['pending'],
       payment_method: [null],
@@ -279,6 +330,33 @@ export class LancamentosListComponent implements OnInit {
         bankAccountControl?.setValue(null);
       }
       bankAccountControl?.updateValueAndValidity();
+    });
+
+    this.transactionForm.get('bank_account_id')?.valueChanges.subscribe(id => {
+      const account = this.bankAccounts.find(a => a.id === id);
+      this.selectedBankAccountBalance = account ? (account.balance !== undefined ? account.balance : null) : null;
+    });
+  }
+
+  private loadParties() {
+    if (!this.selectedStore?.id_code) return;
+
+    this.financial.getParties(this.selectedStore.id_code).subscribe({
+      next: (parties) => {
+        this.allParties = parties;
+        this.suppliers = parties.filter(p => p.is_supplier);
+        this.customers = parties.filter(p => p.is_customer);
+        
+        // Update entities list if a type is already selected
+        const currentType = this.transactionForm.get('type')?.value;
+        if (currentType) {
+          this.updateEntitiesList(currentType, false);
+        }
+      },
+      error: (err) => {
+        console.error('Error loading parties', err);
+        this.toastService.triggerToast('error', 'Erro', 'Erro ao carregar lista de parceiros.');
+      }
     });
   }
 
@@ -403,6 +481,7 @@ export class LancamentosListComponent implements OnInit {
         party_id: '',
         cost_center: '',
         category: '',
+        tag: [],
         is_paid: false,
         status: 'pending',
         payment_method: null,
@@ -414,16 +493,25 @@ export class LancamentosListComponent implements OnInit {
     }
   }
 
-  updateEntitiesList(type: string) {
+  updateEntitiesList(type: string, shouldClear: boolean = true) {
     if (type === 'PAYABLE') {
-      this.entities = this.suppliers.map(s => ({ id: s.id_code, name: s.name }));
+      // For payments, we can pay Suppliers, Employees, or Salespersons
+      this.entities = this.allParties
+        .filter(p => p.is_supplier || p.is_employee || p.is_salesperson)
+        .map(p => ({ id: p.id_code, name: p.name }));
     } else if (type === 'RECEIVABLE') {
-      this.entities = this.customers.map(c => ({ id: c.id_code, name: c.name }));
+      // For receivables, typically Customers
+      this.entities = this.allParties
+        .filter(p => p.is_customer)
+        .map(p => ({ id: p.id_code, name: p.name }));
     } else {
       this.entities = [];
     }
-    // Clear entity selection when type changes
-    this.transactionForm.patchValue({ party_id: '' });
+    
+    if (shouldClear) {
+      // Clear entity selection when type changes
+      this.transactionForm.patchValue({ party_id: '' });
+    }
   }
 
   onEvidenceFilesSelected(event: Event) {
@@ -614,6 +702,19 @@ export class LancamentosListComponent implements OnInit {
     const dueDateValue = row.due_date ? new Date(row.due_date) : new Date();
     const paidAtValue = isPaid && row.paid_at ? new Date(row.paid_at as any) : null;
 
+    let tagsValue: string[] = [];
+    const rawTags = (row.tags || (row as any).tags) as any[];
+
+    if (rawTags && Array.isArray(rawTags)) {
+      if (rawTags.length > 0 && typeof rawTags[0] === 'object') {
+        tagsValue = rawTags.map((t: any) => t.id || t.id_code || t.name);
+      } else {
+        tagsValue = rawTags as string[];
+      }
+    } else if (row.tag) {
+      tagsValue = [row.tag];
+    }
+
     this.transactionForm.patchValue({
       type: row.type || 'PAYABLE',
       nf: raw.nf || '',
@@ -622,8 +723,9 @@ export class LancamentosListComponent implements OnInit {
       due_date: dueDateValue,
       paid_at: paidAtValue,
       party_id: raw.party_id || row.vendor_id || '',
-      cost_center: row.cost_center || '',
-      category: row.category || '',
+      cost_center: row.cost_center_id || row.cost_center_data?.id || '',
+      category: row.category_id || row.category_data?.id || '',
+      tag: tagsValue,
       is_paid: isPaid,
       status: isPaid ? 'paid' : (row.status || 'pending'),
       payment_method: isPaid ? raw.payment_method || null : null,
@@ -631,7 +733,7 @@ export class LancamentosListComponent implements OnInit {
       attachment_url: row.attachment_url || ''
     });
 
-    this.updateEntitiesList(this.transactionForm.get('type')?.value || 'PAYABLE');
+    this.updateEntitiesList(this.transactionForm.get('type')?.value || 'PAYABLE', false);
 
     const attachments = this.getRowAttachments(row);
     this.existingEvidenceFiles = attachments.map(att => {
@@ -652,6 +754,7 @@ export class LancamentosListComponent implements OnInit {
         'party_id',
         'cost_center',
         'category',
+        'tag',
         'status',
         'attachment_url'
       ];
@@ -737,8 +840,11 @@ export class LancamentosListComponent implements OnInit {
 
       if (formValue.nf) payload.nf = formValue.nf;
       if (formValue.party_id) payload.party_id = formValue.party_id;
-      if (formValue.cost_center) payload.cost_center = formValue.cost_center;
-      if (formValue.category) payload.category = formValue.category;
+      if (formValue.cost_center) payload.cost_center_id = formValue.cost_center;
+      if (formValue.category) payload.category_id = formValue.category;
+      if (formValue.tag && Array.isArray(formValue.tag) && formValue.tag.length > 0) {
+        payload.tags = formValue.tag;
+      }
       if (formValue.attachment_url) payload.attachment_url = formValue.attachment_url;
 
       if (formValue.is_paid) {
@@ -861,37 +967,57 @@ export class LancamentosListComponent implements OnInit {
     }
 
     // Load dependencies
-    this.financial.getFornecedores().subscribe(data => {
-      this.suppliers = data;
-      this.updateEntitiesList(this.transactionForm.get('type')?.value || 'PAYABLE');
-    });
+    this.loadParties();
 
-    this.financial.getClientes().subscribe(data => {
-      this.customers = data;
-      // Re-update if type is RECEIVABLE (unlikely on init but good practice)
-      const currentType = this.transactionForm.get('type')?.value;
-      if (currentType === 'RECEIVABLE') {
-        this.updateEntitiesList(currentType);
-      }
-    });
+    if (this.selectedStore?.id_code) {
+      this.financial.getCategorias(this.selectedStore.id_code).subscribe(data => {
+        this.categories = data;
+      });
 
-    this.financial.getCategorias().subscribe(data => {
-      this.categories = data;
-    });
+      this.financial.getCentrosDeCusto(this.selectedStore.id_code).subscribe(data => {
+        this.costCenters = data;
+      });
 
-    this.financial.getCentrosDeCusto().subscribe(data => {
-      this.costCenters = data;
-    });
+      this.financial.getTags(this.selectedStore.id_code).subscribe(data => {
+        this.tags = data;
+        this.tagOptions = data.map(t => ({ value: t.id || t.id_code || t.name, text: t.name }));
+      });
+    } else {
+      // Fallback or empty if no store
+      this.categories = [];
+      this.costCenters = [];
+      this.tags = [];
+      this.tagOptions = [];
+    }
+  }
+
+  handleTagSelection(selectedTags: string[]) {
+    this.transactionForm.patchValue({ tag: selectedTags });
   }
 
   // Search + filtros
   get filteredData() {
     let data = this.allData;
 
+    // Filter by Type
+    if (this.typeFilter !== 'all') {
+      data = data.filter(item => item.type === this.typeFilter);
+    }
+
+    // Filter by Status
     if (this.statusFilter === 'paid') {
       data = data.filter(item => item.status === 'paid');
     } else if (this.statusFilter === 'unpaid') {
       data = data.filter(item => item.status !== 'paid' && item.status !== 'canceled');
+    }
+
+    // Filter by Tags
+    if (this.tagFilter.length > 0) {
+      data = data.filter(item => {
+        if (!item.tags || item.tags.length === 0) return false;
+        // Check if item has ANY of the selected tags (OR logic)
+        return item.tags.some(t => this.tagFilter.includes(t.id));
+      });
     }
 
     if (this.searchTerm) {
@@ -901,7 +1027,9 @@ export class LancamentosListComponent implements OnInit {
         (item.vendor_id && item.vendor_id.toLowerCase().includes(lowerTerm)) ||
         (item.description && item.description.toLowerCase().includes(lowerTerm)) ||
         (item.nf && item.nf.toLowerCase().includes(lowerTerm)) ||
+        (item.category_data?.name && item.category_data.name.toLowerCase().includes(lowerTerm)) ||
         (item.category && item.category.toLowerCase().includes(lowerTerm)) ||
+        (item.cost_center_data?.name && item.cost_center_data.name.toLowerCase().includes(lowerTerm)) ||
         (item.cost_center && item.cost_center.toLowerCase().includes(lowerTerm)) ||
         (item.id_code && item.id_code.toLowerCase().includes(lowerTerm))
       );
@@ -1020,8 +1148,8 @@ export class LancamentosListComponent implements OnInit {
         amount || '',
         dueDate,
         statusLabel,
-        row.category || '',
-        row.cost_center || '',
+        row.category_data?.name || row.category || '',
+        row.cost_center_data?.name || row.cost_center || '',
         paidDate,
         paymentMethodLabel,
         bankAccountId
@@ -1103,8 +1231,20 @@ export class LancamentosListComponent implements OnInit {
     this.updatePagination();
   }
 
-  onStatusFilterChange(status: 'all' | 'unpaid' | 'paid') {
-    this.statusFilter = status;
+  onTypeFilterChange(value: string) {
+    this.typeFilter = value as any;
+    this.currentPage = 1;
+    this.updatePagination();
+  }
+
+  onStatusFilterChange(value: string) {
+    this.statusFilter = value as any;
+    this.currentPage = 1;
+    this.updatePagination();
+  }
+
+  onTagFilterChange(selectedTags: string[]) {
+    this.tagFilter = selectedTags;
     this.currentPage = 1;
     this.updatePagination();
   }

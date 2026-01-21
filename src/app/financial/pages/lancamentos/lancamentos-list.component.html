@@ -1,7 +1,11 @@
 <div>
   <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-    <h2 class="text-title-md2 font-semibold text-black dark:text-white">
-      {{ 'financial.transactions.title' | translate }}
+    <h2 class="text-title-md2 font-semibold text-black dark:text-white flex flex-col sm:flex-row sm:items-center gap-2">
+      <span *ngIf="selectedStore">{{ selectedStore.name }}</span>
+      <span *ngIf="selectedStore" class="hidden sm:inline text-gray-400 font-normal">|</span>
+      <span [class.text-lg]="selectedStore" [class.text-gray-500]="selectedStore" [class.font-normal]="selectedStore">
+        {{ 'financial.transactions.title' | translate }}
+      </span>
     </h2>
     <div class="flex items-center gap-4">
       <button
@@ -140,7 +144,7 @@
             </label>
             <div class="relative z-20 bg-transparent">
               <select formControlName="party_id" class="w-full py-2 pl-3 pr-8 text-sm text-gray-800 bg-transparent border border-gray-300 rounded-lg appearance-none h-11 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 disabled:bg-brand-50 disabled:text-gray-700 disabled:cursor-not-allowed disabled:opacity-100 dark:disabled:bg-brand-500/15 dark:disabled:text-gray-100">
-                <option value="">Selecione...</option>
+                <option value="">{{ 'financial.transactions.form.placeholders.select' | translate }}</option>
                 <option *ngFor="let e of entities" [value]="e.id">{{ e.name }}</option>
               </select>
               <span class="absolute z-30 text-gray-500 -translate-y-1/2 right-2 top-1/2 dark:text-gray-400">
@@ -167,7 +171,7 @@
             <div class="relative z-20 bg-transparent">
               <select formControlName="cost_center" class="w-full py-2 pl-3 pr-8 text-sm text-gray-800 bg-transparent border border-gray-300 rounded-lg appearance-none h-11 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 disabled:bg-brand-50 disabled:text-gray-700 disabled:cursor-not-allowed disabled:opacity-100 dark:disabled:bg-brand-500/15 dark:disabled:text-gray-100">
                 <option value="">{{ 'financial.transactions.form.placeholders.select' | translate }}</option>
-                <option *ngFor="let cc of costCenters" [value]="cc.name">{{ cc.name }}</option>
+                <option *ngFor="let cc of costCenters" [value]="cc.id_code">{{ cc.name }}</option>
               </select>
               <span class="absolute z-30 text-gray-500 -translate-y-1/2 right-2 top-1/2 dark:text-gray-400">
                  <svg class="stroke-current" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3.8335 5.9165L8.00016 10.0832L12.1668 5.9165" stroke="" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
@@ -182,12 +186,23 @@
             <div class="relative z-20 bg-transparent">
               <select formControlName="category" class="w-full py-2 pl-3 pr-8 text-sm text-gray-800 bg-transparent border border-gray-300 rounded-lg appearance-none h-11 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 disabled:bg-brand-50 disabled:text-gray-700 disabled:cursor-not-allowed disabled:opacity-100 dark:disabled:bg-brand-500/15 dark:disabled:text-gray-100">
                 <option value="">{{ 'financial.transactions.form.placeholders.select' | translate }}</option>
-                <option *ngFor="let cat of categories" [value]="cat.name">{{ cat.name }}</option>
+                <option *ngFor="let cat of categories" [value]="cat.id_code">{{ cat.name }}</option>
               </select>
               <span class="absolute z-30 text-gray-500 -translate-y-1/2 right-2 top-1/2 dark:text-gray-400">
                  <svg class="stroke-current" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3.8335 5.9165L8.00016 10.0832L12.1668 5.9165" stroke="" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
               </span>
             </div>
+          </div>
+
+          <div class="md:col-span-6">
+            <app-multi-select
+              label="Tag"
+              [placeholder]="'financial.transactions.form.placeholders.select' | translate"
+              [options]="tagOptions"
+              [defaultSelected]="transactionForm.get('tag')?.value"
+              [disabled]="transactionForm.get('tag')?.disabled || false"
+              (selectionChange)="handleTagSelection($event)">
+            </app-multi-select>
           </div>
 
           <div class="md:col-span-6">
@@ -269,23 +284,41 @@
              <label for="is_paid" class="text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer select-none">
                {{
                  transactionForm.get('type')?.value === 'RECEIVABLE'
-                   ? ('financial.transactions.form.markAsReceived' | translate)
-                   : ('financial.transactions.form.markAsPaid' | translate)
+                   ? ('financial.transactions.formLabels.isPaidReceived' | translate)
+                   : ('financial.transactions.formLabels.isPaidPaid' | translate)
                }}
              </label>
           </div>
 
-          <button type="submit" [disabled]="transactionForm.invalid && formMode !== 'cancel'" class="flex items-center justify-center rounded-lg bg-brand-500 px-6 py-2 text-center text-sm font-medium text-white hover:bg-brand-600 focus:outline-none focus:ring-4 focus:ring-brand-500/50 disabled:opacity-50 disabled:cursor-not-allowed w-full md:w-auto">
-            {{
-              formMode === 'pay'
-                ? ('financial.transactions.actions.pay' | translate)
-                : formMode === 'edit'
-                ? ('financial.transactions.actions.update' | translate)
-                : formMode === 'cancel'
-                ? ('financial.transactions.actions.confirmCancel' | translate)
-                : ('financial.transactions.actions.add' | translate)
-            }}
-          </button>
+          <div class="flex items-center gap-4 w-full md:w-auto justify-end">
+            <div *ngIf="transactionForm.get('is_paid')?.value && paymentMethodRequiresBank && transactionForm.get('bank_account_id')?.value" class="flex items-center gap-2 text-xs">
+              <span class="text-gray-500 dark:text-gray-400">{{ 'financial.bankAccount.table.balance' | translate }}:</span>
+              <span
+                class="inline-flex items-center rounded-md px-2 py-1 font-medium ring-1 ring-inset"
+                [ngClass]="{
+                  'bg-green-50 text-green-700 ring-green-600/20 dark:bg-green-500/10 dark:text-green-400 dark:ring-green-500/20': (selectedBankAccountBalance || 0) >= 0,
+                  'bg-red-50 text-red-700 ring-red-600/20 dark:bg-red-500/10 dark:text-red-400 dark:ring-red-500/20': (selectedBankAccountBalance || 0) < 0
+                }"
+              >
+                <ng-container *ngIf="selectedBankAccountBalance !== null; else waitingBalance">
+                  {{ selectedBankAccountBalance | currency:'BRL' }}
+                </ng-container>
+                <ng-template #waitingBalance>XXX</ng-template>
+              </span>
+            </div>
+
+            <button type="submit" [disabled]="transactionForm.invalid && formMode !== 'cancel'" class="flex items-center justify-center rounded-lg bg-brand-500 px-6 py-2 text-center text-sm font-medium text-white hover:bg-brand-600 focus:outline-none focus:ring-4 focus:ring-brand-500/50 disabled:opacity-50 disabled:cursor-not-allowed w-full md:w-auto">
+              {{
+                formMode === 'pay'
+                  ? ('financial.transactions.actions.pay' | translate)
+                  : formMode === 'edit'
+                  ? ('financial.transactions.actions.update' | translate)
+                  : formMode === 'cancel'
+                  ? ('financial.transactions.actions.confirmCancel' | translate)
+                  : ('financial.transactions.actions.add' | translate)
+              }}
+            </button>
+          </div>
         </div>
       </form>
     </div>
@@ -373,6 +406,38 @@
 
   <!-- Card da tabela -->
   <div class="mt-0 rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+    <!-- Filters Section -->
+    <div class="px-4 py-4 border-b border-gray-200 dark:border-gray-800">
+      <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:flex-wrap">
+        <!-- Type Filter -->
+        <div class="w-full sm:w-48">
+          <label class="mb-1.5 block text-xs font-medium text-gray-700 dark:text-gray-400">
+            Tipo
+          </label>
+          <app-select
+            [options]="typeOptions"
+            [value]="typeFilter"
+            (valueChange)="onTypeFilterChange($event)"
+            placeholder="Todos"
+          ></app-select>
+        </div>
+
+        <!-- Tag Filter -->
+        <div class="w-full sm:w-64">
+          <label class="mb-1.5 block text-xs font-medium text-gray-700 dark:text-gray-400">
+            Tags
+          </label>
+          <app-multi-select
+            [options]="tagOptions"
+            [defaultSelected]="tagFilter"
+            (selectionChange)="onTagFilterChange($event)"
+            placeholder="Filtrar por tags"
+          ></app-multi-select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Search, Pagination and Export -->
     <div class="flex flex-col gap-2 px-4 py-4 border-b border-gray-200 dark:border-gray-800 sm:flex-row sm:items-center sm:justify-between">
       <div class="flex items-center gap-3">
         <span class="text-gray-500 dark:text-gray-400">
@@ -401,6 +466,7 @@
       </div>
 
       <div class="flex flex-col sm:flex-row gap-3 items-center">
+        <!-- Status Filter (Switch Style) -->
         <div class="inline-flex h-11 items-center gap-0.5 rounded-lg bg-gray-100 p-0.5 dark:bg-gray-900">
           <button
             type="button"
@@ -424,6 +490,8 @@
             {{ 'financial.transactions.filters.paid' | translate }}
           </button>
         </div>
+
+        <!-- Search -->
         <div class="relative w-full sm:w-auto">
           <span class="absolute text-gray-500 -translate-y-1/2 pointer-events-none left-4 top-1/2 dark:text-gray-400">
             <svg class="fill-current" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -492,6 +560,11 @@
             <th class="p-4 text-left text-xs font-medium text-gray-700 dark:text-gray-400">
               <span class="text-theme-xs font-medium text-gray-700 dark:text-gray-400">
                 {{ 'financial.transactions.table.headers.costCenter' | translate }}
+              </span>
+            </th>
+            <th class="p-4 text-left text-xs font-medium text-gray-700 dark:text-gray-400">
+              <span class="text-theme-xs font-medium text-gray-700 dark:text-gray-400">
+                Tags
               </span>
             </th>
             <th class="p-4 text-left text-xs font-medium text-gray-700 dark:text-gray-400">
@@ -579,10 +652,19 @@
               </span>
             </td>
             <td class="p-4 whitespace-nowrap">
-              <span class="text-sm text-gray-700 dark:text-gray-400">{{ row.category }}</span>
+              <span class="text-sm text-gray-700 dark:text-gray-400">{{ row.category_data?.name || row.category }}</span>
             </td>
             <td class="p-4 whitespace-nowrap">
-              <span class="text-sm text-gray-700 dark:text-gray-400">{{ row.cost_center }}</span>
+              <span class="text-sm text-gray-700 dark:text-gray-400">{{ row.cost_center_data?.name || row.cost_center }}</span>
+            </td>
+            <td class="p-4 whitespace-nowrap">
+              <div class="flex flex-wrap gap-1">
+                <span *ngFor="let tag of row.tags"
+                      class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium text-white"
+                      [style.backgroundColor]="tag.color">
+                  {{ tag.name }}
+                </span>
+              </div>
             </td>
             <td class="p-4 whitespace-nowrap">
               <div class="flex items-center gap-2 justify-end">

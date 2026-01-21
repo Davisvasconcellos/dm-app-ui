@@ -5,6 +5,10 @@
     "languageSelector": "Select language",
     "searchPlaceholder": "Search..."
   },
+  "actions": {
+    "save": "Save",
+    "cancel": "Cancel"
+  },
   "userDropdown": {
     "accountSettings": "Account Settings",
     "support": "Support",
@@ -168,6 +172,10 @@
         "save": "Save Settings",
         "saveCard": "Save Card"
       },
+      "actions": {
+        "save": "Save",
+        "cancel": "Cancel"
+      },
       "answers": {
         "title": "Responses",
         "actions": {
@@ -211,6 +219,39 @@
     }
   },
   "financial": {
+    "bankAccount": {
+      "title": "Bank Accounts",
+      "new": "New Account",
+      "edit": "Edit Account",
+      "form": {
+        "name": "Account Name",
+        "bankName": "Bank Name",
+        "agency": "Agency",
+        "accountNumber": "Account Number",
+        "type": "Account Type",
+        "initialBalance": "Initial Balance",
+        "isDefault": "Default Account",
+        "types": {
+          "checking": "Checking Account",
+          "savings": "Savings Account",
+          "investment": "Investment",
+          "payment": "Payment",
+          "other": "Other"
+        }
+      },
+      "table": {
+        "bank": "Bank",
+        "details": "Details",
+        "balance": "Current Balance",
+        "default": "Default"
+      },
+      "deleteModal": {
+        "title": "Delete Account",
+        "message": "Are you sure you want to delete the account {{name}}? This action cannot be undone and may affect linked transactions.",
+        "confirm": "Yes, delete",
+        "cancel": "Cancel"
+      }
+    },
     "transactions": {
       "title": "Financial Transactions",
       "overview": {
@@ -254,19 +295,19 @@
           "select": "Select...",
           "description": "Ex: Supplier payment",
           "amount": "0.00"
+        },
+        "payment": {
+          "cash": "Cash",
+          "pix": "PIX",
+          "creditCard": "Credit card",
+          "debitCard": "Debit card",
+          "bankTransfer": "Bank transfer",
+          "billet": "Paid boleto"
         }
       },
       "formLabels": {
         "isPaidReceived": "Mark as received",
         "isPaidPaid": "Mark as paid"
-      },
-      "formPayment": {
-        "cash": "Cash",
-        "pix": "PIX",
-        "creditCard": "Credit card",
-        "debitCard": "Debit card",
-        "bankTransfer": "Bank transfer",
-        "billet": "Paid boleto"
       },
       "filters": {
         "all": "All",

@@ -9,6 +9,8 @@ import { ContaReceber } from './models/conta-receber';
 import { Fornecedor } from './models/fornecedor';
 import { Cliente } from './models/cliente';
 import { Pagamento } from './models/pagamento';
+import { Party } from './models/party';
+import { FinancialCategory, CostCenter, FinancialTag } from './models/financial-settings.models';
 // import { DespesaMenor } from './models/despesa-menor';
 // import { Comissao } from './models/comissao';
 // import { SaldoBancarioDiario } from './models/saldo-bancario';
@@ -44,22 +46,99 @@ export class FinancialService {
     ]);
   }
 
-  getCategorias(): Observable<{ id: string; name: string }[]> {
-    return of([
-      { id: 'cat-vendas', name: 'Vendas' },
-      { id: 'cat-servicos', name: 'Serviços' },
-      { id: 'cat-aluguel', name: 'Aluguel' },
-      { id: 'cat-fornecedores', name: 'Fornecedores' },
-      { id: 'cat-marketing', name: 'Marketing' },
-    ]);
+  getCategorias(storeId?: string, type?: 'payable' | 'receivable'): Observable<FinancialCategory[]> {
+    if (!storeId) {
+      // Return mock for compatibility if no storeId provided (or change to return empty)
+      return of([
+        { id: '1', id_code: 'cat-vendas', name: 'Vendas', type: 'receivable', store_id: 'mock' },
+        { id: '2', id_code: 'cat-servicos', name: 'Serviços', type: 'receivable', store_id: 'mock' },
+        { id: '3', id_code: 'cat-aluguel', name: 'Aluguel', type: 'payable', store_id: 'mock' },
+        { id: '4', id_code: 'cat-fornecedores', name: 'Fornecedores', type: 'payable', store_id: 'mock' },
+        { id: '5', id_code: 'cat-marketing', name: 'Marketing', type: 'payable', store_id: 'mock' },
+      ]);
+    }
+    
+    const headers = { 'Authorization': `Bearer ${this.authService.getAuthToken()}` };
+    const params: any = { store_id: storeId };
+    if (type) params.type = type;
+
+    return this.http.get<any>(`${this.API_BASE_URL}/financial/categories`, { headers, params })
+      .pipe(map(response => response.data || response || []));
   }
 
-  getCentrosDeCusto(): Observable<{ id: string; name: string }[]> {
-    return of([
-      { id: 'cc-escritorio', name: 'Escritório' },
-      { id: 'cc-manutencao', name: 'Manutenção' },
-      { id: 'cc-operacional', name: 'Operacional' },
-    ]);
+  createCategory(data: Partial<FinancialCategory>): Observable<FinancialCategory> {
+    const headers = { 'Authorization': `Bearer ${this.authService.getAuthToken()}` };
+    return this.http.post<any>(`${this.API_BASE_URL}/financial/categories`, data, { headers })
+      .pipe(map(response => response.data || response));
+  }
+
+  updateCategory(id: string, data: Partial<FinancialCategory>): Observable<FinancialCategory> {
+    const headers = { 'Authorization': `Bearer ${this.authService.getAuthToken()}` };
+    return this.http.put<any>(`${this.API_BASE_URL}/financial/categories/${id}`, data, { headers })
+      .pipe(map(response => response.data || response));
+  }
+
+  deleteCategory(id: string): Observable<void> {
+    const headers = { 'Authorization': `Bearer ${this.authService.getAuthToken()}` };
+    return this.http.delete<any>(`${this.API_BASE_URL}/financial/categories/${id}`, { headers });
+  }
+
+  getCentrosDeCusto(storeId?: string): Observable<CostCenter[]> {
+    if (!storeId) {
+      return of([
+        { id: 'cc-escritorio', name: 'Escritório', store_id: 'mock' },
+        { id: 'cc-manutencao', name: 'Manutenção', store_id: 'mock' },
+        { id: 'cc-operacional', name: 'Operacional', store_id: 'mock' },
+      ]);
+    }
+
+    const headers = { 'Authorization': `Bearer ${this.authService.getAuthToken()}` };
+    const params: any = { store_id: storeId };
+
+    return this.http.get<any>(`${this.API_BASE_URL}/financial/cost-centers`, { headers, params })
+      .pipe(map(response => response.data || response || []));
+  }
+
+  createCostCenter(data: Partial<CostCenter>): Observable<CostCenter> {
+    const headers = { 'Authorization': `Bearer ${this.authService.getAuthToken()}` };
+    return this.http.post<any>(`${this.API_BASE_URL}/financial/cost-centers`, data, { headers })
+      .pipe(map(response => response.data || response));
+  }
+
+  updateCostCenter(id: string, data: Partial<CostCenter>): Observable<CostCenter> {
+    const headers = { 'Authorization': `Bearer ${this.authService.getAuthToken()}` };
+    return this.http.put<any>(`${this.API_BASE_URL}/financial/cost-centers/${id}`, data, { headers })
+      .pipe(map(response => response.data || response));
+  }
+
+  deleteCostCenter(id: string): Observable<void> {
+    const headers = { 'Authorization': `Bearer ${this.authService.getAuthToken()}` };
+    return this.http.delete<any>(`${this.API_BASE_URL}/financial/cost-centers/${id}`, { headers });
+  }
+
+  getTags(storeId: string): Observable<FinancialTag[]> {
+    const headers = { 'Authorization': `Bearer ${this.authService.getAuthToken()}` };
+    const params: any = { store_id: storeId };
+
+    return this.http.get<any>(`${this.API_BASE_URL}/financial/tags`, { headers, params })
+      .pipe(map(response => response.data || response || []));
+  }
+
+  createTag(data: Partial<FinancialTag>): Observable<FinancialTag> {
+    const headers = { 'Authorization': `Bearer ${this.authService.getAuthToken()}` };
+    return this.http.post<any>(`${this.API_BASE_URL}/financial/tags`, data, { headers })
+      .pipe(map(response => response.data || response));
+  }
+
+  updateTag(idCode: string, data: Partial<FinancialTag>): Observable<FinancialTag> {
+    const headers = { 'Authorization': `Bearer ${this.authService.getAuthToken()}` };
+    return this.http.put<any>(`${this.API_BASE_URL}/financial/tags/${idCode}`, data, { headers })
+      .pipe(map(response => response.data || response));
+  }
+
+  deleteTag(idCode: string): Observable<void> {
+    const headers = { 'Authorization': `Bearer ${this.authService.getAuthToken()}` };
+    return this.http.delete<any>(`${this.API_BASE_URL}/financial/tags/${idCode}`, { headers });
   }
 
   getContasPagar(storeId?: string, page?: number, limit?: number, kpiLinked?: boolean): Observable<TransactionsListResponse> {
@@ -100,6 +179,71 @@ export class FinancialService {
         } as TransactionsListResponse;
       })
     );
+  }
+
+  // Bank Accounts Methods
+  getBankAccounts(storeId: string): Observable<any[]> {
+    const headers = { 'Authorization': `Bearer ${this.authService.getAuthToken()}` };
+    return this.http.get<any>(`${this.API_BASE_URL}/financial/bank-accounts`, { 
+      headers,
+      params: { store_id: storeId }
+    }).pipe(
+      map(response => response.data || response || [])
+    );
+  }
+
+  // Parties Methods
+  getParties(storeId: string, type?: 'customer' | 'supplier' | 'employee' | 'salesperson'): Observable<Party[]> {
+    const headers = { 'Authorization': `Bearer ${this.authService.getAuthToken()}` };
+    const params: any = { store_id: storeId };
+    if (type) {
+      params.type = type;
+    }
+    
+    return this.http.get<any>(`${this.API_BASE_URL}/financial/parties`, { 
+      headers,
+      params
+    }).pipe(
+      map(response => response.data || response || [])
+    );
+  }
+
+  createParty(data: Partial<Party>): Observable<Party> {
+    const headers = { 'Authorization': `Bearer ${this.authService.getAuthToken()}` };
+    return this.http.post<any>(`${this.API_BASE_URL}/financial/parties`, data, { headers })
+      .pipe(map(response => response.data || response));
+  }
+
+  updateParty(idCode: string, data: Partial<Party>): Observable<Party> {
+    const headers = { 'Authorization': `Bearer ${this.authService.getAuthToken()}` };
+    return this.http.put<any>(`${this.API_BASE_URL}/financial/parties/${idCode}`, data, { headers })
+      .pipe(map(response => response.data || response));
+  }
+
+  deleteParty(idCode: string): Observable<void> {
+    const headers = { 'Authorization': `Bearer ${this.authService.getAuthToken()}` };
+    return this.http.delete<any>(`${this.API_BASE_URL}/financial/parties/${idCode}`, { headers });
+  }
+
+  getBankAccountById(idCode: string): Observable<any> {
+    const headers = { 'Authorization': `Bearer ${this.authService.getAuthToken()}` };
+    return this.http.get<any>(`${this.API_BASE_URL}/financial/bank-accounts/${idCode}`, { headers })
+      .pipe(map(response => response.data || response));
+  }
+
+  createBankAccount(data: any): Observable<any> {
+    const headers = { 'Authorization': `Bearer ${this.authService.getAuthToken()}` };
+    return this.http.post<any>(`${this.API_BASE_URL}/financial/bank-accounts`, data, { headers });
+  }
+
+  updateBankAccount(idCode: string, data: any): Observable<any> {
+    const headers = { 'Authorization': `Bearer ${this.authService.getAuthToken()}` };
+    return this.http.put<any>(`${this.API_BASE_URL}/financial/bank-accounts/${idCode}`, data, { headers });
+  }
+
+  deleteBankAccount(idCode: string): Observable<any> {
+    const headers = { 'Authorization': `Bearer ${this.authService.getAuthToken()}` };
+    return this.http.delete<any>(`${this.API_BASE_URL}/financial/bank-accounts/${idCode}`, { headers });
   }
 
   getContasReceber(): Observable<ContaReceber[]> {

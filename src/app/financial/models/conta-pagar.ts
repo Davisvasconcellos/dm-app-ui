@@ -17,12 +17,18 @@ export interface ContaPagar {
   paid_at?: Date | string;
   status: StatusConta;
   category?: string;
+  category_id?: string;
+  category_data?: { id: string; name: string; [key: string]: any };
   cost_center?: string;
+  cost_center_id?: string;
+  cost_center_data?: { id: string; name: string; [key: string]: any };
   created_by?: string;
   approved_by?: string;
   attachment_url?: string;
   attachments?: Attachment[];
   type?: 'PAYABLE' | 'RECEIVABLE' | 'TRANSFER' | 'ADJUSTMENT';
+  tag?: string;
+  tags?: { id: string; name: string; color: string }[];
 }
 
 export interface TransactionsSummary {

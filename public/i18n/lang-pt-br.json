@@ -5,6 +5,10 @@
     "languageSelector": "Selecionar idioma",
     "searchPlaceholder": "Pesquisar..."
   },
+  "actions": {
+    "save": "Salvar",
+    "cancel": "Cancelar"
+  },
   "userDropdown": {
     "accountSettings": "Configurações da Conta",
     "support": "Suporte",
@@ -168,6 +172,10 @@
         "save": "Salvar Configurações",
         "saveCard": "Salvar Cartão"
       },
+      "actions": {
+        "save": "Salvar",
+        "cancel": "Cancelar"
+      },
       "answers": {
         "title": "Respostas",
         "actions": {
@@ -211,7 +219,40 @@
     }
   },
   "financial": {
-    "transactions": {
+    "bankAccount": {
+        "title": "Contas Bancárias",
+        "new": "Nova Conta",
+        "edit": "Editar Conta",
+        "form": {
+          "name": "Nome da Conta",
+          "bankName": "Nome do Banco",
+          "agency": "Agência",
+          "accountNumber": "Número da Conta",
+          "type": "Tipo de Conta",
+          "initialBalance": "Saldo Inicial",
+          "isDefault": "Conta Principal",
+          "types": {
+            "checking": "Conta Corrente",
+            "savings": "Conta Poupança",
+            "investment": "Investimento",
+            "payment": "Pagamento",
+            "other": "Outro"
+          }
+        },
+        "table": {
+          "bank": "Banco",
+          "details": "Detalhes",
+          "balance": "Saldo Atual",
+          "default": "Principal"
+        },
+        "deleteModal": {
+          "title": "Excluir Conta",
+          "message": "Tem certeza que deseja excluir a conta {{name}}? Esta ação não pode ser desfeita e pode afetar lançamentos vinculados.",
+          "confirm": "Sim, excluir",
+          "cancel": "Cancelar"
+        }
+      },
+      "transactions": {
       "title": "Lançamentos Financeiros",
       "overview": {
         "title": "Visão Geral",
@@ -254,19 +295,19 @@
           "select": "Selecione...",
           "description": "Ex: Pagamento fornecedor",
           "amount": "0,00"
+        },
+        "payment": {
+          "cash": "Dinheiro",
+          "pix": "PIX",
+          "creditCard": "Cartão de Crédito",
+          "debitCard": "Cartão de Débito",
+          "bankTransfer": "Transferência Bancária",
+          "billet": "Boleto Pago"
         }
       },
       "formLabels": {
         "isPaidReceived": "Marcar como recebido",
         "isPaidPaid": "Marcar como pago"
-      },
-      "formPayment": {
-        "cash": "Dinheiro",
-        "pix": "PIX",
-        "creditCard": "Cartão de Crédito",
-        "debitCard": "Cartão de Débito",
-        "bankTransfer": "Transferência Bancária",
-        "billet": "Boleto Pago"
       },
       "filters": {
         "all": "Todos",

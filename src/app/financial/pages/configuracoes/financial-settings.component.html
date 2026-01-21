@@ -32,19 +32,16 @@
           [class.text-gray-500]="activeTab !== 'stores'"
           class="whitespace-nowrap border-b-2 py-2 px-1 text-sm font-medium hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
         >
-          Lojas
+          Dados
         </button>
 
-        <button
+        <!-- API Tab Hidden -->
+        <!-- <button
           (click)="setActiveTab('apis')"
-          [class.border-brand-500]="activeTab === 'apis'"
-          [class.text-brand-500]="activeTab === 'apis'"
-          [class.border-transparent]="activeTab !== 'apis'"
-          [class.text-gray-500]="activeTab !== 'apis'"
-          class="whitespace-nowrap border-b-2 py-2 px-1 text-sm font-medium hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+          ...
         >
           APIs
-        </button>
+        </button> -->
 
         <button
           (click)="setActiveTab('categories')"
@@ -55,6 +52,17 @@
           class="whitespace-nowrap border-b-2 py-2 px-1 text-sm font-medium hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
         >
           Categorias
+        </button>
+
+        <button
+          (click)="setActiveTab('cost-centers')"
+          [class.border-brand-500]="activeTab === 'cost-centers'"
+          [class.text-brand-500]="activeTab === 'cost-centers'"
+          [class.border-transparent]="activeTab !== 'cost-centers'"
+          [class.text-gray-500]="activeTab !== 'cost-centers'"
+          class="whitespace-nowrap border-b-2 py-2 px-1 text-sm font-medium hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+        >
+          Centros de Custo
         </button>
 
         <button
@@ -120,7 +128,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label class="mb-2.5 block text-sm font-medium text-gray-700 dark:text-gray-400">CNPJ *</label>
-                <input formControlName="cnpj" type="text" class="w-full rounded-lg border border-gray-300 bg-transparent py-3 px-5 text-sm text-gray-800 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white">
+                <input formControlName="cnpj" (input)="onCnpjInput($event)" maxlength="18" type="text" class="w-full rounded-lg border border-gray-300 bg-transparent py-3 px-5 text-sm text-gray-800 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white">
               </div>
               <div>
                 <label class="mb-2.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Email *</label>
@@ -136,11 +144,11 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
                 <label class="mb-2.5 block text-sm font-medium text-gray-700 dark:text-gray-400">CEP</label>
-                <input formControlName="zip_code" type="text" class="w-full rounded-lg border border-gray-300 bg-transparent py-3 px-5 text-sm text-gray-800 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white">
+                <input formControlName="zip_code" (blur)="onCepBlur($event)" maxlength="9" type="text" class="w-full rounded-lg border border-gray-300 bg-transparent py-3 px-5 text-sm text-gray-800 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white">
               </div>
               <div class="md:col-span-2">
                 <label class="mb-2.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Logradouro</label>
-                <input formControlName="address_street" type="text" class="w-full rounded-lg border border-gray-300 bg-transparent py-3 px-5 text-sm text-gray-800 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white">
+                <input formControlName="address_street" readonly type="text" class="w-full rounded-lg border border-gray-300 bg-gray-100 py-3 px-5 text-sm text-gray-800 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white cursor-not-allowed">
               </div>
               <div>
                 <label class="mb-2.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Número</label>
@@ -148,11 +156,15 @@
               </div>
               <div>
                 <label class="mb-2.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Bairro</label>
-                <input formControlName="address_neighborhood" type="text" class="w-full rounded-lg border border-gray-300 bg-transparent py-3 px-5 text-sm text-gray-800 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white">
+                <input formControlName="address_neighborhood" readonly type="text" class="w-full rounded-lg border border-gray-300 bg-gray-100 py-3 px-5 text-sm text-gray-800 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white cursor-not-allowed">
               </div>
               <div>
                 <label class="mb-2.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Cidade</label>
-                <input formControlName="address_city" type="text" class="w-full rounded-lg border border-gray-300 bg-transparent py-3 px-5 text-sm text-gray-800 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white">
+                <input formControlName="address_city" readonly type="text" class="w-full rounded-lg border border-gray-300 bg-gray-100 py-3 px-5 text-sm text-gray-800 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white cursor-not-allowed">
+              </div>
+              <div>
+                <label class="mb-2.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Estado</label>
+                <input formControlName="address_state" readonly type="text" class="w-full rounded-lg border border-gray-300 bg-gray-100 py-3 px-5 text-sm text-gray-800 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white cursor-not-allowed">
               </div>
             </div>
           </div>
@@ -165,7 +177,7 @@
         </form>
       </div>
 
-      <div *ngIf="activeTab === 'apis'" class="space-y-6">
+      <div *ngIf="false && activeTab === 'apis'" class="space-y-6">
       <div>
         <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90">Integrações de API</h3>
         <p class="text-sm text-gray-500 dark:text-gray-400">Configure suas chaves de API para serviços bancários e gateways de pagamento.</p>
@@ -206,11 +218,68 @@
     <div *ngIf="activeTab === 'categories'" class="space-y-6">
       <div class="flex justify-between items-center">
         <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90">Categorias de Receitas e Despesas</h3>
-        <button (click)="addCategory()" class="flex items-center justify-center rounded-lg bg-brand-500 px-4 py-2 text-center text-sm font-medium text-white hover:bg-brand-600 focus:outline-none focus:ring-4 focus:ring-brand-500/50 dark:bg-brand-500 dark:hover:bg-brand-600">
+        <button *ngIf="!showCategoryForm" (click)="addCategory()" class="flex items-center justify-center rounded-lg bg-brand-500 px-4 py-2 text-center text-sm font-medium text-white hover:bg-brand-600 focus:outline-none focus:ring-4 focus:ring-brand-500/50 dark:bg-brand-500 dark:hover:bg-brand-600">
           Nova Categoria
         </button>
       </div>
       
+      <!-- Inline Form -->
+      <div *ngIf="showCategoryForm" class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-white/[0.03]">
+        <h4 class="text-base font-semibold text-gray-800 dark:text-white mb-4">
+          {{ editingCategory ? 'Editar Categoria' : 'Nova Categoria' }}
+        </h4>
+        <form [formGroup]="categoryForm" (ngSubmit)="saveCategory()">
+          <div class="grid gap-6 sm:grid-cols-2 mb-6">
+            <div>
+              <app-label>Nome da Categoria</app-label>
+              <app-input-field
+                type="text"
+                formControlName="name"
+                placeholder="Ex: Vendas, Alimentação"
+              />
+            </div>
+            <div>
+              <app-label>Tipo</app-label>
+              <div class="relative">
+                <select
+                  formControlName="type"
+                  class="h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 pr-11 text-sm shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800 text-gray-800 dark:text-white/90"
+                >
+                  <option value="" disabled>Selecione o tipo</option>
+                  <option *ngFor="let type of categoryTypes" [value]="type.value">
+                    {{ type.label }}
+                  </option>
+                </select>
+                <svg
+                  class="absolute text-gray-700 dark:text-gray-400 right-3 top-1/2 -translate-y-1/2 pointer-events-none"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 20 20"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M4.79175 8.02075L10.0001 13.2291L15.2084 8.02075"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </div>
+            </div>
+          </div>
+          <div class="flex justify-end gap-3">
+            <button type="button" (click)="cancelCategoryForm()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700">
+              Cancelar
+            </button>
+            <button type="submit" [disabled]="isSubmitting" class="px-4 py-2 text-sm font-medium text-white bg-brand-500 rounded-lg hover:bg-brand-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500">
+              {{ isSubmitting ? 'Salvando...' : 'Salvar' }}
+            </button>
+          </div>
+        </form>
+      </div>
+
       <div class="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800">
         <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-800">
           <thead class="bg-gray-50 dark:bg-white/[0.03]">
@@ -238,14 +307,104 @@
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
-                  [ngClass]="cat.type === 'Receita' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'">
-                  {{ cat.type }}
+                  [ngClass]="cat.type === 'receivable' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'">
+                  {{ cat.type === 'receivable' ? 'Receita' : 'Despesa' }}
                 </span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                <button class="text-brand-500 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300">
+                <button (click)="editCategory(cat)" class="text-brand-500 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300 mr-4">
                   Editar
                 </button>
+                <button (click)="confirmDeleteCategory(cat)" class="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300">
+                  Excluir
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="categories.length === 0">
+              <td colspan="3" class="px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400">
+                Nenhuma categoria cadastrada.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Cost Centers Tab Content -->
+    <div *ngIf="activeTab === 'cost-centers'" class="space-y-6">
+      <div class="flex justify-between items-center">
+        <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90">Centros de Custo</h3>
+        <button *ngIf="!showCostCenterForm" (click)="addCostCenter()" class="flex items-center justify-center rounded-lg bg-brand-500 px-4 py-2 text-center text-sm font-medium text-white hover:bg-brand-600 focus:outline-none focus:ring-4 focus:ring-brand-500/50 dark:bg-brand-500 dark:hover:bg-brand-600">
+          Novo Centro de Custo
+        </button>
+      </div>
+
+      <!-- Inline Form -->
+      <div *ngIf="showCostCenterForm" class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-white/[0.03]">
+        <h4 class="text-base font-semibold text-gray-800 dark:text-white mb-4">
+          {{ editingCostCenter ? 'Editar Centro de Custo' : 'Novo Centro de Custo' }}
+        </h4>
+        <form [formGroup]="costCenterForm" (ngSubmit)="saveCostCenter()">
+          <div class="grid gap-6 sm:grid-cols-2 mb-6">
+            <div>
+              <app-label>Nome</app-label>
+              <app-input-field
+                type="text"
+                formControlName="name"
+                placeholder="Ex: Administrativo, Operacional"
+              />
+            </div>
+            <div>
+              <app-label>Código (Opcional)</app-label>
+              <app-input-field
+                type="text"
+                formControlName="code"
+                placeholder="Ex: ADM-01"
+              />
+            </div>
+          </div>
+          <div class="flex justify-end gap-3">
+            <button type="button" (click)="cancelCostCenterForm()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700">
+              Cancelar
+            </button>
+            <button type="submit" [disabled]="isSubmitting" class="px-4 py-2 text-sm font-medium text-white bg-brand-500 rounded-lg hover:bg-brand-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500">
+              {{ isSubmitting ? 'Salvando...' : 'Salvar' }}
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <div class="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800">
+        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-800">
+          <thead class="bg-gray-50 dark:bg-white/[0.03]">
+            <tr>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">Nome</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">Código</th>
+              <th scope="col" class="relative px-6 py-3">
+                <span class="sr-only">Ações</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200 dark:bg-transparent dark:divide-gray-800">
+            <tr *ngFor="let cc of costCenters">
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm font-medium text-gray-900 dark:text-white">{{ cc.name }}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span class="text-sm text-gray-500 dark:text-gray-400">{{ cc.code || '-' }}</span>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <button (click)="editCostCenter(cc)" class="text-brand-500 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300 mr-4">
+                  Editar
+                </button>
+                <button (click)="confirmDeleteCostCenter(cc)" class="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300">
+                  Excluir
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="costCenters.length === 0">
+              <td colspan="3" class="px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400">
+                Nenhum centro de custo cadastrado.
               </td>
             </tr>
           </tbody>
@@ -257,20 +416,68 @@
     <div *ngIf="activeTab === 'tags'" class="space-y-6">
       <div class="flex justify-between items-center">
         <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90">Tags</h3>
-        <button (click)="addTag()" class="flex items-center justify-center rounded-lg bg-brand-500 px-4 py-2 text-center text-sm font-medium text-white hover:bg-brand-600 focus:outline-none focus:ring-4 focus:ring-brand-500/50 dark:bg-brand-500 dark:hover:bg-brand-600">
+        <button *ngIf="!showTagForm" (click)="addTag()" class="flex items-center justify-center rounded-lg bg-brand-500 px-4 py-2 text-center text-sm font-medium text-white hover:bg-brand-600 focus:outline-none focus:ring-4 focus:ring-brand-500/50 dark:bg-brand-500 dark:hover:bg-brand-600">
           Nova Tag
         </button>
       </div>
 
+      <!-- Inline Form -->
+      <div *ngIf="showTagForm" class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-white/[0.03]">
+        <h4 class="text-base font-semibold text-gray-800 dark:text-white mb-4">
+          {{ editingTag ? 'Editar Tag' : 'Nova Tag' }}
+        </h4>
+        <form [formGroup]="tagForm" (ngSubmit)="saveTag()">
+          <div class="grid gap-6 sm:grid-cols-2 mb-6">
+            <div>
+              <app-label>Nome da Tag</app-label>
+              <app-input-field
+                type="text"
+                formControlName="name"
+                placeholder="Ex: Urgente, Projeto X"
+              />
+            </div>
+            <div>
+              <app-label>Cor</app-label>
+              <div class="flex items-center gap-3">
+                <input
+                  type="color"
+                  formControlName="color"
+                  class="h-10 w-20 cursor-pointer rounded border border-gray-300 bg-transparent p-1 dark:border-gray-700"
+                />
+                <span class="text-sm text-gray-500 dark:text-gray-400">{{ tagForm.get('color')?.value }}</span>
+              </div>
+            </div>
+          </div>
+          <div class="flex justify-end gap-3">
+            <button type="button" (click)="cancelTagForm()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700">
+              Cancelar
+            </button>
+            <button type="submit" [disabled]="isSubmitting" class="px-4 py-2 text-sm font-medium text-white bg-brand-500 rounded-lg hover:bg-brand-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500">
+              {{ isSubmitting ? 'Salvando...' : 'Salvar' }}
+            </button>
+          </div>
+        </form>
+      </div>
+
       <div class="flex flex-wrap gap-3">
-        <div *ngFor="let tag of tags" class="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-700">
-          {{ tag }}
-          <button type="button" class="flex-shrink-0 ml-2 inline-flex text-gray-400 hover:text-gray-500 focus:outline-none focus:text-gray-500 dark:text-gray-500 dark:hover:text-gray-400">
-            <span class="sr-only">Remove large option</span>
+        <div *ngFor="let tag of tags" class="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium border"
+          [style.backgroundColor]="tag.color + '20'"
+          [style.color]="tag.color"
+          [style.borderColor]="tag.color">
+          {{ tag.name }}
+          <button (click)="editTag(tag)" class="ml-2 text-current hover:opacity-75 focus:outline-none">
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+            </svg>
+          </button>
+          <button (click)="confirmDeleteTag(tag)" class="ml-1 text-current hover:opacity-75 focus:outline-none">
             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
+        </div>
+        <div *ngIf="tags.length === 0" class="text-sm text-gray-500 dark:text-gray-400">
+          Nenhuma tag cadastrada.
         </div>
       </div>
     </div>
@@ -278,14 +485,114 @@
     <!-- Bank Accounts Tab Content -->
     <div *ngIf="activeTab === 'bank-accounts'" class="space-y-6">
       <div class="flex justify-between items-center">
-        <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90">Contas Bancárias</h3>
-        <button (click)="addAccount()" class="flex items-center justify-center rounded-lg bg-brand-500 px-4 py-2 text-center text-sm font-medium text-white hover:bg-brand-600 focus:outline-none focus:ring-4 focus:ring-brand-500/50 dark:bg-brand-500 dark:hover:bg-brand-600">
-          Nova Conta
+        <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90">{{ 'financial.bankAccount.title' | translate }}</h3>
+        <button *ngIf="!showBankAccountForm" (click)="addAccount()" class="flex items-center justify-center rounded-lg bg-brand-500 px-4 py-2 text-center text-sm font-medium text-white hover:bg-brand-600 focus:outline-none focus:ring-4 focus:ring-brand-500/50 dark:bg-brand-500 dark:hover:bg-brand-600">
+          {{ 'financial.bankAccount.new' | translate }}
         </button>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div *ngFor="let acc of bankAccounts" class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-white/[0.03]">
+      <!-- Inline Form -->
+      <div *ngIf="showBankAccountForm" class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-white/[0.03]">
+        <h4 class="text-base font-semibold text-gray-800 dark:text-white mb-4">
+          {{ (editingBankAccount ? 'financial.bankAccount.edit' : 'financial.bankAccount.new') | translate }}
+        </h4>
+        <form [formGroup]="bankAccountForm" (ngSubmit)="saveBankAccount()">
+          <div class="grid gap-6 sm:grid-cols-2 mb-6">
+            <div>
+              <app-label>{{ 'financial.bankAccount.form.name' | translate }}</app-label>
+              <app-input-field
+                type="text"
+                formControlName="name"
+                [placeholder]="'financial.bankAccount.form.name' | translate"
+              />
+            </div>
+            <div>
+              <app-label>{{ 'financial.bankAccount.form.bankName' | translate }}</app-label>
+              <app-input-field
+                type="text"
+                formControlName="bank_name"
+                [placeholder]="'financial.bankAccount.form.bankName' | translate"
+              />
+            </div>
+            <div>
+              <app-label>{{ 'financial.bankAccount.form.agency' | translate }}</app-label>
+              <app-input-field
+                type="text"
+                formControlName="agency"
+                [placeholder]="'financial.bankAccount.form.agency' | translate"
+              />
+            </div>
+            <div>
+              <app-label>{{ 'financial.bankAccount.form.accountNumber' | translate }}</app-label>
+              <app-input-field
+                type="text"
+                formControlName="account_number"
+                [placeholder]="'financial.bankAccount.form.accountNumber' | translate"
+              />
+            </div>
+            <div>
+              <app-label>{{ 'financial.bankAccount.form.type' | translate }}</app-label>
+              <app-select
+                [options]="typeOptions"
+                [placeholder]="'financial.bankAccount.form.type' | translate"
+                [value]="bankAccountForm.get('type')?.value"
+                (valueChange)="bankAccountForm.get('type')?.setValue($event)"
+                className="bg-gray-50 dark:bg-gray-800"
+              />
+            </div>
+            <div>
+              <app-label>{{ 'financial.bankAccount.form.initialBalance' | translate }}</app-label>
+              <app-input-field
+                type="number"
+                formControlName="initial_balance"
+                [placeholder]="'financial.bankAccount.form.initialBalance' | translate"
+                [min]="'0'"
+                [step]="0.01"
+              />
+            </div>
+            <div class="sm:col-span-2">
+               <app-checkbox
+                id="is_default"
+                [label]="'financial.bankAccount.form.isDefault' | translate"
+                [checked]="bankAccountForm.get('is_default')?.value"
+                (checkedChange)="bankAccountForm.get('is_default')?.setValue($event)"
+              />
+            </div>
+          </div>
+          <div class="flex justify-end gap-3">
+            <app-button
+              type="button"
+              variant="outline"
+              (click)="cancelBankAccountForm()"
+            >
+              {{ 'actions.cancel' | translate }}
+            </app-button>
+            <app-button
+              type="submit"
+              [disabled]="isSubmitting"
+            >
+              {{ 'actions.save' | translate }}
+            </app-button>
+          </div>
+        </form>
+      </div>
+
+      <div *ngIf="!showBankAccountForm" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div *ngFor="let acc of bankAccounts" class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-white/[0.03] relative group">
+          <!-- Edit/Delete Actions -->
+          <div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
+            <button (click)="editAccount(acc)" class="p-1 text-gray-400 hover:text-brand-500 dark:text-gray-500 dark:hover:text-brand-400">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+              </svg>
+            </button>
+            <button (click)="confirmDeleteAccount(acc)" class="p-1 text-gray-400 hover:text-red-500 dark:text-gray-500 dark:hover:text-red-400">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+              </svg>
+            </button>
+          </div>
+
           <div class="flex items-start justify-between mb-4">
             <div class="flex items-center gap-3">
               <div class="flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
@@ -294,19 +601,157 @@
                 </svg>
               </div>
               <div>
-                <h4 class="text-base font-semibold text-gray-800 dark:text-white/90">{{ acc.bank }}</h4>
-                <p class="text-xs text-gray-500 dark:text-gray-400">Ag: {{ acc.agency }} / CC: {{ acc.account }}</p>
+                <h4 class="text-base font-semibold text-gray-800 dark:text-white/90 flex items-center gap-2">
+                  {{ acc.name }}
+                  <span *ngIf="acc.is_default" class="text-[10px] bg-brand-100 text-brand-700 px-1.5 py-0.5 rounded border border-brand-200 dark:bg-brand-900/30 dark:text-brand-300 dark:border-brand-800">
+                    {{ 'financial.bankAccount.table.default' | translate }}
+                  </span>
+                </h4>
+                <p class="text-sm font-medium text-gray-600 dark:text-gray-300">{{ acc.bank_name }}</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">Ag: {{ acc.agency }} / CC: {{ acc.account_number }}</p>
               </div>
             </div>
           </div>
           <div class="pt-4 border-t border-gray-100 dark:border-gray-800">
             <div class="flex justify-between items-end">
-              <span class="text-xs text-gray-500 dark:text-gray-400">Saldo Atual</span>
-              <span class="text-lg font-bold text-green-600 dark:text-green-400">{{ acc.balance | currency:'BRL' }}</span>
+              <span class="text-xs text-gray-500 dark:text-gray-400">{{ 'financial.bankAccount.table.balance' | translate }}</span>
+              <span class="text-lg font-bold" [ngClass]="{'text-green-600 dark:text-green-400': (acc.current_balance ?? acc.initial_balance) >= 0, 'text-red-600 dark:text-red-400': (acc.current_balance ?? acc.initial_balance) < 0}">
+                {{ (acc.current_balance ?? acc.initial_balance) | currency:'BRL' }}
+              </span>
             </div>
           </div>
         </div>
       </div>
     </div>
+
+
   </div>
 </div>
+
+<!-- Delete Confirmation Modal -->
+<app-modal [isOpen]="isDeleteBankAccountModalOpen" (close)="cancelDeleteBankAccount()">
+  <div class="p-6 text-center">
+    <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-500">
+      <span class="[&>svg]:h-6 [&>svg]:w-6">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 32 32"
+          fill="currentColor"
+        >
+          <path
+            fill-rule="evenodd"
+            clip-rule="evenodd"
+            d="M9.62684 11.7496C9.04105 11.1638 9.04105 10.2141 9.62684 9.6283C10.2126 9.04252 11.1624 9.04252 11.7482 9.6283L18.9985 16.8786L26.2485 9.62851C26.8343 9.04273 27.7841 9.04273 28.3699 9.62851C28.9556 10.2143 28.9556 11.164 28.3699 11.7498L21.1198 18.9999L28.3699 26.25C28.9556 26.8358 28.9556 27.7855 28.3699 28.3713C27.7841 28.9571 26.8343 28.9571 26.2485 28.3713L18.9985 21.1212L11.7482 28.3715C11.1624 28.9573 10.2126 28.9573 9.62684 28.3715C9.04105 27.7857 9.04105 26.836 9.62684 26.2502L16.8771 18.9999L9.62684 11.7496Z"
+            fill=""
+          />
+        </svg>
+      </span>
+    </div>
+
+    <h4 class="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90 sm:text-title-sm">
+      {{ 'financial.bankAccount.deleteModal.title' | translate }}
+    </h4>
+    <p class="text-sm leading-6 text-gray-500 dark:text-gray-400">
+      {{ 'financial.bankAccount.deleteModal.message' | translate: { name: bankAccountToDelete?.name } }}
+    </p>
+
+    <div class="flex items-center justify-center w-full gap-3 mt-7">
+      <button
+        type="button"
+        class="flex justify-center w-full px-4 py-3 text-sm font-medium text-gray-700 rounded-lg bg-white ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:ring-gray-700 dark:hover:bg-white/[0.03] sm:w-auto"
+        (click)="cancelDeleteBankAccount()"
+      >
+        {{ 'financial.bankAccount.deleteModal.cancel' | translate }}
+      </button>
+      <button
+        type="button"
+        class="flex justify-center w-full px-4 py-3 text-sm font-medium text-white rounded-lg bg-error-500 shadow-theme-xs hover:bg-error-600 sm:w-auto"
+        (click)="deleteBankAccount()"
+        [disabled]="isSubmitting"
+      >
+        {{ 'financial.bankAccount.deleteModal.confirm' | translate }}
+      </button>
+    </div>
+  </div>
+</app-modal>
+
+<!-- Delete Category Modal -->
+<app-modal [isOpen]="isDeleteCategoryModalOpen" (close)="cancelDeleteCategory()">
+  <div class="p-6 text-center">
+    <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-500">
+      <span class="[&>svg]:h-6 [&>svg]:w-6">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+        </svg>
+      </span>
+    </div>
+    <h4 class="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90 sm:text-title-sm">
+      Excluir Categoria?
+    </h4>
+    <p class="text-sm leading-6 text-gray-500 dark:text-gray-400">
+      Tem certeza que deseja excluir a categoria "{{ categoryToDelete?.name }}"? Esta ação não pode ser desfeita.
+    </p>
+    <div class="flex items-center justify-center w-full gap-3 mt-7">
+      <button type="button" class="flex justify-center w-full px-4 py-3 text-sm font-medium text-gray-700 rounded-lg bg-white ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:ring-gray-700 dark:hover:bg-white/[0.03] sm:w-auto" (click)="cancelDeleteCategory()">
+        Cancelar
+      </button>
+      <button type="button" class="flex justify-center w-full px-4 py-3 text-sm font-medium text-white rounded-lg bg-red-500 hover:bg-red-600 sm:w-auto" (click)="deleteCategory()" [disabled]="isSubmitting">
+        Excluir
+      </button>
+    </div>
+  </div>
+</app-modal>
+
+<!-- Delete Cost Center Modal -->
+<app-modal [isOpen]="isDeleteCostCenterModalOpen" (close)="cancelDeleteCostCenter()">
+  <div class="p-6 text-center">
+    <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-500">
+      <span class="[&>svg]:h-6 [&>svg]:w-6">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+        </svg>
+      </span>
+    </div>
+    <h4 class="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90 sm:text-title-sm">
+      Excluir Centro de Custo?
+    </h4>
+    <p class="text-sm leading-6 text-gray-500 dark:text-gray-400">
+      Tem certeza que deseja excluir o centro de custo "{{ costCenterToDelete?.name }}"? Esta ação não pode ser desfeita.
+    </p>
+    <div class="flex items-center justify-center w-full gap-3 mt-7">
+      <button type="button" class="flex justify-center w-full px-4 py-3 text-sm font-medium text-gray-700 rounded-lg bg-white ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:ring-gray-700 dark:hover:bg-white/[0.03] sm:w-auto" (click)="cancelDeleteCostCenter()">
+        Cancelar
+      </button>
+      <button type="button" class="flex justify-center w-full px-4 py-3 text-sm font-medium text-white rounded-lg bg-red-500 hover:bg-red-600 sm:w-auto" (click)="deleteCostCenter()" [disabled]="isSubmitting">
+        Excluir
+      </button>
+    </div>
+  </div>
+</app-modal>
+
+<!-- Delete Tag Modal -->
+<app-modal [isOpen]="isDeleteTagModalOpen" (close)="cancelDeleteTag()">
+  <div class="p-6 text-center">
+    <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-500">
+      <span class="[&>svg]:h-6 [&>svg]:w-6">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+        </svg>
+      </span>
+    </div>
+    <h4 class="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90 sm:text-title-sm">
+      Excluir Tag?
+    </h4>
+    <p class="text-sm leading-6 text-gray-500 dark:text-gray-400">
+      Tem certeza que deseja excluir a tag "{{ tagToDelete?.name }}"? Esta ação não pode ser desfeita.
+    </p>
+    <div class="flex items-center justify-center w-full gap-3 mt-7">
+      <button type="button" class="flex justify-center w-full px-4 py-3 text-sm font-medium text-gray-700 rounded-lg bg-white ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:ring-gray-700 dark:hover:bg-white/[0.03] sm:w-auto" (click)="cancelDeleteTag()">
+        Cancelar
+      </button>
+      <button type="button" class="flex justify-center w-full px-4 py-3 text-sm font-medium text-white rounded-lg bg-red-500 hover:bg-red-600 sm:w-auto" (click)="deleteTag()" [disabled]="isSubmitting">
+        Excluir
+      </button>
+    </div>
+  </div>
+</app-modal></div>
