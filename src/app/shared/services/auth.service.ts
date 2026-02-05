@@ -26,6 +26,13 @@ export interface User {
   address_zip_code?: string | null;
   email_verified: boolean;
   status: string;
+  modules?: { 
+    id: number;
+    id_code: string;
+    name: string;
+    slug: string;
+    active: boolean;
+  }[];
   team_user?: number;
   plan_id?: number;
   plan_start?: string | null;
@@ -105,6 +112,11 @@ export class AuthService {
     if (token && user) {
       this.currentUserSubject.next(user);
       this.isAuthenticatedSubject.next(true);
+      
+      // Refresh user data to ensure modules and permissions are up to date
+      this.getUserMe().subscribe({
+        error: (err) => console.error('Erro ao atualizar dados do usuário na inicialização:', err)
+      });
     }
   }
 
@@ -253,6 +265,17 @@ export class AuthService {
   hasAnyRole(roles: string[]): boolean {
     const user = this.getCurrentUser();
     return user ? roles.includes(user.role) : false;
+  }
+
+  hasModule(moduleSlug: string): boolean {
+    const user = this.getCurrentUser();
+    if (!user) return false;
+    // Master tem acesso a tudo
+    if (user.role === 'master') return true;
+    
+    const has = user.modules?.some(m => m.slug === moduleSlug) ?? false;
+    // console.log(`AuthService.hasModule('${moduleSlug}') check for user '${user.name}': ${has}`);
+    return has;
   }
 
   private handleError = (error: HttpErrorResponse): Observable<never> => {

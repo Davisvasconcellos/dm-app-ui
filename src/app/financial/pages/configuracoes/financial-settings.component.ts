@@ -13,9 +13,7 @@ import { LabelComponent } from '../../../shared/components/form/label/label.comp
 import { ButtonComponent } from '../../../shared/components/ui/button/button.component';
 import { CheckboxComponent } from '../../../shared/components/form/input/checkbox.component';
 import { ModalComponent } from '../../../shared/components/ui/modal/modal.component';
-
-
-
+import { AlertComponent } from '../../../shared/components/ui/alert/alert.component';
 import { FinancialCategory, CostCenter, FinancialTag } from '../../models/financial-settings.models';
 
 @Component({
@@ -31,7 +29,8 @@ import { FinancialCategory, CostCenter, FinancialTag } from '../../models/financ
     LabelComponent,
     ButtonComponent,
     CheckboxComponent,
-    ModalComponent
+    ModalComponent,
+    AlertComponent
   ],
   templateUrl: './financial-settings.component.html',
 })
@@ -43,6 +42,8 @@ export class FinancialSettingsComponent implements OnInit {
   costCenterForm: FormGroup;
   tagForm: FormGroup;
   isSubmitting = false;
+  isLoading = false;
+  isCreatingStore = false;
 
   banner_url: string = '';
   logo_url: string | null = null;
@@ -162,14 +163,17 @@ export class FinancialSettingsComponent implements OnInit {
   }
 
   loadStoreData() {
+    this.isLoading = true;
     const selectedStore = this.localStorageService.getData<Store>(this.STORE_KEY);
     this.selectedStore = selectedStore;
+    
     if (selectedStore && selectedStore.id_code) {
       this.fetchStoreById(selectedStore.id_code);
       this.loadBankAccounts();
       this.loadCategories();
       this.loadCostCenters();
       this.loadTags();
+      this.isLoading = false;
     } else {
       this.storeService.getStores().subscribe({
         next: (stores) => {
@@ -180,9 +184,16 @@ export class FinancialSettingsComponent implements OnInit {
             this.loadCategories();
             this.loadCostCenters();
             this.loadTags();
+          } else {
+            this.selectedStore = null;
           }
+          this.isLoading = false;
         },
-        error: (err) => console.error('Error fetching stores', err)
+        error: (err) => {
+          console.error('Error fetching stores', err);
+          this.selectedStore = null;
+          this.isLoading = false;
+        }
       });
     }
   }
@@ -273,7 +284,28 @@ export class FinancialSettingsComponent implements OnInit {
   }
 
   onAddNewStore() {
-    console.log('Add new store clicked');
+    this.isCreatingStore = true;
+    this.selectedStore = null;
+    this.activeTab = 'stores';
+    this.storeForm.reset({
+      name: '',
+      email: '',
+      cnpj: '',
+      type: '',
+      phone: '',
+      address_street: '',
+      address_number: '',
+      address_neighborhood: '',
+      address_city: '',
+      address_state: '',
+      zip_code: '',
+      description: '',
+      website: '',
+      instagram_handle: '',
+      facebook_handle: ''
+    });
+    this.banner_url = '';
+    this.logo_url = null;
   }
 
   onSubmitStore() {
@@ -283,29 +315,56 @@ export class FinancialSettingsComponent implements OnInit {
       return;
     }
 
-    if (!this.selectedStore?.id_code) {
-      this.toastService.triggerToast('error', 'Erro', 'Nenhuma empresa selecionada para edição.');
-      return;
-    }
-
     this.isSubmitting = true;
     const payload = this.storeForm.value;
 
-    this.storeService.updateStore(this.selectedStore.id_code, payload).subscribe({
-      next: (response) => {
-        this.toastService.triggerToast('success', 'Sucesso', 'Dados da empresa atualizados.');
-        this.isSubmitting = false;
-        // Atualizar dados locais se necessário
-        if (response && response.data) {
-          this.populateForm(response.data);
+    if (this.isCreatingStore) {
+      this.storeService.createStore(payload).subscribe({
+        next: (response) => {
+          this.toastService.triggerToast('success', 'Sucesso', 'Empresa criada com sucesso.');
+          this.isSubmitting = false;
+          this.isCreatingStore = false;
+          const createdStore = response && response.data ? (response.data.store || response.data) : null;
+          if (createdStore && createdStore.id_code) {
+            this.selectedStore = createdStore;
+            this.localStorageService.saveData(this.STORE_KEY, createdStore);
+            this.populateForm(createdStore);
+            this.loadBankAccounts();
+            this.loadCategories();
+            this.loadCostCenters();
+            this.loadTags();
+          } else {
+            this.loadStoreData();
+          }
+        },
+        error: (err) => {
+          console.error('Error creating store', err);
+          this.toastService.triggerToast('error', 'Erro', 'Erro ao criar a empresa.');
+          this.isSubmitting = false;
         }
-      },
-      error: (err) => {
-        console.error('Error updating store', err);
-        this.toastService.triggerToast('error', 'Erro', 'Erro ao atualizar dados da empresa.');
+      });
+    } else {
+      if (!this.selectedStore?.id_code) {
+        this.toastService.triggerToast('error', 'Erro', 'Nenhuma empresa selecionada para edição.');
         this.isSubmitting = false;
+        return;
       }
-    });
+
+      this.storeService.updateStore(this.selectedStore.id_code, payload).subscribe({
+        next: (response) => {
+          this.toastService.triggerToast('success', 'Sucesso', 'Dados da empresa atualizados.');
+          this.isSubmitting = false;
+          if (response && response.data) {
+            this.populateForm(response.data);
+          }
+        },
+        error: (err) => {
+          console.error('Error updating store', err);
+          this.toastService.triggerToast('error', 'Erro', 'Erro ao atualizar dados da empresa.');
+          this.isSubmitting = false;
+        }
+      });
+    }
   }
 
   triggerLogoInput() {

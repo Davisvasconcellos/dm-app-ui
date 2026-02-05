@@ -25,6 +25,7 @@ import { Error500Component } from './pages/other-page/error-500/error-500.compon
 import { Error503Component } from './pages/other-page/error-503/error-503.component';
 import { ComingSoonComponent } from './pages/other-page/coming-soon/coming-soon.component';
 import { MaintenanceComponent } from './pages/other-page/maintenance/maintenance.component';
+import { NoPermissionComponent } from './pages/other-page/no-permission/no-permission.component';
 import { SuccessComponent } from './pages/other-page/success/success.component';
 import { EndQuestSuccessComponent } from './pages/events/end-quest-success/end-quest-success.component';
 import { ChatsComponent } from './pages/chats/chats.component';
@@ -122,7 +123,7 @@ export const routes: Routes = [
   },
   {
     path: 'events/home-default',
-    component: AppHeaderLayoutComponent,
+    component: AppLayoutComponent,
     canActivate: [AuthGuard],
     children: [
       {
@@ -318,6 +319,24 @@ export const routes: Routes = [
         canActivate: [AuthGuard, RoleGuard],
         data: { expectedRoles: ['waiter'] },
         title:'Angular Check User Status'
+      },
+      {
+        path: 'master',
+        canActivate: [AuthGuard, RoleGuard],
+        data: { expectedRoles: ['master'] },
+        children: [
+          { 
+            path: 'home', 
+            loadComponent: () => import('./pages/master/home-master/home-master.component').then(m => m.HomeMasterComponent),
+            title: 'Master Admin - Home'
+          },
+          { 
+            path: 'modules', 
+            loadComponent: () => import('./pages/master/modules-manager/modules-manager.component').then(m => m.ModulesManagerComponent),
+            title: 'Gerenciamento de Módulos'
+          },
+          { path: '', redirectTo: 'home', pathMatch: 'full' }
+        ]
       },
       {
         path:'pub/admin',
@@ -715,6 +734,11 @@ export const routes: Routes = [
     path:'maintenance',
     component:MaintenanceComponent,
     title:'Angular Maintenance Dashboard'
+  },
+  {
+    path:'no-permission',
+    component:NoPermissionComponent,
+    title:'No Permission'
   },
   {
     path:'success',

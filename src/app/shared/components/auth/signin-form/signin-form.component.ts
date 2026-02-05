@@ -8,6 +8,7 @@ import { RouterModule, Router, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../services/auth.service';
 import { getAuth, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { switchMap } from 'rxjs/operators';
 
 @Component({
   selector: 'app-signin-form',
@@ -72,9 +73,17 @@ export class SigninFormComponent implements OnInit {
     this.isLoading = true;
     this.errorMessage = '';
 
-    this.authService.login({ email: this.email, password: this.password }).subscribe({
+    this.authService.login({ email: this.email, password: this.password })
+    .pipe(
+      switchMap((loginResponse) => {
+        console.log('Login inicial realizado:', loginResponse);
+        // Busca dados completos do usuário (incluindo módulos)
+        return this.authService.getUserMe();
+      })
+    )
+    .subscribe({
       next: (response) => {
-        console.log('Login realizado com sucesso:', response);
+        console.log('Dados do usuário atualizados:', response);
         this.isLoading = false;
         
         // 1) Sempre priorizar returnUrl quando presente (sobrepõe regras de role)
@@ -136,8 +145,16 @@ export class SigninFormComponent implements OnInit {
       const cred = await signInWithPopup(auth, provider);
       const idToken = await cred.user.getIdToken();
 
-      this.authService.loginWithGoogle(idToken).subscribe({
-        next: () => {
+      this.authService.loginWithGoogle(idToken)
+      .pipe(
+        switchMap((loginResponse) => {
+          console.log('Login Google inicial realizado:', loginResponse);
+          return this.authService.getUserMe();
+        })
+      )
+      .subscribe({
+        next: (response) => {
+          console.log('Dados do usuário atualizados (Google):', response);
           this.isLoading = false;
           // 1) Sempre priorizar returnUrl quando presente (sobrepõe regras de role)
           const returnUrl = this.getReturnUrl();
