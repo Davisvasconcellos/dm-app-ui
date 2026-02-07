@@ -179,6 +179,8 @@
                   </div>
                 </section>
 
+<!-- Suggestions moved to dedicated page -->
+
                 <!-- 3 - DISPONÍVEIS -->
                 <section class="relative bg-blue-900/20 rounded-3xl px-2 py-6 md:p-6 border border-blue-500/30 shadow-[0_0_50px_rgba(59,130,246,0.05)]">
                   <div class="flex justify-between items-end mb-6 border-b border-blue-500/30 pb-2">
@@ -250,6 +252,9 @@
               </div>
               </div>
           </div>
+
+          <!-- SUGGESTIONS VIEW -->
+          <app-music-suggestions-list *ngIf="viewMode === 'suggestions'" class="w-full h-full overflow-hidden"></app-music-suggestions-list>
 
           <!-- PLAYLIST VIEW (Now Playing) -->
           <div *ngIf="viewMode === 'playlist'" class="relative w-full h-full flex flex-col items-center justify-center py-2 md:py-4 overflow-y-auto scrollbar-hide">
@@ -428,6 +433,15 @@
       </div>
     </button>
     <button
+      (click)="viewMode = 'suggestions'"
+      class="flex-1 flex items-center justify-center border-r border-white/5 hover:bg-white/5 transition-colors group"
+      [ngClass]="viewMode === 'suggestions' ? 'bg-purple-600/10' : ''">
+      <div class="flex flex-col items-center">
+        <span class="text-white font-oswald font-black italic text-2xl md:text-3xl leading-none">+</span>
+        <span class="text-purple-500 font-oswald font-bold text-[9px] uppercase tracking-[0.2em] mt-1 opacity-60 group-hover:opacity-100">{{ 'events.guestV2.nav.suggestions' | translate }}</span>
+      </div>
+    </button>
+    <button
       (click)="viewMode = 'playlist'"
       class="flex-1 flex items-center justify-center hover:bg-white/5 transition-colors group"
       [ngClass]="viewMode === 'playlist' ? 'bg-blue-600/10' : ''">
@@ -530,3 +544,5 @@
   <span class="text-[7px] uppercase font-bold tracking-wider mt-0.5">{{ type }}</span>
   </div>
 </ng-template>
+
+<!-- Suggestion modal moved to app-music-suggestions-list -->

@@ -1,0 +1,232 @@
+<ng-template #instrumentIcon let-type="type">
+  <div class="flex flex-col items-center justify-center">
+  <ng-container [ngSwitch]="type">
+    <!-- 1. Voz -->
+    <svg *ngSwitchCase="'voz'" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+      <path d="M19 10v1a7 7 0 0 1-14 0v-1"/>
+      <line x1="12" y1="19" x2="12" y2="22"/>
+    </svg>
+    <!-- 2. Guitarra -->
+    <svg *ngSwitchCase="'guitarra'" width="24" height="24" viewBox="0 0 313.926 313.926" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+      <path d="M64.647,210.666c-2.733-2.732-7.166-2.733-9.899-0.001c-2.734,2.734-2.734,7.166-0.001,9.899l38.282,38.283 c1.367,1.367,3.158,2.051,4.95,2.051c1.791,0,3.583-0.684,4.949-2.05c2.734-2.734,2.734-7.166-0.001-9.899L64.647,210.666z"/>
+      <path d="M103.849,191.187c-2.732-2.733-7.165-2.733-9.899-0.001c-2.734,2.734-2.734,7.166-0.001,9.899l18.561,18.562 c1.367,1.367,3.158,2.051,4.95,2.051c1.791,0,3.583-0.684,4.949-2.05c2.734-2.734,2.734-7.166-0.001-9.899L103.849,191.187z"/>
+      <path d="M312.64,22.521c-1.567-6.819-3.348-11.263-5.288-13.201c-2.568-2.569-5.753-3.984-8.967-3.984 c-1.64,0-3.231,0.357-4.729,1.06c-1.563,0.732-3.252,1.555-5.027,2.442l-6.547-6.548c-2.732-2.732-7.165-2.733-9.899-0.001 c-2.734,2.733-2.734,7.166-0.001,9.899l3.441,3.441c-3.056,1.646-6.136,3.333-9.121,4.987l-3.877-3.878 c-2.734-2.733-7.166-2.733-9.9,0c-2.733,2.734-2.733,7.166,0,9.9l1.101,1.101c-5.987,3.407-10.185,5.854-10.656,6.13 c-0.52,0.304-0.997,0.672-1.423,1.098c-3.324,3.326-4.343,8.109-3.093,12.412l-85.52,85.52c-0.584-0.281-1.162-0.556-1.728-0.822 c-3.704-1.747-6.903-3.256-9.918-6.271c-2.689-2.689,4.236-13.904,7.957-19.93c6.492-10.513,13.205-21.384,5.478-29.111 c-1.462-1.462-4.078-3.205-8.237-3.205c-10.996,0-26.237,12.858-29.421,16.042c-12.234,12.234-17.166,21.781-21.937,31.014 c-4.199,8.128-8.166,15.806-17.563,25.203c-7.012,7.012-16.218,10.502-25.965,14.198c-11.222,4.255-22.825,8.654-32.828,18.656 c-43.276,43.277-1.157,85.398,14.698,101.255c15.718,15.717,36.824,33.759,60.724,33.758c14.246-0.001,27.883-6.414,40.531-19.063 c10.001-10.002,14.401-21.605,18.656-32.827c3.695-9.747,7.186-18.953,14.197-25.964c6.785-6.786,12.096-9.278,18.244-12.164 c6.388-2.998,13.628-6.396,22.087-14.854c20.867-20.868,19.424-31.071,14.538-35.957c-2.621-2.621-6.113-3.949-10.379-3.949 c-4.824,0-10.106,1.698-15.7,3.497c-5.554,1.785-11.298,3.633-16.074,3.633c-3.153-0.001-5.349-0.789-7.115-2.557 c-1.195-1.195-2.021-2.198-2.581-3.119l95.411-95.411c1.162,0.339,2.375,0.521,3.614,0.521c3.342,0,6.47-1.286,8.809-3.623 l32.636-32.637C314.314,36.163,314.7,31.483,312.64,22.521z M247.407,58.425l7.763,7.764l-84.21,84.21 c-0.879-2.973-2.678-6.174-6.015-9.51l-0.001-0.001L247.407,58.425z M180.493,190.039 C180.494,190.039,180.493,190.039,180.493,190.039c6.972,0,14.085-2.287,20.36-4.306c3.612-1.161,7.328-2.356,9.985-2.716 c-1.885,3.648-6.551,9.818-12.63,15.897c-6.726,6.726-12.014,9.207-18.136,12.08c-6.411,3.01-13.678,6.42-22.196,14.938 c-9.137,9.138-13.331,20.201-17.388,30.9c-3.903,10.293-7.589,20.016-11.961,28.718c-4.331,8.62-8.525,17.228-19.165,27.868 c-2.457,2.457-3.784,5.437-3.738,8.39l0.206,12.87c0.046,2.871,1.156,5.343,3.125,6.961c1.97,1.618,4.511,2.15,7.157,1.498 l11.758-2.895c2.906-0.715,5.656-2.583,7.747-5.26c3.086-3.951,6.596-8.232,10.334-12.618c1.373-1.61,3.84-1.666,5.291-0.215 l10.54,10.541c1.455,1.455,1.425,3.901-0.185,5.275c-4.437,3.787-8.777,7.346-12.784,10.479c-2.658,2.079-4.516,4.814-5.231,7.702 l-2.894,11.758c-0.652,2.646-0.12,5.187,1.498,7.157c1.618,1.969,4.09,3.079,6.961,3.125l12.87,0.206 c2.953,0.047,5.933-1.28,8.39-3.738c10.64-10.64,19.248-24.834,27.868-29.165c8.68-4.372,19.762-8.251,30.9-17.388 c8.518-8.518,11.928-15.785,14.938-22.196c2.873-6.122,5.354-11.41,12.08-18.136c6.079-6.079,12.249-10.745,15.897-12.63 c-0.36,2.657-1.555,6.373-2.716,9.985c-2.019,6.275-4.306,13.388-4.306,20.36c0,29.07,11.065,58.141,33.196,80.271 c44.26,44.26,116.279,44.26,160.539,0L64.647,210.666z M167.36,339.066c-2.733-2.733-7.166-2.733-9.899-0.001 c-2.734,2.734-2.734,7.166-0.001,9.899l10.54,10.541c1.367,1.367,3.158,2.051,4.95,2.051c1.791,0,3.583-0.684,4.949-2.05 c2.734-2.734,2.734-7.166,0.001-9.899L167.36,339.066z"/>
+    </svg>
+    <!-- 3. Baixo -->
+    <svg *ngSwitchCase="'baixo'" width="24" height="24" viewBox="0 0 469.945 469.945" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+      <path d="M459.353,50.552l3.67-3.67c5.576-5.575,7.949-12.496,6.511-18.987c-1.438-6.491-6.512-11.762-13.921-14.46l-25.832-9.409 c-2.736-0.997-5.808-0.319-7.87,1.744l-3.67,3.67l-6.091-6.091c-2.93-2.929-7.678-2.929-10.607,0 c-2.929,2.929-2.929,7.677,0,10.606l6.091,6.091l-10.54,10.54l-6.028-6.028c-2.93-2.929-7.678-2.929-10.607,0 c-2.929,2.929-2.929,7.678,0,10.607l6.028,6.028l-3.671,3.671c-0.87,0.87-1.513,1.942-1.871,3.12l-4.403,14.466l-122.98,117.398 c-14.393-1.348-41.92-3.851-53.188-4.358c-22.038-0.996-44.539,8.317-61.761,25.541l-7.754,7.753 c-2.366,2.366-2.878,6.014-1.255,8.941c5.742,10.355,1.99,23.451-8.364,29.194l-19.8,10.981 c-10.356,5.743-23.451,1.99-29.194-8.364c-1.142-2.059-3.184-3.462-5.516-3.79c-2.327-0.329-4.682,0.459-6.347,2.124 l-27.188,27.188c-44.26,44.261-44.26,116.279,0,160.539c22.131,22.13,51.201,33.196,80.271,33.196s58.14-11.065,80.271-33.196 l27.188-27.188c1.664-1.665,2.451-4.015,2.123-6.346c-0.327-2.332-1.73-4.374-3.789-5.516 c-5.017-2.782-8.649-7.351-10.229-12.865c-1.58-5.514-0.918-11.313,1.864-16.33l10.981-19.801 c2.782-5.016,7.351-8.649,12.865-10.228c5.513-1.58,11.313-0.917,16.329,1.864c2.927,1.622,6.575,1.111,8.941-1.255l7.753-7.753 c17.224-17.224,26.532-39.736,25.54-61.762c-0.508-11.273-3.01-38.795-4.358-53.188L406.343,92.251l14.466-4.403 c1.178-0.358,2.249-1.001,3.12-1.872l3.67-3.671l6.028,6.028c1.465,1.465,3.384,2.197,5.304,2.197 c1.919,0,3.839-0.732,5.303-2.197c2.93-2.929,2.93-7.677,0.001-10.607l-6.028-6.029l10.54-10.54l6.091,6.091 c1.465,1.464,3.385,2.197,5.304,2.197c1.919,0,3.839-0.732,5.304-2.197c2.929-2.929,2.929-7.678,0-10.607L459.353,50.552z M257.156,319.574l-4.088,4.089c-7.179-2.614-14.974-2.903-22.46-0.758c-9.365,2.683-17.126,8.853-21.851,17.373l-10.981,19.8 c-4.726,8.52-5.851,18.37-3.167,27.736c1.778,6.209,5.09,11.712,9.603,16.094l-21.083,21.083 c-38.41,38.412-100.915,38.412-139.326,0c-38.412-38.412-38.412-100.914,0-139.326l21.092-21.092 c11.196,11.489,29.132,14.591,43.821,6.445l19.801-10.982c15.866-8.8,22.606-27.765,16.611-44.381c0.825,0.03,1.654,0.048,2.483,0.048 c51.136,0,92.571-41.436,92.571-92.571C257.202,321.196,257.185,320.383,257.156,319.574z"/>
+    </svg>
+    <!-- 4. Teclado -->
+    <svg *ngSwitchCase="'teclado'" width="24" height="24" viewBox="0 0 93.936 93.936" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+      <g>
+        <path d="M85.73,16.514H8.206C3.68,16.514,0,20.199,0,24.719v44.498c0,4.524,3.68,8.205,8.206,8.205H85.73
+            c4.525,0,8.206-3.681,8.206-8.205V24.719C93.936,20.199,90.255,16.514,85.73,16.514z M87.936,69.217
+            c0,1.217-0.989,2.205-2.206,2.205H8.206c-1.217,0-2.206-0.988-2.206-2.205V24.719c0-1.217,0.989-2.205,2.206-2.205H85.73
+            c1.217,0,2.206,0.988,2.206,2.205V69.217z"/>
+        <path d="M12.872,27.38H22.4v26.756h-9.528V27.38z M26.4,27.38h9.528v26.756H26.4V27.38z M39.928,27.38h9.529v26.756h-9.529V27.38z
+             M53.456,27.38h9.528v26.756h-9.528V27.38z M66.983,27.38h9.528v26.756h-9.528V27.38z"/>
+        <path d="M19.456,58.334h-4.072v8.192h4.072V58.334z M32.984,58.334h-4.072v8.192h4.072V58.334z M46.513,58.334h-4.072v8.192h4.072
+            V58.334z M60.04,58.334h-4.071v8.192h4.071V58.334z M73.568,58.334h-4.071v8.192h4.071V58.334z"/>
+      </g>
+    </svg>
+    <!-- 5. Bateria -->
+    <svg *ngSwitchCase="'bateria'" width="24" height="24" viewBox="0 0 314.001 314.001" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+      <path d="M307.65,273.522c-0.025-0.025-0.052-0.051-0.077-0.076L186.966,156.559l92.99-95.953c8.021-0.828,16.095-4.843,22.55-11.297 c6.069-6.068,10.027-13.63,11.145-21.292c1.211-8.301-1.112-16.075-6.369-21.323C302.969,2.377,296.93,0,290.276,0 c-9,0-18.338,4.177-25.62,11.459c-6.506,6.507-10.518,14.618-11.308,22.684L157,127.519L60.653,34.144 c-0.79-8.066-4.802-16.178-11.308-22.685c-6.067-6.066-13.627-10.023-21.29-11.14c-8.307-1.207-16.08,1.113-21.33,6.368 C1.463,11.941-0.861,19.716,0.35,28.017c1.118,7.662,5.075,15.223,11.144,21.292c6.473,6.472,14.53,10.477,22.553,11.299 l92.989,95.951L6.428,273.445c-0.025,0.025-0.052,0.051-0.077,0.076c-4.36,4.359-6.596,10.268-6.294,16.636 c0.29,6.117,2.913,11.95,7.384,16.422C12.153,311.295,18.547,314,24.982,314c0.001,0,0.001,0,0.002,0 c5.935,0,11.45-2.243,15.524-6.317c0.026-0.026,0.052-0.052,0.077-0.079l116.416-120.125l116.414,120.125 c0.025,0.026,0.051,0.053,0.076,0.079c4.099,4.099,9.566,6.318,15.499,6.318c0.378,0,0.759-0.009,1.141-0.027 c6.12-0.291,11.954-2.917,16.426-7.392c4.474-4.475,7.098-10.308,7.387-16.425C314.246,283.789,312.01,277.881,307.65,273.522z M43.394,50.136c-1.257-2.073-3.518-3.372-5.986-3.372c-0.102,0.001-0.197,0.003-0.296,0.002c-5.24,0-11.101-2.739-15.719-7.357 c-3.895-3.894-6.515-8.782-7.191-13.412c-0.332-2.279-0.461-6.532,2.419-9.407c2.875-2.877,7.129-2.748,9.413-2.416 c4.631,0.675,9.519,3.294,13.409,7.186c4.678,4.677,7.426,10.629,7.352,15.922c-0.032,2.264,1.051,4.343,2.815,5.658l97.33,94.328 l-9.852,9.549L43.394,50.136z M30.577,297.815C28.75,299.62,26.529,300,24.983,300c-2.749,0-5.532-1.209-7.64-3.317 c-2.005-2.006-3.178-4.558-3.302-7.188c-0.112-2.363,0.66-4.507,2.177-6.041L264.177,43.144c1.901-1.309,3.061-3.497,3.028-5.863 c-0.074-5.292,2.673-11.245,7.351-15.922C279.163,16.751,285.04,14,290.276,14c2.06,0,4.965,0.449,7.108,2.595 c2.874,2.87,2.746,7.122,2.413,9.401c-0.675,4.63-3.296,9.518-7.189,13.412c-4.607,4.607-10.486,7.357-15.727,7.357l-0.194-0.001 c-0.031-0.001-0.063-0.001-0.095-0.001c-2.47,0-4.732,1.3-5.903,2.471c-1.171,1.171-2.472,2.472-2.472,5.903 c0,5.241,2.75,11.12,7.357,15.727c3.895,3.893,8.782,6.514,13.412,7.189c2.279,0.333,6.531,0.461,9.401-2.413 c2.146-2.143,2.595-5.048,2.595-7.108C290.276,14,290.276,14,290.276,14c-1.782,0-4.008,0.38-5.719,2.091 c-1.534,1.517-2.19,3.66-2.302,6.023c-0.24,5.06,3.618,8.802,8.125,10.647c2.14,0.876,4.604,0.73,6.711-0.275 c2.107-1.006,3.639-2.924,4.22-5.188c1.373-5.352-2.316-10.673-7.531-11.233c-0.344-0.037-0.686-0.065-1.026-0.065 c-0.902,0-1.796,0.199-2.616,0.617c-2.368,1.206-3.243,4.04-2.072,6.342c0.682,1.339,2.083,2.124,3.535,2.124 c0.548,0,1.104-0.111,1.631-0.34c2.812-1.222,2.831-5.148-0.08-6.195c-1.635-0.588-3.081,1.178-2.227,2.584 c0.132,0.218,0.342,0.366,0.584,0.412c0.243,0.046,0.493-0.024,0.669-0.2c0.417-0.417,0.125-1.125-0.465-1.125 c-0.134,0-0.259,0.053-0.354,0.147C288.752,24.87,289.46,25.578,290.276,25.578c0.816,0,1.478-0.662,1.478-1.478 c0-0.816-0.662-1.478-1.478-1.478c-0.816,0-1.478,0.662-1.478,1.478C288.798,24.1,288.798,24.1,288.798,24.1 c0,1.36-1.102,2.462-2.462,2.462c-1.36,0-2.462-1.102-2.462-2.462c0-1.36,1.102-2.462,2.462-2.462c1.36,0,2.462,1.102,2.462,2.462 C288.798,24.1,288.798,24.1,288.798,24.1z"/>
+    </svg>
+    <!-- 6. Metais -->
+    <svg *ngSwitchCase="'metais'" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 8h4l8-4v16l-8-4H4V8z M16 8h2v8h-2z"/>
+    </svg>
+    <!-- 7. Percussão -->
+    <svg *ngSwitchCase="'percussao'" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 4h6v16H4z M14 4h6v16h-6z"/>
+    </svg>
+    <!-- 8. Cordas -->
+    <svg *ngSwitchCase="'cordas'" width="24" height="24" viewBox="0 0 512 512" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+      <g>
+        <path d="M207.882,304.111c18.384,18.392,48.197,18.392,66.589,0c18.384-18.384,18.384-48.196,0-66.581 c-18.392-18.392-48.206-18.392-66.589,0C189.489,255.915,189.489,285.728,207.882,304.111z"></path>
+        <path d="M364.346,218.42l-18.136,19.034l7.674,7.665c8.708,8.708,13.002,20.001,13.011,31.404 c-0.009,11.404-4.312,22.696-13.011,31.414c-6.802,6.954-19.317,12.994-30.139,16.801c-11.839,4.268-22.652,10.471-31.215,19.017 c-7.324,7.297-12.953,16.493-15.382,27.093c-3.533,15.544-5.056,32.825-9.008,49.121c-3.91,16.331-9.95,31.08-21.232,42.346 c-1.48,1.48-3.055,2.908-4.748,4.286c-9.384,7.648-19.137,13.122-29.42,16.219c-15.433,4.552-32.388,4.192-53.27-4.14 c-20.814-8.35-45.245-25.082-73.151-53.005c-37.281-37.23-54.433-68.181-58.788-92.81c-2.207-12.371-1.42-23.294,1.652-33.603 c3.088-10.291,8.572-20.044,16.219-29.428c1.386-1.702,2.815-3.276,4.303-4.764c11.258-11.275,25.989-17.315,42.32-21.224 c16.305-3.943,33.577-5.466,49.121-8.999c10.6-2.438,19.805-8.058,27.102-15.373c8.538-8.572,14.731-19.368,19.008-31.224 c3.815-10.831,9.83-23.338,16.793-30.147c8.708-8.7,20.001-13.003,31.412-13.012c11.412,0.009,22.696,4.303,31.404,13.012 l7.682,7.682l19.026-18.136l-8.127-8.127c-27.615-27.615-72.364-27.615-99.978,0c-11.831,11.977-18.392,27.434-22.944,39.822 c-3.216,8.974-7.734,16.433-12.866,21.54c-4.414,4.406-9.119,7.118-14.432,8.359c-12.789,2.993-30.668,4.61-49.318,9.051 c-18.615,4.465-38.598,12.01-54.792,28.196c-2.105,2.104-4.141,4.346-6.091,6.75c-9.377,11.506-16.776,24.304-21.02,38.488 c-6.441,21.266-5.337,45.305,4.928,70.61c10.249,25.382,29.232,52.338,58.805,81.92c39.42,39.377,74.28,60.164,106.746,66.076 c16.185,2.926,31.635,1.916,45.793-2.344c14.175-4.243,26.973-11.635,38.496-21.027c2.387-1.933,4.62-3.969,6.715-6.066 c16.186-16.202,23.748-36.178,28.206-54.793c4.44-18.658,6.065-36.546,9.068-49.352c1.24-5.295,3.944-9.983,8.35-14.414 c5.115-5.132,12.575-9.649,21.532-12.874c12.413-4.543,27.845-11.121,39.822-22.944c27.614-27.623,27.614-72.363,0-99.978 L364.346,218.42z"></path>
+        <polygon points="268.021,208.308 303.694,243.972 426.547,115.071 396.923,85.437 "></polygon>
+        <polygon points="454.838,15.349 403.732,66.446 445.547,108.261 496.652,57.155 "></polygon>
+        <polygon points="446.959,10.199 436.753,0.002 420.114,16.64 430.312,26.838 "></polygon>
+        <polygon points="415.238,41.92 405.032,31.722 388.393,48.361 398.591,58.558 "></polygon>
+        <polygon points="501.794,65.043 485.155,81.682 495.352,91.879 512,75.24 "></polygon>
+        <rect x="459.642" y="98.416" transform="matrix(-0.7071 -0.7071 0.7071 -0.7071 719.0573 518.2056)" width="14.422" height="23.531"></rect>
+        <polygon points="115.5,343.84 168.154,396.493 182.089,382.558 129.444,329.904 "></polygon>
+      </g>
+    </svg>
+    <!-- 9. Outro (Default) -->
+    <svg *ngSwitchDefault width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
+    </svg>
+  </ng-container>
+  <span class="text-[7px] uppercase font-bold tracking-wider mt-0.5">{{ type }}</span>
+  </div>
+</ng-template>
+
+<div class="fixed inset-0 z-50 flex flex-col bg-[#121212] text-white">
+  <!-- Header -->
+  <div class="h-16 flex items-center justify-between px-6 border-b border-white/10 bg-[#121212]">
+    <h2 class="font-oswald font-black italic text-2xl uppercase tracking-tighter text-white">
+      {{ (suggestionToEdit ? 'Editar Sugestão' : 'Nova Sugestão') | translate }}
+    </h2>
+    <button (click)="close.emit()" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors text-gray-400 hover:text-white">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+    </button>
+  </div>
+
+  <!-- Content -->
+  <div class="flex-1 overflow-y-auto p-6" [formGroup]="suggestionForm">
+    
+    <!-- Step 1: Song Info -->
+    <div *ngIf="step === 1" class="space-y-8 max-w-2xl mx-auto pt-8">
+      <div class="space-y-2">
+        <label class="block text-[10px] uppercase font-bold tracking-[0.2em] text-gray-400 pl-1">
+          {{ 'Nome da Música' | translate }}
+        </label>
+        <input type="text" formControlName="song_name" 
+          class="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-4 text-white placeholder-gray-600 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all font-medium text-lg"
+          [placeholder]="'Ex: Hotel California' | translate">
+          <p *ngIf="suggestionForm.get('song_name')?.touched && suggestionForm.get('song_name')?.invalid" class="pl-1 text-xs text-red-500 font-bold uppercase tracking-wide">
+            {{ 'Campo obrigatório' | translate }}
+          </p>
+      </div>
+
+      <div class="space-y-2">
+        <label class="block text-[10px] uppercase font-bold tracking-[0.2em] text-gray-400 pl-1">
+          {{ 'Artista / Banda' | translate }}
+        </label>
+        <input type="text" formControlName="artist_name" 
+          class="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-4 text-white placeholder-gray-600 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all font-medium text-lg"
+          [placeholder]="'Ex: Eagles' | translate">
+          <p *ngIf="suggestionForm.get('artist_name')?.touched && suggestionForm.get('artist_name')?.invalid" class="pl-1 text-xs text-red-500 font-bold uppercase tracking-wide">
+            {{ 'Campo obrigatório' | translate }}
+          </p>
+      </div>
+    </div>
+
+    <!-- Step 2: My Instrument -->
+    <div *ngIf="step === 2" class="space-y-6 max-w-3xl mx-auto pt-4">
+      <h3 class="text-xl font-oswald font-bold italic uppercase text-center text-white mb-8 tracking-wide">
+        {{ 'O que você vai tocar?' | translate }}
+      </h3>
+      
+      <div class="grid grid-cols-3 md:grid-cols-4 gap-4">
+        <button *ngFor="let inst of instrumentOptions"
+          type="button"
+          (click)="suggestionForm.get('my_instrument')?.setValue(inst)"
+          class="group relative flex flex-col items-center justify-center p-4 rounded-xl border transition-all aspect-square"
+          [ngClass]="suggestionForm.get('my_instrument')?.value === inst 
+            ? 'bg-purple-600/20 border-purple-500 text-purple-400 shadow-[0_0_20px_rgba(147,51,234,0.3)]' 
+            : 'bg-[#0a0a0a] border-white/10 hover:bg-white/5 text-gray-500 hover:text-gray-300'">
+           
+           <div class="w-12 h-12 mb-3 transition-transform duration-300 group-hover:scale-110">
+             <ng-container [ngTemplateOutlet]="instrumentIcon" [ngTemplateOutletContext]="{ type: getInstrumentType(inst) }"></ng-container>
+           </div>
+           <span class="text-[10px] font-bold uppercase tracking-widest">{{ inst }}</span>
+        </button>
+      </div>
+       <p *ngIf="suggestionForm.get('my_instrument')?.touched && suggestionForm.get('my_instrument')?.invalid" class="mt-4 text-sm text-red-500 text-center font-bold uppercase tracking-wide">
+            {{ 'Selecione um instrumento' | translate }}
+       </p>
+    </div>
+
+    <!-- Step 3: Invite Friends -->
+    <div *ngIf="step === 3" class="space-y-8 max-w-3xl mx-auto pt-4">
+      <div class="text-center mb-8">
+        <h3 class="text-xl font-oswald font-bold italic uppercase text-white mb-2 tracking-wide">
+          {{ 'Convidar Amigos' | translate }}
+        </h3>
+        <p class="text-xs text-gray-500 font-bold uppercase tracking-widest">
+          {{ 'Convide amigos para tocar com você' | translate }}
+        </p>
+      </div>
+
+      <!-- Add Friend Form -->
+      <div class="bg-[#0a0a0a] border border-white/10 p-6 rounded-2xl space-y-6 shadow-xl">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="space-y-2">
+              <label class="block text-[10px] uppercase font-bold tracking-[0.2em] text-gray-400 pl-1">
+                {{ 'Amigo' | translate }}
+              </label>
+              <select [(ngModel)]="selectedFriendId" [ngModelOptions]="{standalone: true}"
+                class="w-full bg-[#121212] border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:border-purple-500 focus:ring-0">
+                <option value="" disabled selected>{{ 'Selecione um amigo...' | translate }}</option>
+                <option *ngFor="let friend of friends" [value]="friend.id">{{ friend.name }}</option>
+              </select>
+            </div>
+            
+            <div class="space-y-2">
+              <label class="block text-[10px] uppercase font-bold tracking-[0.2em] text-gray-400 pl-1">
+                 {{ 'Instrumento sugerido' | translate }}
+              </label>
+               <div class="grid grid-cols-6 gap-2">
+                 <button *ngFor="let inst of instrumentOptions"
+                   type="button"
+                   (click)="selectedFriendInstrument = inst"
+                   class="flex items-center justify-center p-2 rounded-lg border transition-all aspect-square"
+                   [ngClass]="selectedFriendInstrument === inst
+                     ? 'bg-purple-600/20 border-purple-500 text-purple-400 shadow-[0_0_10px_rgba(147,51,234,0.2)]'
+                     : 'bg-[#121212] border-white/10 hover:bg-white/5 text-gray-500 hover:text-gray-300'">
+                     <div class="w-full h-full p-0.5 transform transition-transform group-hover:scale-110">
+                        <ng-container [ngTemplateOutlet]="instrumentIcon" [ngTemplateOutletContext]="{ type: getInstrumentType(inst) }"></ng-container>
+                     </div>
+                 </button>
+               </div>
+            </div>
+        </div>
+
+        <button (click)="addInvite()" 
+          [disabled]="!selectedFriendId || !selectedFriendInstrument"
+          class="w-full py-3 bg-white/5 hover:bg-white/10 text-white rounded-xl text-xs font-bold uppercase tracking-widest disabled:opacity-50 border border-white/10 transition-all">
+          {{ 'Adicionar Convite' | translate }}
+        </button>
+      </div>
+
+      <!-- List of Invites -->
+      <div class="space-y-3 mt-6">
+        <div *ngFor="let invite of invites.controls; let i = index" class="flex items-center gap-4 bg-[#0a0a0a] p-4 rounded-xl border border-white/5 group">
+           <img [src]="invite.value.avatar" class="w-12 h-12 rounded-full object-cover border border-white/10">
+           <div class="flex-grow min-w-0">
+             <p class="text-white font-bold text-sm truncate">{{ invite.value.name }}</p>
+             <div class="flex items-center gap-2 mt-1 text-purple-400">
+                <div class="w-4 h-4">
+                  <ng-container [ngTemplateOutlet]="instrumentIcon" [ngTemplateOutletContext]="{ type: getInstrumentType(invite.value.instrument) }"></ng-container>
+                </div>
+                <span class="text-[10px] font-bold uppercase tracking-wider opacity-80">{{ invite.value.instrument }}</span>
+             </div>
+           </div>
+           <button (click)="removeInvite(i)" class="w-10 h-10 flex items-center justify-center rounded-lg text-gray-500 hover:text-red-500 hover:bg-red-500/10 transition-colors">
+             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+           </button>
+        </div>
+        <div *ngIf="invites.length === 0" class="text-center py-8 border-2 border-dashed border-white/5 rounded-2xl">
+          <p class="text-gray-600 text-xs font-bold uppercase tracking-widest">{{ 'Nenhum convite adicionado.' | translate }}</p>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- Footer Actions -->
+  <div class="p-6 border-t border-white/10 bg-[#121212]">
+    <div class="flex gap-4 max-w-2xl mx-auto">
+      <button *ngIf="step > 1" (click)="prevStep()"
+        class="flex-1 py-4 border border-white/10 hover:bg-white/5 text-white rounded-xl font-oswald font-bold uppercase tracking-wider text-sm transition-all">
+        {{ 'Voltar' | translate }}
+      </button>
+      
+      <button *ngIf="step < 3" (click)="nextStep()"
+        class="flex-1 py-4 bg-purple-600 hover:bg-purple-500 text-white rounded-xl font-oswald font-bold uppercase tracking-wider text-sm shadow-[0_0_20px_rgba(147,51,234,0.3)] transition-all">
+        {{ 'Próximo' | translate }}
+      </button>
+
+      <button *ngIf="step === 3" (click)="submit()"
+        class="flex-1 py-4 bg-green-600 hover:bg-green-500 text-white rounded-xl font-oswald font-bold uppercase tracking-wider text-sm shadow-[0_0_20px_rgba(22,163,74,0.3)] transition-all">
+        {{ (suggestionToEdit ? 'Salvar Alterações' : 'Finalizar Sugestão') | translate }}
+      </button>
+    </div>
+  </div>
+</div>

@@ -103,7 +103,8 @@
       },
       "nav": {
         "dashboard": "Dashboard",
-        "playlist": "Playlist"
+        "playlist": "Playlist",
+        "suggestions": "Suggestions"
       }
     },
     "quest": {
