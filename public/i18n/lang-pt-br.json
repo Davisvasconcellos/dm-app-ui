@@ -92,6 +92,12 @@
         "participant": "Participante",
         "emptyQueueMessage": "Nenhuma música na sua fila."
       },
+      "invites": {
+        "title": "CONVITES",
+        "badgeLabel": "Convite para tocar",
+        "reject": "RECUSAR",
+        "accept": "ACEITAR"
+      },
       "playlist": {
         "queueTitle": "FILA DE ESPERA",
         "songsWaiting": "EM ESPERA",

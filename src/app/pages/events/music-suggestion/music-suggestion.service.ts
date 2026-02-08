@@ -25,6 +25,12 @@ export interface MusicSuggestion {
   status: SuggestionStatus;
   participants: Participant[];
   created_at: number | string;
+  creator?: {
+    id: string | number;
+    id_code: string;
+    name: string;
+    avatar_url: string;
+  };
 }
 
 export interface FriendSearchResult {

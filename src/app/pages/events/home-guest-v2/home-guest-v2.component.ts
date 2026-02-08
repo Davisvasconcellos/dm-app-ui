@@ -7,12 +7,15 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { EventService, ApiJam, ApiSong, OnStageResponse } from '../event.service';
 import { AuthService, User } from '../../../shared/services/auth.service';
 import { NotificationComponent } from '../../../shared/components/ui/notification/notification/notification.component';
+import { MusicSuggestionService, MusicSuggestion, Participant } from '../music-suggestion/music-suggestion.service';
+import { ToastService } from '../../../shared/services/toast.service';
 import { MusicSuggestionsListComponent } from '../music-suggestions-list/music-suggestions-list.component';
+import { ModalComponent } from '../../../shared/components/ui/modal/modal.component';
 
 @Component({
   selector: 'app-home-guest-v2',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule, MusicSuggestionsListComponent],
+  imports: [CommonModule, FormsModule, TranslateModule, MusicSuggestionsListComponent, ModalComponent],
   templateUrl: './home-guest-v2.component.html',
   styleUrl: './home-guest-v2.component.css',
   animations: [
@@ -41,6 +44,14 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
   onStageSongs: ApiSong[] = [];
   playingNowSongs: ApiSong[] = [];
   goToStageSongs: ApiSong[] = [];
+  
+  // Invites
+  invitesForMe: MusicSuggestion[] = [];
+  isProcessingInvite: Record<string, boolean> = {};
+  rejectModalOpen = false;
+  inviteToReject: MusicSuggestion | null = null;
+  recentlyAcceptedInvites: string[] = [];
+  recentlyRejectedInvites: string[] = [];
 
   // Maps and state tracking
   selections: Record<number, string | null> = {};
@@ -117,7 +128,9 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
     private router: Router,
     private appRef: ApplicationRef,
     private injector: Injector,
-    private envInjector: EnvironmentInjector
+    private envInjector: EnvironmentInjector,
+    private musicSuggestionService: MusicSuggestionService,
+    private toast: ToastService
   ) {
     this.useSse = false;
     this.currentLang = localStorage.getItem('lang') || 'pt-br';
@@ -190,6 +203,27 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
         this.loadJams();
         this.loadOnStageOnce();
         this.loadPlaylist();
+
+        // Load Suggestions/Invites
+        this.musicSuggestionService.loadSuggestions(this.eventIdCode);
+        this.musicSuggestionService.suggestions$.subscribe(suggestions => {
+          if (this.currentUser?.id_code) {
+             this.invitesForMe = suggestions.filter(s => {
+              // I am a participant
+              const me = s.participants.find(p => 
+                (p.user_id_code || String(p.user_id)) === String(this.currentUser?.id_code) ||
+                (p.user_id_code || String(p.user_id)) === String(this.currentUser?.id)
+              );
+              // I am NOT the creator
+              const isCreator = s.created_by_user_id === String(this.currentUser?.id);
+              // Status is PENDING or ACCEPTED and suggestion is not REJECTED
+              const isPending = me && me.status === 'PENDING';
+              const isAccepted = me && me.status === 'ACCEPTED';
+              const isRejectedRecently = this.recentlyRejectedInvites.includes(s.id);
+              return (isPending || isAccepted) && !isCreator && s.status !== 'REJECTED' && s.status !== 'APPROVED' && !isRejectedRecently;
+             });
+          }
+        });
       }
 
       this.startPolling();
@@ -582,5 +616,85 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
         document.exitFullscreen().catch(() => {});
       }
     }
+  }
+
+  getInviter(suggestion: MusicSuggestion): { name: string; avatar_url?: string; avatar?: string } | undefined {
+    if (suggestion.creator) {
+      return suggestion.creator;
+    }
+    return suggestion.participants.find(p => p.is_creator);
+  }
+
+  getMyInviteInstrument(suggestion: MusicSuggestion): string {
+    if (!this.currentUser) return 'outro';
+    const me = suggestion.participants.find(p => 
+      (p.user_id_code || String(p.user_id)) === String(this.currentUser?.id_code) ||
+      (p.user_id_code || String(p.user_id)) === String(this.currentUser?.id)
+    );
+    return me?.instrument || 'outro';
+  }
+
+  isAccepted(invite: MusicSuggestion): boolean {
+    if (this.recentlyAcceptedInvites.includes(invite.id)) return true;
+    if (!this.currentUser) return false;
+    const me = invite.participants.find(p => 
+      (p.user_id_code || String(p.user_id)) === String(this.currentUser?.id_code) ||
+      (p.user_id_code || String(p.user_id)) === String(this.currentUser?.id)
+    );
+    return me?.status === 'ACCEPTED';
+  }
+
+  acceptInvite(suggestion: MusicSuggestion) {
+    if (!this.currentUser) return;
+    this.isProcessingInvite[suggestion.id] = true;
+
+    this.musicSuggestionService.acceptInvite(suggestion.id, String(this.currentUser.id)).subscribe({
+      next: () => {
+        this.recentlyAcceptedInvites.push(suggestion.id);
+        this.toast.triggerToast('success', 'Convite aceito!', 'Você agora está participando desta sugestão.');
+        delete this.isProcessingInvite[suggestion.id];
+      },
+      error: (err) => {
+        console.error(err);
+        this.toast.triggerToast('error', 'Erro ao aceitar convite', 'Tente novamente.');
+        delete this.isProcessingInvite[suggestion.id];
+      }
+    });
+  }
+
+  openRejectModal(suggestion: MusicSuggestion) {
+    this.inviteToReject = suggestion;
+    this.rejectModalOpen = true;
+  }
+
+  closeRejectModal() {
+    this.rejectModalOpen = false;
+    this.inviteToReject = null;
+  }
+
+  confirmReject() {
+    if (this.inviteToReject) {
+      this.rejectInvite(this.inviteToReject);
+      this.closeRejectModal();
+    }
+  }
+
+  rejectInvite(suggestion: MusicSuggestion) {
+    if (!this.currentUser) return;
+    this.isProcessingInvite[suggestion.id] = true;
+
+    this.musicSuggestionService.rejectInvite(suggestion.id, String(this.currentUser.id)).subscribe({
+      next: () => {
+        this.recentlyRejectedInvites.push(suggestion.id);
+        this.invitesForMe = this.invitesForMe.filter(i => i.id !== suggestion.id);
+        this.toast.triggerToast('info', 'Convite recusado', 'Você recusou participar desta sugestão.');
+        delete this.isProcessingInvite[suggestion.id];
+      },
+      error: (err) => {
+        console.error(err);
+        this.toast.triggerToast('error', 'Erro ao recusar convite', 'Tente novamente.');
+        delete this.isProcessingInvite[suggestion.id];
+      }
+    });
   }
 }

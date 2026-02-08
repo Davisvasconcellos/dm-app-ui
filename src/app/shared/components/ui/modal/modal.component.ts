@@ -4,21 +4,23 @@ import {
   Input,
   Output,
   EventEmitter,
-  ElementRef,
   OnInit,
   OnDestroy,
-  HostListener
+  OnChanges,
+  HostListener,
+  SimpleChanges
 } from '@angular/core';
 
 @Component({
   selector: 'app-modal',
+  standalone: true,
   imports: [
     CommonModule,
   ],
   templateUrl: './modal.component.html',
   styles: ``
 })
-export class ModalComponent {
+export class ModalComponent implements OnInit, OnDestroy, OnChanges {
 
   @Input() isOpen = false;
   @Output() close = new EventEmitter<void>();
@@ -26,7 +28,7 @@ export class ModalComponent {
   @Input() showCloseButton = true;
   @Input() isFullscreen = false;
 
-  constructor(private el: ElementRef) {}
+  constructor() {}
 
   ngOnInit() {
     if (this.isOpen) {
@@ -38,7 +40,7 @@ export class ModalComponent {
     document.body.style.overflow = 'unset';
   }
 
-  ngOnChanges() {
+  ngOnChanges(changes: SimpleChanges) {
     document.body.style.overflow = this.isOpen ? 'hidden' : 'unset';
   }
 
@@ -53,7 +55,7 @@ export class ModalComponent {
   }
 
   @HostListener('document:keydown.escape', ['$event'])
-  onEscape(event: KeyboardEvent) {
+  onEscape(event: Event) {
     if (this.isOpen) {
       this.close.emit();
     }
