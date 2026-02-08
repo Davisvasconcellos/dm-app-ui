@@ -109,6 +109,13 @@
       "suggestions": {
         "title": "MUSIC ",
         "subtitle": "SUGGEST SONGS FOR THE BAND",
+        "status": {
+          "approved": "Approved",
+          "rejected": "Rejected",
+          "submitted": "Waiting for Band",
+          "waitingFriends": "Waiting for Friends",
+          "waitingApproval": "Waiting Approval"
+        },
         "newSuggestion": "New Suggestion",
         "form": {
           "songLabel": "Song",
@@ -129,10 +136,25 @@
           "accept": "Accept",
           "reject": "Reject"
         },
+        "participating": {
+          "title": "Participating"
+        },
         "mySuggestions": {
           "title": "My Suggestions",
           "edit": "Edit",
           "delete": "Delete"
+        },
+        "deleteModal": {
+          "title": "Delete Suggestion",
+          "message": "Are you sure you want to delete the suggestion:",
+          "cancel": "Cancel",
+          "confirm": "Delete"
+        },
+        "removeParticipantModal": {
+          "title": "Remove Participant",
+          "message": "Are you sure you want to remove this participant from the suggestion?",
+          "cancel": "Cancel",
+          "confirm": "Remove"
         }
       }
     },

@@ -1,15 +1,19 @@
-import { Component, OnInit, ElementRef, ViewChild } from '@angular/core';
+import { Component, OnInit, ElementRef, ViewChild, OnDestroy, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormsModule, FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { MusicSuggestionService, MusicSuggestion, Participant } from '../music-suggestion/music-suggestion.service';
+import { MusicSuggestionService, MusicSuggestion, Participant, FriendSearchResult } from '../music-suggestion/music-suggestion.service';
+import { AuthService } from '../../../shared/services/auth.service';
+import { ToastService } from '../../../shared/services/toast.service';
+import { ModalComponent } from '../../../shared/components/ui/modal/modal.component';
+import { Subject, debounceTime, distinctUntilChanged, switchMap, takeUntil } from 'rxjs';
 
 interface Friend { id: string; name: string; avatar: string }
 
 @Component({
   selector: 'app-music-suggestions-list',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, TranslateModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, TranslateModule, ModalComponent],
   templateUrl: './music-suggestions-list.component.html',
   styles: [`
     :host {
@@ -20,10 +24,22 @@ interface Friend { id: string; name: string; avatar: string }
     }
   `]
 })
-export class MusicSuggestionsListComponent implements OnInit {
+export class MusicSuggestionsListComponent implements OnInit, OnDestroy {
+  @Input() eventId: string = '';
   mySuggestions: MusicSuggestion[] = [];
   invitesForMe: MusicSuggestion[] = [];
+  acceptedSuggestions: MusicSuggestion[] = [];
   editingSuggestion: MusicSuggestion | null = null;
+  
+  // Delete Modal
+  isDeleteModalOpen = false;
+  suggestionToDelete: MusicSuggestion | null = null;
+
+  // Remove Participant Modal
+  isRemoveParticipantModalOpen = false;
+  participantToRemove: { userId: string, name: string } | null = null;
+  suggestionForParticipantRemoval: string | null = null;
+
   @ViewChild('scrollArea') scrollArea?: ElementRef<HTMLDivElement>;
   
   // Inline Create Form
@@ -34,10 +50,15 @@ export class MusicSuggestionsListComponent implements OnInit {
   selectedFriendId = '';
   selectedFriendInstrument = '';
   friendQuery = '';
+  
+  private searchSubject = new Subject<string>();
+  private destroy$ = new Subject<void>();
 
   constructor(
     private suggestionService: MusicSuggestionService,
-    private fb: FormBuilder
+    private authService: AuthService,
+    private fb: FormBuilder,
+    private toastService: ToastService
   ) {
     this.createForm = this.fb.group({
       song_name: ['', Validators.required],
@@ -45,23 +66,50 @@ export class MusicSuggestionsListComponent implements OnInit {
       my_instrument: ['', Validators.required],
       invites: this.fb.array([])
     });
-    this.friends = this.suggestionService.mockFriends;
   }
 
   ngOnInit(): void {
-    // Subscribe to suggestions
-    this.suggestionService.suggestions$.subscribe(suggestions => {
-      const userId = this.suggestionService.currentUser.id;
-      this.mySuggestions = suggestions.filter(s => s.created_by_user_id === userId);
-      this.invitesForMe = suggestions.filter(s => 
-          s.created_by_user_id !== userId && 
-          s.participants.some(p => p.user_id === userId && p.status === 'PENDING')
-      );
+    if (this.eventId) {
+      this.suggestionService.loadSuggestions(this.eventId);
+    }
+
+    // Setup search
+    this.searchSubject.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      switchMap(query => this.suggestionService.searchFriends(query, this.eventId)),
+      takeUntil(this.destroy$)
+    ).subscribe((users: FriendSearchResult[]) => {
+      this.friends = users.map(u => ({
+        id: u.user_id,
+        name: u.name,
+        avatar: u.avatar_url || ''
+      }));
     });
+
+    // Subscribe to suggestions
+    this.suggestionService.suggestions$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(suggestions => {
+        const currentUser = this.authService.getCurrentUser();
+        if (!currentUser) return;
+        const userId = currentUser.id.toString();
+        
+        this.mySuggestions = suggestions.filter(s => String(s.created_by_user_id) === userId);
+        this.invitesForMe = suggestions.filter(s => 
+            String(s.created_by_user_id) !== userId && 
+            s.participants.some(p => String(p.user_id) === userId && p.status === 'PENDING')
+        );
+      });
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   get mockUserId() {
-    return this.suggestionService.currentUser.id;
+    return this.authService.getCurrentUser()?.id.toString() || '';
   }
   
   get invites() {
@@ -82,6 +130,14 @@ export class MusicSuggestionsListComponent implements OnInit {
   addInvite() {
     if (!this.selectedFriendId || !this.selectedFriendInstrument) return;
     
+    // Check for duplicates
+    const isDuplicate = this.invites.value.some((inv: any) => inv.user_id === this.selectedFriendId);
+    if (isDuplicate) {
+      this.toastService.triggerToast('warning', 'Usuário duplicado', 'Este usuário já foi adicionado.');
+      this.clearSelection();
+      return;
+    }
+
     const friend = this.friends.find(f => f.id === this.selectedFriendId);
     if (!friend) return;
 
@@ -92,9 +148,14 @@ export class MusicSuggestionsListComponent implements OnInit {
       instrument: [this.selectedFriendInstrument]
     }));
 
+    this.clearSelection();
+  }
+
+  private clearSelection() {
     this.selectedFriendId = '';
     this.selectedFriendInstrument = '';
     this.friendQuery = '';
+    this.friends = []; // Clear search results to reset the list
   }
 
   removeInvite(index: number) {
@@ -108,81 +169,62 @@ export class MusicSuggestionsListComponent implements OnInit {
     }
 
     const formVal = this.createForm.value;
-    const currentUser = this.suggestionService.currentUser;
+    const currentUser = this.authService.getCurrentUser();
+    if (!currentUser) return;
 
     if (this.editingSuggestion) {
-      const updated: MusicSuggestion = {
-        ...this.editingSuggestion,
+      const updated: Partial<MusicSuggestion> = {
+        id: this.editingSuggestion.id,
         song_name: formVal.song_name,
         artist_name: formVal.artist_name,
-        participants: [
-          {
-            user_id: currentUser.id,
-            name: currentUser.name,
-            avatar: currentUser.avatar,
-            instrument: formVal.my_instrument,
-            is_creator: true,
-            status: 'ACCEPTED'
-          },
-          ...formVal.invites.map((inv: any) => ({
-            user_id: inv.user_id,
-            name: inv.name,
-            avatar: inv.avatar,
-            instrument: inv.instrument,
-            is_creator: false,
-            status: 'PENDING'
-          }))
-        ]
+        // Backend handles participants update logic or we send minimal fields
       };
-      this.suggestionService.updateSuggestion(updated);
+      
+      this.suggestionService.updateSuggestion(updated).subscribe({
+        next: () => {
+          this.toastService.triggerToast('success', 'Sugestão atualizada', 'Sua sugestão foi atualizada com sucesso.');
+          this.editingSuggestion = null;
+          this.toggleCreate();
+        },
+        error: (err) => this.toastService.triggerToast('error', 'Erro ao atualizar', err.message || 'Não foi possível atualizar a sugestão.')
+      });
     } else {
-      const newSuggestion: MusicSuggestion = {
-        id: 'sugg-' + Date.now(),
+      const payload = {
+        event_id: this.eventId,
         song_name: formVal.song_name,
         artist_name: formVal.artist_name,
-        created_by_user_id: currentUser.id,
-        status: 'DRAFT',
-        created_at: Date.now(),
-        participants: [
-          {
-            user_id: currentUser.id,
-            name: currentUser.name,
-            avatar: currentUser.avatar,
-            instrument: formVal.my_instrument,
-            is_creator: true,
-            status: 'ACCEPTED'
-          },
-          ...formVal.invites.map((inv: any) => ({
-            user_id: inv.user_id,
-            name: inv.name,
-            avatar: inv.avatar,
-            instrument: inv.instrument,
-            is_creator: false,
-            status: 'PENDING'
-          }))
-        ]
+        my_instrument: formVal.my_instrument,
+        invites: formVal.invites.map((inv: any) => ({
+          user_id: inv.user_id,
+          instrument: inv.instrument
+        }))
       };
-      this.suggestionService.addSuggestion(newSuggestion);
+      
+      this.suggestionService.addSuggestion(payload).subscribe({
+        next: () => {
+          this.toastService.triggerToast('success', 'Sugestão criada', 'Sua sugestão foi criada com sucesso.');
+          this.toggleCreate();
+        },
+        error: (err) => this.toastService.triggerToast('error', 'Erro ao criar', err.message || 'Não foi possível criar a sugestão.')
+      });
     }
-    this.editingSuggestion = null;
-    this.toggleCreate();
   }
   
   onImageError(event: any) {
     event.target.src = '/images/user/default-avatar.jpg';
   }
 
-  getSuggestionStatus(s: MusicSuggestion): { label: string, class: string } {
-    if (s.status === 'APPROVED') return { label: 'Aprovada', class: 'bg-green-500/20 text-green-500' };
-    if (s.status === 'REJECTED') return { label: 'Recusada', class: 'bg-red-500/20 text-red-500' };
-    if (s.status === 'SUBMITTED') return { label: 'Aguardando Banda', class: 'bg-blue-500/20 text-blue-500' };
+  getSuggestionStatus(s: MusicSuggestion): { labelKey: string, class: string } {
+    if (s.status === 'APPROVED') return { labelKey: 'events.guestV2.suggestions.status.approved', class: 'bg-green-500/20 text-green-500' };
+    if (s.status === 'REJECTED') return { labelKey: 'events.guestV2.suggestions.status.rejected', class: 'bg-red-500/20 text-red-500' };
+    if (s.status === 'SUBMITTED') return { labelKey: 'events.guestV2.suggestions.status.submitted', class: 'bg-blue-500/20 text-blue-500' };
     
     // DRAFT
     const hasPending = s.participants.some(p => p.status === 'PENDING');
     if (hasPending) {
-        return { label: 'Aguardando Amigos', class: 'bg-indigo-500/20 text-indigo-400' };
+        return { labelKey: 'events.guestV2.suggestions.status.waitingFriends', class: 'bg-indigo-500/20 text-indigo-400' };
     }
-    return { label: 'Rascunho', class: 'bg-yellow-500/20 text-yellow-500' };
+    return { labelKey: 'events.guestV2.suggestions.status.waitingApproval', class: 'bg-purple-500/20 text-purple-500' };
   }
 
   getSuggestionBorderClass(s: MusicSuggestion): string {
@@ -227,26 +269,85 @@ export class MusicSuggestionsListComponent implements OnInit {
     }, 0);
   }
 
-  deleteSuggestion(id: string) {
-    if (confirm('Tem certeza que deseja excluir esta sugestão?')) {
-      this.suggestionService.deleteSuggestion(id);
-    }
+  openDeleteModal(suggestion: MusicSuggestion) {
+    this.suggestionToDelete = suggestion;
+    this.isDeleteModalOpen = true;
+  }
+
+  closeDeleteModal() {
+    this.isDeleteModalOpen = false;
+    this.suggestionToDelete = null;
+  }
+
+  confirmDelete() {
+    if (!this.suggestionToDelete) return;
+    
+    const id = this.suggestionToDelete.id;
+    this.suggestionService.deleteSuggestion(id).subscribe({
+      next: () => {
+        this.toastService.triggerToast('success', 'Sugestão excluída', 'A sugestão foi removida com sucesso.');
+        this.closeDeleteModal();
+      },
+      error: (err) => {
+        this.toastService.triggerToast('error', 'Erro ao excluir', err.message || 'Não foi possível excluir a sugestão.');
+        this.closeDeleteModal();
+      }
+    });
   }
 
   removeParticipantFromSuggestion(suggestionId: string, userId: string) {
-    if (confirm('Remover este participante?')) {
-      this.suggestionService.removeParticipant(suggestionId, userId);
-    }
+    // Legacy method signature kept for compatibility if needed, but redirected to modal logic if name unavailable
+    // Ideally update template to pass name. For now, let's find the name.
+    const s = this.mySuggestions.find(ms => ms.id === suggestionId);
+    const p = s?.participants.find(part => (part.user_id_code || String(part.user_id)) === userId);
+    this.openRemoveParticipantModal(suggestionId, userId, p?.name || 'Participante');
+  }
+
+  openRemoveParticipantModal(suggestionId: string, userId: string, userName: string) {
+    this.suggestionForParticipantRemoval = suggestionId;
+    this.participantToRemove = { userId, name: userName };
+    this.isRemoveParticipantModalOpen = true;
+  }
+
+  closeRemoveParticipantModal() {
+    this.isRemoveParticipantModalOpen = false;
+    this.participantToRemove = null;
+    this.suggestionForParticipantRemoval = null;
+  }
+
+  confirmRemoveParticipant() {
+    if (!this.suggestionForParticipantRemoval || !this.participantToRemove) return;
+
+    const suggestionId = this.suggestionForParticipantRemoval;
+    const userId = this.participantToRemove.userId;
+
+    this.suggestionService.removeParticipant(suggestionId, userId).subscribe({
+      next: () => {
+          this.toastService.triggerToast('success', 'Participante removido', 'O participante foi removido da sugestão.');
+          // Update local state
+          const s = this.mySuggestions.find(ms => ms.id === suggestionId);
+          if (s) {
+              s.participants = s.participants.filter(p => (p.user_id_code || String(p.user_id)) !== userId);
+          }
+          this.closeRemoveParticipantModal();
+      },
+      error: (err) => {
+        this.toastService.triggerToast('error', 'Erro ao remover', err.message || 'Não foi possível remover o participante.');
+        this.closeRemoveParticipantModal();
+      }
+    });
   }
 
   submitSuggestion(suggestionId: string) {
     const s = this.mySuggestions.find(ms => ms.id === suggestionId);
     if (!s || !this.canSubmitSuggestion(s)) {
-      alert('Ainda há convidados pendentes ou rejeitados. Remova-os ou aguarde aceitação.');
+      this.toastService.triggerToast('warning', 'Ação necessária', 'Ainda há convidados pendentes ou rejeitados. Remova-os ou aguarde aceitação.');
       return;
     }
-    this.suggestionService.submitSuggestion(suggestionId);
-    alert('Sugestão enviada! A banda irá analisar.');
+    this.suggestionService.submitSuggestion(suggestionId).subscribe({
+      next: () => this.toastService.triggerToast('success', 'Sugestão enviada', 'Sugestão enviada! A banda irá analisar.'),
+      error: (err) => this.toastService.triggerToast('error', 'Erro ao enviar', err.message || 'Não foi possível enviar a sugestão.')
+    });
   }
 
   getInstrumentType(instrument: string): string {
@@ -297,10 +398,16 @@ export class MusicSuggestionsListComponent implements OnInit {
   }
 
   getMyInviteInstrument(suggestion: MusicSuggestion): string {
-    const userId = this.suggestionService.currentUser.id;
+    const userId = this.authService.getCurrentUser()?.id.toString();
     // Find the participant entry for the current user
-    const myParticipant = suggestion.participants.find(p => p.user_id === userId);
+    const myParticipant = suggestion.participants.find(p => String(p.user_id) === userId);
     return myParticipant ? myParticipant.instrument : 'outro';
+  }
+
+  getMyParticipantStatus(suggestion: MusicSuggestion): string {
+    const userId = this.authService.getCurrentUser()?.id.toString();
+    const p = suggestion.participants.find(p => String(p.user_id) === userId);
+    return p ? p.status : '';
   }
 
   getInvitees(s: MusicSuggestion): Participant[] {
@@ -313,21 +420,47 @@ export class MusicSuggestionsListComponent implements OnInit {
   }
 
   acceptInvite(suggestionId: string) {
-    const userId = this.suggestionService.currentUser.id;
-    this.suggestionService.acceptInvite(suggestionId, userId);
+    const userId = this.authService.getCurrentUser()?.id.toString() || '';
+    this.suggestionService.acceptInvite(suggestionId, userId).subscribe({
+        next: () => {
+            this.toastService.triggerToast('success', 'Convite aceito', 'Você aceitou o convite para tocar nesta música.');
+            
+            // Update local state
+            const inviteIndex = this.invitesForMe.findIndex(s => s.id === suggestionId);
+            if (inviteIndex !== -1) {
+                const suggestion = this.invitesForMe[inviteIndex];
+                
+                // Update participant status
+                const participant = suggestion.participants.find(p => String(p.user_id) === userId);
+                if (participant) {
+                    participant.status = 'ACCEPTED';
+                }
+
+                // Move to accepted list
+                this.invitesForMe.splice(inviteIndex, 1);
+                this.acceptedSuggestions.unshift(suggestion);
+            }
+        },
+        error: (err) => this.toastService.triggerToast('error', 'Erro ao aceitar', err.message || 'Não foi possível aceitar o convite.')
+    });
   }
 
   rejectInvite(suggestionId: string) {
-    const userId = this.suggestionService.currentUser.id;
-    this.suggestionService.rejectInvite(suggestionId, userId);
+    const userId = this.authService.getCurrentUser()?.id.toString() || '';
+    this.suggestionService.rejectInvite(suggestionId, userId).subscribe({
+        next: () => {
+            this.toastService.triggerToast('success', 'Convite recusado', 'Você recusou o convite.');
+            
+            // Remove from list immediately
+            this.invitesForMe = this.invitesForMe.filter(s => s.id !== suggestionId);
+        },
+        error: (err) => this.toastService.triggerToast('error', 'Erro ao recusar', err.message || 'Não foi possível recusar o convite.')
+    });
   }
 
   getFilteredFriends(): any[] {
-    const q = (this.friendQuery || '').toLowerCase().trim();
-    if (!q) return [];
-    return this.friends
-      .filter(f => String(f.name || '').toLowerCase().includes(q))
-      .slice(0, 8);
+    // This is now handled by the search subscription and local `friends` state
+    return this.friends; 
   }
 
   trackFriend(index: number, f: Friend) { return f?.id; }
@@ -335,6 +468,7 @@ export class MusicSuggestionsListComponent implements OnInit {
   onFriendQueryChange(val: string) {
     this.friendQuery = val;
     this.selectedFriendId = '';
+    this.searchSubject.next(val);
   }
 
   selectFriend(friend: Friend) {

@@ -2,6 +2,7 @@ import { Component, EventEmitter, Output, OnInit, Input, OnChanges, SimpleChange
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormsModule, FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
 import { MusicSuggestionService, Participant, MusicSuggestion } from './music-suggestion.service';
+import { AuthService } from '../../../shared/services/auth.service';
 import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
@@ -25,7 +26,8 @@ export class MusicSuggestionComponent implements OnInit, OnChanges {
 
   constructor(
     private fb: FormBuilder,
-    private suggestionService: MusicSuggestionService
+    private suggestionService: MusicSuggestionService,
+    private authService: AuthService
   ) {
     this.suggestionForm = this.fb.group({
       song_name: ['', Validators.required],
@@ -36,7 +38,7 @@ export class MusicSuggestionComponent implements OnInit, OnChanges {
   }
 
   ngOnInit() {
-    this.friends = this.suggestionService.getFriends();
+    this.friends = [];
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -51,8 +53,10 @@ export class MusicSuggestionComponent implements OnInit, OnChanges {
       artist_name: suggestion.artist_name
     });
 
-    const currentUser = this.suggestionService.currentUser;
-    const myParticipant = suggestion.participants.find(p => p.user_id === currentUser.id);
+    const currentUser = this.authService.getCurrentUser();
+    if (!currentUser) return;
+
+    const myParticipant = suggestion.participants.find(p => p.user_id === currentUser.id.toString());
     if (myParticipant) {
       this.suggestionForm.patchValue({
         my_instrument: myParticipant.instrument
@@ -135,11 +139,12 @@ export class MusicSuggestionComponent implements OnInit, OnChanges {
     if (this.suggestionForm.invalid) return;
 
     const formValue = this.suggestionForm.value;
-    const currentUser = this.suggestionService.currentUser;
+    const currentUser = this.authService.getCurrentUser();
+    if (!currentUser) return;
 
     const participants: Participant[] = [
       {
-        user_id: currentUser.id,
+        user_id: currentUser.id.toString(),
         name: currentUser.name,
         avatar: currentUser.avatar,
         instrument: formValue.my_instrument,
@@ -157,24 +162,20 @@ export class MusicSuggestionComponent implements OnInit, OnChanges {
     ];
 
     if (this.suggestionToEdit) {
-      const updatedSuggestion: MusicSuggestion = {
-        ...this.suggestionToEdit,
+      const updatedSuggestion: Partial<MusicSuggestion> = {
+        id: this.suggestionToEdit.id,
+        song_name: formValue.song_name,
+        artist_name: formValue.artist_name,
+        // Backend handles participants logic usually, or send minimal
+      };
+      this.suggestionService.updateSuggestion(updatedSuggestion).subscribe();
+    } else {
+      const newSuggestion: Partial<MusicSuggestion> = {
         song_name: formValue.song_name,
         artist_name: formValue.artist_name,
         participants: participants
       };
-      this.suggestionService.updateSuggestion(updatedSuggestion);
-    } else {
-      const newSuggestion: MusicSuggestion = {
-        id: Math.random().toString(36).substring(2, 15),
-        song_name: formValue.song_name,
-        artist_name: formValue.artist_name,
-        created_by_user_id: currentUser.id,
-        status: 'DRAFT',
-        participants: participants,
-        created_at: Date.now()
-      };
-      this.suggestionService.addSuggestion(newSuggestion);
+      this.suggestionService.addSuggestion(newSuggestion).subscribe();
     }
 
     this.close.emit();

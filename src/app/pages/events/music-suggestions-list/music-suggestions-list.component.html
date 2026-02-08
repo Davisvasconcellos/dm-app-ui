@@ -219,7 +219,70 @@
          </div>
       </section>
 
-      <!-- 2. MY SUGGESTIONS -->
+      <!-- 2. PARTICIPATING (Accepted Invites) -->
+      <section *ngIf="acceptedSuggestions.length > 0">
+        <div class="flex justify-between items-end mb-6 border-b border-white/10 pb-2">
+            <h2 class="text-white font-oswald font-black italic text-2xl md:text-3xl uppercase tracking-tighter leading-none pl-2">
+              {{ 'events.guestV2.suggestions.participating.title' | translate }}
+            </h2>
+        </div>
+
+        <div class="grid grid-cols-1 gap-4">
+            <div *ngFor="let suggestion of acceptedSuggestions" 
+                 class="bg-[#121212] border-white/5 rounded-2xl overflow-hidden shadow-lg transition-all group relative border-t-4 hover:border-purple-500/20 mb-[20px]"
+                 [ngClass]="getSuggestionBorderClass(suggestion)">
+                 
+                 <div class="p-[15px]">
+                    <!-- Title Row -->
+                    <div class="flex items-start justify-between gap-3 mb-1">
+                        <div class="flex flex-col gap-1 min-w-0 flex-grow">
+                            <h3 class="text-white font-oswald font-black text-xl md:text-2xl uppercase italic tracking-tighter truncate group-hover:text-purple-400 transition-colors leading-none">
+                                {{ suggestion.song_name }}
+                            </h3>
+                            
+                            <p class="text-gray-400 text-xs font-bold uppercase tracking-widest">{{ suggestion.artist_name }}</p>
+                            
+                            <div class="mt-1 flex items-center gap-2">
+                              <span class="inline-block px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider border"
+                                    [ngClass]="getSuggestionStatus(suggestion).class + ' border-current opacity-80'">
+                                  {{ getSuggestionStatus(suggestion).labelKey | translate }}
+                              </span>
+                              
+                              <!-- My Instrument Badge -->
+                              <span class="flex items-center gap-1 px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider border border-white/10 bg-white/5 text-gray-300">
+                                <span class="w-3 h-3 text-purple-400">
+                                   <ng-container [ngTemplateOutlet]="instrumentIcon" [ngTemplateOutletContext]="{ type: getInstrumentType(getMyInviteInstrument(suggestion)), showLabel: false }"></ng-container>
+                                </span>
+                                {{ getInstrumentLabelFromType(getMyInviteInstrument(suggestion)) }}
+                              </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Participants/Status Row -->
+                    <div class="mt-4 flex items-center justify-between border-t border-white/5 pt-3">
+                        <div class="flex -space-x-2">
+                            <ng-container *ngFor="let p of getInvitees(suggestion); let i = index">
+                                <img *ngIf="i < 3" 
+                                     [src]="p.avatar || '/images/user/default-avatar.jpg'" 
+                                     class="w-6 h-6 rounded-full border border-[#121212] ring-1 ring-white/10 object-cover"
+                                     [title]="p.name + ' (' + p.instrument + ')'">
+                            </ng-container>
+                            <div *ngIf="getInvitees(suggestion).length > 3" class="w-6 h-6 rounded-full bg-gray-800 border border-[#121212] ring-1 ring-white/10 flex items-center justify-center text-[9px] font-bold text-gray-400">
+                                +{{ getInvitees(suggestion).length - 3 }}
+                            </div>
+                        </div>
+                        
+                        <div class="text-[10px] text-gray-500 font-bold uppercase tracking-widest">
+                            {{ 'events.guestV2.suggestions.invites.from' | translate }} {{ getInviteSender(suggestion)?.name || 'Band' }}
+                        </div>
+                    </div>
+                 </div>
+            </div>
+        </div>
+      </section>
+
+      <!-- 3. MY SUGGESTIONS -->
       <section>
         <div class="flex justify-between items-end mb-6 border-b border-white/10 pb-2">
             <h2 class="text-white font-oswald font-black italic text-2xl md:text-3xl uppercase tracking-tighter leading-none pl-2">{{ 'events.guestV2.suggestions.mySuggestions.title' | translate }}</h2>
@@ -231,43 +294,48 @@
                  [ngClass]="getSuggestionBorderClass(suggestion)">
                  
                  <div class="p-[15px]">
-                    <!-- Title Row: título - status - ações -->
-                    <div class="flex items-center gap-3 mb-2">
-                        <div class="flex items-center gap-3 flex-grow min-w-0">
+                    <!-- Title Row: título e ações -->
+                    <div class="flex items-start justify-between gap-3 mb-1">
+                        <div class="flex flex-col gap-1 min-w-0 flex-grow">
                             <h3 class="text-white font-oswald font-black text-xl md:text-2xl uppercase italic tracking-tighter truncate group-hover:text-purple-400 transition-colors leading-none">
                                 {{ suggestion.song_name }}
                             </h3>
-                            <span class="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider border"
-                                  [ngClass]="getSuggestionStatus(suggestion).class + ' border-current opacity-80'">
-                                {{ getSuggestionStatus(suggestion).label }}
-                            </span>
+                            
+                            <p class="text-gray-400 text-xs font-bold uppercase tracking-widest">{{ suggestion.artist_name }}</p>
+                            
+                            <div class="mt-1">
+                              <span class="inline-block px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider border"
+                                    [ngClass]="getSuggestionStatus(suggestion).class + ' border-current opacity-80'">
+                                  {{ getSuggestionStatus(suggestion).labelKey | translate }}
+                              </span>
+                            </div>
                         </div>
+
                         <!-- Actions (horizontal à direita do título) -->
-                        <div class="flex items-center gap-2 shrink-0">
+                        <div class="flex items-center gap-2 shrink-0 pt-1">
                             <button (click)="editSuggestion(suggestion)" class="p-2 hover:bg-white/5 rounded-lg text-gray-400 hover:text-white transition-colors" title="{{ 'events.guestV2.suggestions.mySuggestions.edit' | translate }}">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
                             </button>
-                            <button (click)="deleteSuggestion(suggestion.id)" class="p-2 hover:bg-red-500/10 rounded-lg text-gray-400 hover:text-red-500 transition-colors" title="{{ 'events.guestV2.suggestions.mySuggestions.delete' | translate }}">
+                            <button (click)="openDeleteModal(suggestion)" class="p-2 hover:bg-red-500/10 rounded-lg text-gray-400 hover:text-red-500 transition-colors" title="{{ 'events.guestV2.suggestions.mySuggestions.delete' | translate }}">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                             </button>
                         </div>
                     </div>
-                    <p class="text-gray-400 text-xs font-bold uppercase tracking-widest mb-3">{{ suggestion.artist_name }}</p>
                         
                         <!-- Participants (Mini Cards, same visual as invite insertion) -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mt-3">
                           <div *ngFor="let p of getInvitees(suggestion)" 
                    class="flex items-center gap-3 p-[15px] rounded-xl border"
-                               [ngClass]="p.status === 'ACCEPTED' ? 'bg-green-600/15 border-green-500' : p.status === 'PENDING' ? 'bg-yellow-600/15 border-yellow-500' : 'bg-[#0a0a0a] border-white/5'">
+                               [ngClass]="p.status === 'ACCEPTED' ? 'bg-green-600/15 border-green-500' : p.status === 'REJECTED' ? 'bg-red-600/15 border-red-500' : p.status === 'PENDING' ? 'bg-yellow-600/15 border-yellow-500' : 'bg-[#0a0a0a] border-white/5'">
                               <img [src]="p.avatar" (error)="onImageError($event)" class="w-10 h-10 rounded-full object-cover border border-white/10">
                               <div class="flex-grow min-w-0">
                                   <p class="text-white font-bold text-sm truncate">{{ p.name }}</p>
                                   <p class="text-[10px] uppercase font-bold tracking-wider opacity-80"
-                                     [ngClass]="p.status === 'ACCEPTED' ? 'text-green-300' : p.status === 'PENDING' ? 'text-yellow-300' : 'text-gray-400'">
+                                     [ngClass]="p.status === 'ACCEPTED' ? 'text-green-300' : p.status === 'REJECTED' ? 'text-red-300' : p.status === 'PENDING' ? 'text-yellow-300' : 'text-gray-400'">
                                     {{ p.instrument }}
                                   </p>
                               </div>
-                              <button *ngIf="p.status === 'PENDING'" type="button" (click)="removeParticipantFromSuggestion(suggestion.id, p.user_id)" class="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-red-500 transition-colors" title="Remover participante">
+                              <button *ngIf="p.status === 'PENDING' || p.status === 'REJECTED'" type="button" (click)="removeParticipantFromSuggestion(suggestion.id, p.user_id_code || p.user_id)" class="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-red-500 transition-colors" title="Remover participante">
                                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                               </button>
                           </div>
@@ -291,6 +359,82 @@
 </div>
 
 <!-- Inline editing uses the same create form -->
+
+<!-- Delete Confirmation Modal -->
+<app-modal [isOpen]="isDeleteModalOpen" (close)="closeDeleteModal()">
+  <div class="p-6 text-center">
+    <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-500">
+      <span class="[&>svg]:h-6 [&>svg]:w-6">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="currentColor">
+          <path fill-rule="evenodd" clip-rule="evenodd" d="M9.62684 11.7496C9.04105 11.1638 9.04105 10.2141 9.62684 9.6283C10.2126 9.04252 11.1624 9.04252 11.7482 9.6283L18.9985 16.8786L26.2485 9.62851C26.8343 9.04273 27.7841 9.04273 28.3699 9.62851C28.9556 10.2143 28.9556 11.164 28.3699 11.7498L21.1198 18.9999L28.3699 26.25C28.9556 26.8358 28.9556 27.7855 28.3699 28.3713C27.7841 28.9571 26.8343 28.9571 26.2485 28.3713L18.9985 21.1212L11.7482 28.3715C11.1624 28.9573 10.2126 28.9573 9.62684 28.3715C9.04105 27.7857 9.04105 26.836 9.62684 26.2502L16.8771 18.9999L9.62684 11.7496Z" fill=""/>
+        </svg>
+      </span>
+    </div>
+
+    <h4 class="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90 sm:text-title-sm">
+      {{ 'events.guestV2.suggestions.deleteModal.title' | translate }}
+    </h4>
+    <p class="text-sm leading-6 text-gray-500 dark:text-gray-400">
+      {{ 'events.guestV2.suggestions.deleteModal.message' | translate }}
+      <span class="font-bold text-gray-700 dark:text-gray-300 block mt-1">{{ suggestionToDelete?.song_name }}</span>
+    </p>
+
+    <div class="flex items-center justify-center w-full gap-3 mt-7">
+      <button
+        type="button"
+        class="flex justify-center w-full px-4 py-3 text-sm font-medium text-gray-700 rounded-lg bg-white ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:ring-gray-700 dark:hover:bg-white/[0.03] sm:w-auto"
+        (click)="closeDeleteModal()"
+      >
+        {{ 'events.guestV2.suggestions.deleteModal.cancel' | translate }}
+      </button>
+      <button
+        type="button"
+        class="flex justify-center w-full px-4 py-3 text-sm font-medium text-white rounded-lg bg-red-600 hover:bg-red-500 sm:w-auto"
+        (click)="confirmDelete()"
+      >
+        {{ 'events.guestV2.suggestions.deleteModal.confirm' | translate }}
+      </button>
+    </div>
+  </div>
+</app-modal>
+
+<!-- Remove Participant Confirmation Modal -->
+<app-modal [isOpen]="isRemoveParticipantModalOpen" (close)="closeRemoveParticipantModal()">
+  <div class="p-6 text-center">
+    <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-500">
+      <span class="[&>svg]:h-6 [&>svg]:w-6">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="currentColor">
+          <path fill-rule="evenodd" clip-rule="evenodd" d="M9.62684 11.7496C9.04105 11.1638 9.04105 10.2141 9.62684 9.6283C10.2126 9.04252 11.1624 9.04252 11.7482 9.6283L18.9985 16.8786L26.2485 9.62851C26.8343 9.04273 27.7841 9.04273 28.3699 9.62851C28.9556 10.2143 28.9556 11.164 28.3699 11.7498L21.1198 18.9999L28.3699 26.25C28.9556 26.8358 28.9556 27.7855 28.3699 28.3713C27.7841 28.9571 26.8343 28.9571 26.2485 28.3713L18.9985 21.1212L11.7482 28.3715C11.1624 28.9573 10.2126 28.9573 9.62684 28.3715C9.04105 27.7857 9.04105 26.836 9.62684 26.2502L16.8771 18.9999L9.62684 11.7496Z" fill=""/>
+        </svg>
+      </span>
+    </div>
+
+    <h4 class="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90 sm:text-title-sm">
+      {{ 'events.guestV2.suggestions.removeParticipantModal.title' | translate }}
+    </h4>
+    <p class="text-sm leading-6 text-gray-500 dark:text-gray-400">
+      {{ 'events.guestV2.suggestions.removeParticipantModal.message' | translate }}
+      <span class="font-bold text-gray-700 dark:text-gray-300 block mt-1">{{ participantToRemove?.name }}</span>
+    </p>
+
+    <div class="flex items-center justify-center w-full gap-3 mt-7">
+      <button
+        type="button"
+        class="flex justify-center w-full px-4 py-3 text-sm font-medium text-gray-700 rounded-lg bg-white ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:ring-gray-700 dark:hover:bg-white/[0.03] sm:w-auto"
+        (click)="closeRemoveParticipantModal()"
+      >
+        {{ 'events.guestV2.suggestions.removeParticipantModal.cancel' | translate }}
+      </button>
+      <button
+        type="button"
+        class="flex justify-center w-full px-4 py-3 text-sm font-medium text-white rounded-lg bg-red-600 hover:bg-red-500 sm:w-auto"
+        (click)="confirmRemoveParticipant()"
+      >
+        {{ 'events.guestV2.suggestions.removeParticipantModal.confirm' | translate }}
+      </button>
+    </div>
+  </div>
+</app-modal>
 
 
 <!-- Reusable Instrument Icon Template -->
