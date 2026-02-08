@@ -124,10 +124,12 @@
           "artistPlaceholder": "Artist/Band name...",
           "myInstrumentLabel": "My Instrument",
           "inviteFriendsLabel": "Invite Friends (Optional)",
+          "openInviteFormButton": "Add Participants",
           "friendLabel": "Friend",
           "friendPlaceholder": "Type name...",
           "suggestedInstrumentLabel": "Suggested Instrument",
-          "addButton": "Add",
+          "addButton": "Invite Participant",
+          "invitedListLabel": "Invited",
           "submitButton": "Create Suggestion"
         },
         "invites": {

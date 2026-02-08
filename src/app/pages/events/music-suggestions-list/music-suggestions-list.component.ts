@@ -45,11 +45,16 @@ export class MusicSuggestionsListComponent implements OnInit, OnDestroy {
   // Inline Create Form
   isCreating = false;
   createForm: FormGroup;
-  instrumentOptions = ['Voz', 'Guitarra', 'Baixo', 'Cordas', 'Bateria', 'Percussão', 'Teclado', 'Metais', 'Outros'];
+  // Invite Logic
+  friendQuery = '';
   friends: Friend[] = [];
   selectedFriendId = '';
   selectedFriendInstrument = '';
-  friendQuery = '';
+  isInviteFormOpen = false; // Progressive Disclosure state
+
+  instrumentOptions = [
+    'voz', 'guitarra', 'violao', 'baixo', 'teclado', 'bateria', 'percussao', 'metais', 'cordas', 'outro'
+  ];
   
   private searchSubject = new Subject<string>();
   private destroy$ = new Subject<void>();
