@@ -1,8 +1,9 @@
 import { Component, OnInit, ElementRef, ViewChild, OnDestroy, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormsModule, FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
+import { ReactiveFormsModule, FormsModule, FormBuilder, FormGroup, Validators, FormArray, FormControl } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { MusicSuggestionService, MusicSuggestion, Participant, FriendSearchResult } from '../music-suggestion/music-suggestion.service';
+import { DiscogsService, DiscogsResult } from '../../../shared/services/discogs.service';
 import { AuthService } from '../../../shared/services/auth.service';
 import { ToastService } from '../../../shared/services/toast.service';
 import { ModalComponent } from '../../../shared/components/ui/modal/modal.component';
@@ -56,11 +57,18 @@ export class MusicSuggestionsListComponent implements OnInit, OnDestroy {
     'voz', 'guitarra', 'violao', 'baixo', 'teclado', 'bateria', 'percussao', 'metais', 'cordas', 'outro'
   ];
   
+  // Music Search Logic (Discogs)
+  searchMusicControl = new FormControl('');
+  musicResults: DiscogsResult[] = [];
+  selectedMusic: DiscogsResult | null = null;
+  isSearchingMusic = false;
+  
   private searchSubject = new Subject<string>();
   private destroy$ = new Subject<void>();
 
   constructor(
     private suggestionService: MusicSuggestionService,
+    private discogsService: DiscogsService,
     private authService: AuthService,
     private fb: FormBuilder,
     private toastService: ToastService
@@ -78,7 +86,31 @@ export class MusicSuggestionsListComponent implements OnInit, OnDestroy {
       this.suggestionService.loadSuggestions(this.eventId);
     }
 
-    // Setup search
+    // Setup music search
+    this.searchMusicControl.valueChanges.pipe(
+      debounceTime(1000), // Wait 1s after user stops typing to avoid excessive API calls
+      distinctUntilChanged(),
+      switchMap(query => {
+        this.isSearchingMusic = !!query && query.length >= 2;
+        if (!this.isSearchingMusic) {
+           this.musicResults = [];
+           return [];
+        }
+        return this.discogsService.search(query || '');
+      }),
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: (results) => {
+        this.musicResults = results;
+        this.isSearchingMusic = false;
+      },
+      error: () => {
+        this.musicResults = [];
+        this.isSearchingMusic = false;
+      }
+    });
+
+    // Setup friend search
     this.searchSubject.pipe(
       debounceTime(300),
       distinctUntilChanged(),
@@ -108,6 +140,35 @@ export class MusicSuggestionsListComponent implements OnInit, OnDestroy {
       });
   }
 
+  selectMusic(music: DiscogsResult) {
+    this.selectedMusic = music;
+    this.musicResults = [];
+    
+    // Split title "Artist - Song" if possible, Discogs usually returns "Artist - Title"
+    let artist = 'Desconhecido';
+    let song = music.title;
+    
+    if (music.title.includes(' - ')) {
+      const parts = music.title.split(' - ');
+      artist = parts[0];
+      song = parts.slice(1).join(' - ');
+    }
+    
+    this.createForm.patchValue({
+      song_name: song,
+      artist_name: artist
+    });
+  }
+
+  clearSelectedMusic() {
+    this.selectedMusic = null;
+    this.createForm.patchValue({
+      song_name: '',
+      artist_name: ''
+    });
+    this.searchMusicControl.setValue('');
+  }
+
   ngOnDestroy() {
     this.destroy$.next();
     this.destroy$.complete();
@@ -129,6 +190,7 @@ export class MusicSuggestionsListComponent implements OnInit, OnDestroy {
       this.selectedFriendId = '';
       this.selectedFriendInstrument = '';
       this.friendQuery = '';
+      this.clearSelectedMusic(); // Reset music search state
     }
   }
 
@@ -177,11 +239,20 @@ export class MusicSuggestionsListComponent implements OnInit, OnDestroy {
     const currentUser = this.authService.getCurrentUser();
     if (!currentUser) return;
 
+    // Determine cover image
+    let coverImage = this.editingSuggestion?.cover_image; // Default to existing
+    
+    if (this.selectedMusic && this.selectedMusic.id !== 0) {
+        // New selection from Discogs
+        coverImage = this.selectedMusic.cover_image || this.selectedMusic.thumb;
+    }
+
     if (this.editingSuggestion) {
       const updated: Partial<MusicSuggestion> = {
         id: this.editingSuggestion.id,
         song_name: formVal.song_name,
         artist_name: formVal.artist_name,
+        cover_image: coverImage
         // Backend handles participants update logic or we send minimal fields
       };
       
@@ -198,6 +269,7 @@ export class MusicSuggestionsListComponent implements OnInit, OnDestroy {
         event_id: this.eventId,
         song_name: formVal.song_name,
         artist_name: formVal.artist_name,
+        cover_image: coverImage,
         my_instrument: formVal.my_instrument,
         invites: formVal.invites.map((inv: any) => ({
           user_id: inv.user_id,
@@ -217,6 +289,10 @@ export class MusicSuggestionsListComponent implements OnInit, OnDestroy {
   
   onImageError(event: any) {
     event.target.src = '/images/user/default-avatar.jpg';
+  }
+
+  onAlbumImageError(event: any) {
+    event.target.src = '/images/cards/card-01.jpg';
   }
 
   getSuggestionStatus(s: MusicSuggestion): { labelKey: string, class: string } {
@@ -254,6 +330,16 @@ export class MusicSuggestionsListComponent implements OnInit, OnDestroy {
       artist_name: suggestion.artist_name,
       my_instrument: suggestion.participants.find(p => p.user_id === this.mockUserId)?.instrument || ''
     });
+
+    // Create synthetic selection for display so the user sees the card
+    this.selectedMusic = {
+        id: 0,
+        title: `${suggestion.artist_name} - ${suggestion.song_name}`,
+        thumb: '', 
+        cover_image: '',
+        year: ''
+    };
+
     this.invites.clear();
     const others = suggestion.participants.filter(p => p.user_id !== this.mockUserId);
     others.forEach(p => {

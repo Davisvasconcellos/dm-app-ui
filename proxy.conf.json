@@ -1,33 +1,14 @@
 {
-  "/api/*": {
-    "target": "http://localhost:4000",
+  "/discogs-api": {
+    "target": "https://api.discogs.com",
     "secure": false,
     "changeOrigin": true,
-    "logLevel": "debug"
-  },
-  "/images/*": {
-    "target": "http://localhost:3001",
-    "secure": false,
-    "changeOrigin": true,
-    "logLevel": "debug"
-  },
-  "/upload/*": {
-    "target": "http://localhost:3001",
-    "secure": false,
-    "changeOrigin": true,
-    "logLevel": "debug"
-  }
-  ,
-  "/pdf/*": {
-    "target": "http://localhost:3001",
-    "secure": false,
-    "changeOrigin": true,
-    "logLevel": "debug"
-  },
-  "/pdfs/*": {
-    "target": "http://localhost:3001",
-    "secure": false,
-    "changeOrigin": true,
+    "pathRewrite": {
+      "^/discogs-api": ""
+    },
+    "headers": {
+      "User-Agent": "VibeSessionsApp/1.0"
+    },
     "logLevel": "debug"
   }
 }

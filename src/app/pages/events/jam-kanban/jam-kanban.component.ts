@@ -115,6 +115,10 @@ export class JamKanbanComponent implements OnInit, OnDestroy {
     this.currentPage = 1; // Reset to first page on filter change
   }
 
+  onAlbumImageError(event: any) {
+    event.target.src = '/images/cards/card-01.jpg';
+  }
+
   get paginatedSuggestions(): MusicSuggestion[] {
     const startIndex = (this.currentPage - 1) * this.itemsPerPage;
     return this.filteredSuggestions.slice(startIndex, startIndex + this.itemsPerPage);

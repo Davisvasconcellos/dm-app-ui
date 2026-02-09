@@ -11,7 +11,11 @@ export class AuthInterceptor implements HttpInterceptor {
 
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     const token = this.localStorageService.getAuthToken();
-    const cloned = token ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } }) : req;
+    
+    // Check if the request is for an external domain that shouldn't receive our API token
+    const isExternalApi = req.url.includes('api.discogs.com') || req.url.includes('viacep.com.br') || req.url.includes('/discogs-api');
+
+    const cloned = (token && !isExternalApi) ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } }) : req;
 
     return next.handle(cloned).pipe(
       catchError((err: HttpErrorResponse) => {

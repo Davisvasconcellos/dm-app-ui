@@ -21,6 +21,7 @@ export interface MusicSuggestion {
   id: string;
   song_name: string;
   artist_name: string;
+  cover_image?: string;
   created_by_user_id: string;
   status: SuggestionStatus;
   participants: Participant[];
@@ -45,6 +46,7 @@ export interface CreateSuggestionPayload {
   event_id: string;
   song_name: string;
   artist_name: string;
+  cover_image?: string;
   my_instrument: string;
   invites?: {
     user_id: string;

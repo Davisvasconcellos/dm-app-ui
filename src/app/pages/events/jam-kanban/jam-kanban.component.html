@@ -176,9 +176,17 @@
             <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
               <tr *ngFor="let s of paginatedSuggestions" class="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
                 <td class="px-6 py-4">
-                  <div class="flex flex-col">
-                    <span class="text-sm font-medium text-gray-900 dark:text-white">{{ s.song_name }}</span>
-                    <span class="text-xs text-gray-500 dark:text-gray-400">{{ s.artist_name }}</span>
+                  <div class="flex items-center gap-3">
+                    <div class="flex-shrink-0 w-12 h-12 rounded-md overflow-hidden bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600">
+                        <img [src]="s.cover_image || '/images/cards/card-01.jpg'" 
+                             (error)="onAlbumImageError($event)"
+                             class="w-full h-full object-cover" 
+                             alt="Capa do álbum">
+                    </div>
+                    <div class="flex flex-col">
+                      <span class="text-sm font-medium text-gray-900 dark:text-white">{{ s.song_name }}</span>
+                      <span class="text-xs text-gray-500 dark:text-gray-400">{{ s.artist_name }}</span>
+                    </div>
                   </div>
                 </td>
                 <td class="px-6 py-4">
@@ -229,45 +237,71 @@
 
         <!-- Grid View -->
         <div *ngIf="suggestionViewMode === 'grid'" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          <div *ngFor="let s of paginatedSuggestions" class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 flex flex-col gap-4 group hover:border-blue-500/50 transition-colors">
-            <div class="flex items-start justify-between">
-              <div>
-                <h4 class="font-medium text-gray-900 dark:text-white line-clamp-1" [title]="s.song_name">{{ s.song_name }}</h4>
-                <p class="text-sm text-gray-500 dark:text-gray-400 line-clamp-1">{{ s.artist_name }}</p>
-              </div>
-              <img [src]="s.creator?.avatar_url || '/images/user/default-avatar.jpg'" class="w-8 h-8 rounded-full object-cover" [title]="'Sugerido por ' + s.creator?.name">
-            </div>
+          <div *ngFor="let s of paginatedSuggestions" class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 flex flex-col overflow-hidden group hover:shadow-md transition-all duration-200">
+            
+            <!-- Banner Image Area -->
+            <div class="h-32 relative flex-shrink-0 bg-gray-100 dark:bg-gray-800">
+                <img [src]="s.cover_image || '/images/cards/card-01.jpg'" 
+                     (error)="onAlbumImageError($event)"
+                     class="w-full h-full object-cover" 
+                     alt="Capa do álbum">
+                
+                <!-- Overlay Gradient for better contrast if needed, or just pure image -->
+                <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
 
-            <div class="flex-1">
-              <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wide">Participantes</p>
-              <div class="flex flex-wrap gap-2">
-                <div *ngFor="let p of s.participants" class="flex items-center gap-1.5 bg-gray-50 dark:bg-gray-700/50 px-2 py-1 rounded-md">
-                  <img [src]="p.avatar || '/images/user/default-avatar.jpg'" 
-                       class="w-4 h-4 rounded-full object-cover"
-                       [ngClass]="{'grayscale': p.status === 'PENDING'}"
-                       [style.filter]="p.status === 'REJECTED' ? 'grayscale(100%) brightness(40%) sepia(100%) hue-rotate(-50deg) saturate(600%) contrast(0.8)' : ''">
-                  <span class="text-xs text-gray-700 dark:text-gray-300" 
-                        [ngClass]="{'text-gray-400': p.status === 'REJECTED', 'text-gray-500': p.status === 'PENDING'}">
-                    {{ p.name.split(' ')[0] }}
-                  </span>
-                  <span class="text-[10px] text-gray-400">({{ p.instrument }})</span>
+                <!-- Creator Avatar (Overlapping) -->
+                <div class="absolute -bottom-8 right-4">
+                    <img [src]="s.creator?.avatar_url || '/images/user/default-avatar.jpg'" 
+                         class="w-16 h-16 rounded-full object-cover border-4 border-white dark:border-gray-900 shadow-sm" 
+                         [title]="'Sugerido por ' + s.creator?.name">
                 </div>
-              </div>
             </div>
 
-            <div class="flex items-center gap-2 pt-3 border-t border-gray-100 dark:border-gray-700">
-              <button (click)="rejectSuggestion(s)" class="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20 rounded-md transition-colors">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-                {{ 'events.admin.kanban.suggestions.actions.reject' | translate }}
-              </button>
-              <button (click)="approveSuggestion(s)" class="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-white bg-brand-500 hover:bg-brand-600 rounded-md transition-colors">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                </svg>
-                {{ 'events.admin.kanban.suggestions.actions.approve' | translate }}
-              </button>
+            <!-- Content Area -->
+            <div class="p-4 pt-10 flex flex-col gap-4 flex-1">
+                <!-- Header Info -->
+                <div class="flex flex-col gap-0.5 pr-14">
+                    <h4 class="font-bold text-lg text-gray-900 dark:text-white line-clamp-1" [title]="s.song_name">{{ s.song_name }}</h4>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 font-medium line-clamp-1">{{ s.artist_name }}</p>
+                </div>
+
+                <!-- Participants -->
+                <div class="flex-1">
+                  <div class="flex items-center gap-2 mb-2">
+                    <span class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Participantes</span>
+                    <span class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-500 px-1.5 rounded-full">{{ s.participants.length }}</span>
+                  </div>
+                  
+                  <div class="flex flex-wrap gap-2">
+                    <div *ngFor="let p of s.participants" class="flex items-center gap-1.5 bg-gray-50 dark:bg-gray-700/50 border border-gray-100 dark:border-gray-600/50 px-2 py-1 rounded-md">
+                      <img [src]="p.avatar || '/images/user/default-avatar.jpg'" 
+                           class="w-4 h-4 rounded-full object-cover"
+                           [ngClass]="{'grayscale': p.status === 'PENDING'}"
+                           [style.filter]="p.status === 'REJECTED' ? 'grayscale(100%) brightness(40%) sepia(100%) hue-rotate(-50deg) saturate(600%) contrast(0.8)' : ''">
+                      <span class="text-xs text-gray-700 dark:text-gray-300 font-medium" 
+                            [ngClass]="{'text-gray-400': p.status === 'REJECTED', 'text-gray-500': p.status === 'PENDING'}">
+                        {{ p.name.split(' ')[0] }}
+                      </span>
+                      <span class="text-[10px] text-gray-400">({{ p.instrument }})</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex items-center gap-2 pt-3 border-t border-gray-100 dark:border-gray-700 mt-auto">
+                  <button (click)="rejectSuggestion(s)" class="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 dark:text-red-400 dark:bg-red-900/10 dark:hover:bg-red-900/20 rounded-lg transition-colors">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    {{ 'events.admin.kanban.suggestions.actions.reject' | translate }}
+                  </button>
+                  <button (click)="approveSuggestion(s)" class="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-white bg-brand-500 hover:bg-brand-600 rounded-lg transition-colors shadow-sm shadow-brand-500/20">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    {{ 'events.admin.kanban.suggestions.actions.approve' | translate }}
+                  </button>
+                </div>
             </div>
           </div>
           
