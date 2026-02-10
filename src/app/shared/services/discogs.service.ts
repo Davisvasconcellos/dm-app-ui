@@ -16,10 +16,11 @@ export interface DiscogsResult {
   providedIn: 'root'
 })
 export class DiscogsService {
-  // Em produção usamos a URL direta. Em desenvolvimento, usamos o proxy '/discogs-api' configurado no proxy.conf.json
-  // para evitar problemas de CORS no localhost.
+  // Em produção, a requisição DEVE passar pelo nosso backend (API) para evitar bloqueio de CORS,
+  // pois a API do Discogs não aceita chamadas diretas do navegador (browser).
+  // Em desenvolvimento, mantemos o proxy local (/discogs-api) para facilitar o debug sem depender do backend rodando.
   private readonly API_URL = environment.production 
-    ? 'https://api.discogs.com/database/search' 
+    ? `${environment.apiUrl}/api/v1/discogs/search` 
     : '/discogs-api/database/search';
 
   // Valores vindos do environment

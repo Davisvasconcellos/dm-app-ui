@@ -137,7 +137,11 @@ export class JamKanbanComponent implements OnInit, OnDestroy {
   approveSuggestion(suggestion: MusicSuggestion) {
     const msg = this.translate.instant('events.admin.kanban.suggestions.actions.confirm_approve', { song: suggestion.song_name });
     if (!confirm(msg)) return;
-    this.musicSuggestionService.updateSuggestion({ id: suggestion.id, status: 'APPROVED' }).subscribe({
+    this.musicSuggestionService.updateSuggestion({ 
+      id: suggestion.id, 
+      id_code: suggestion.id_code,
+      status: 'APPROVED' 
+    }).subscribe({
       next: () => {
         // Optimistic update or wait for reload
         // The subscription above will auto-update the list as it filters by SUBMITTED
@@ -149,11 +153,44 @@ export class JamKanbanComponent implements OnInit, OnDestroy {
   rejectSuggestion(suggestion: MusicSuggestion) {
     const msg = this.translate.instant('events.admin.kanban.suggestions.actions.confirm_reject', { song: suggestion.song_name });
     if (!confirm(msg)) return;
-    this.musicSuggestionService.updateSuggestion({ id: suggestion.id, status: 'REJECTED' }).subscribe({
+    this.musicSuggestionService.updateSuggestion({ 
+      id: suggestion.id, 
+      id_code: suggestion.id_code,
+      status: 'REJECTED' 
+    }).subscribe({
       next: () => {
         // The subscription above will auto-update
       },
       error: () => alert('Erro ao recusar sugestão')
+    });
+  }
+
+  // Delete Modal
+  isDeleteModalOpen = false;
+  suggestionToDelete: MusicSuggestion | null = null;
+
+  openDeleteModal(suggestion: MusicSuggestion) {
+    this.suggestionToDelete = suggestion;
+    this.isDeleteModalOpen = true;
+  }
+
+  closeDeleteModal() {
+    this.isDeleteModalOpen = false;
+    this.suggestionToDelete = null;
+  }
+
+  confirmDelete() {
+    if (!this.suggestionToDelete) return;
+    const id = this.suggestionToDelete.id_code || this.suggestionToDelete.id;
+    this.musicSuggestionService.deleteSuggestion(id).subscribe({
+      next: () => {
+        this.triggerToast('success', 'Sugestão excluída', `A música "${this.suggestionToDelete?.song_name}" foi removida.`);
+        this.closeDeleteModal();
+      },
+      error: () => {
+        this.triggerToast('error', 'Erro ao excluir', 'Não foi possível remover a sugestão.');
+        this.closeDeleteModal();
+      }
     });
   }
 

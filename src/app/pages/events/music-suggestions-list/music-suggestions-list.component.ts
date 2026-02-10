@@ -250,6 +250,7 @@ export class MusicSuggestionsListComponent implements OnInit, OnDestroy {
     if (this.editingSuggestion) {
       const updated: Partial<MusicSuggestion> = {
         id: this.editingSuggestion.id,
+        id_code: this.editingSuggestion.id_code,
         song_name: formVal.song_name,
         artist_name: formVal.artist_name,
         cover_image: coverImage
@@ -373,7 +374,7 @@ export class MusicSuggestionsListComponent implements OnInit, OnDestroy {
   confirmDelete() {
     if (!this.suggestionToDelete) return;
     
-    const id = this.suggestionToDelete.id;
+    const id = this.suggestionToDelete.id_code || this.suggestionToDelete.id;
     this.suggestionService.deleteSuggestion(id).subscribe({
       next: () => {
         this.toastService.triggerToast('success', 'Sugestão excluída', 'A sugestão foi removida com sucesso.');
@@ -435,7 +436,8 @@ export class MusicSuggestionsListComponent implements OnInit, OnDestroy {
       this.toastService.triggerToast('warning', 'Ação necessária', 'Ainda há convidados pendentes ou rejeitados. Remova-os ou aguarde aceitação.');
       return;
     }
-    this.suggestionService.submitSuggestion(suggestionId).subscribe({
+    const id = s.id_code || s.id;
+    this.suggestionService.submitSuggestion(id).subscribe({
       next: () => this.toastService.triggerToast('success', 'Sugestão enviada', 'Sugestão enviada! A banda irá analisar.'),
       error: (err) => this.toastService.triggerToast('error', 'Erro ao enviar', err.message || 'Não foi possível enviar a sugestão.')
     });

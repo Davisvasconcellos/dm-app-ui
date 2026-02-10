@@ -19,6 +19,7 @@ export interface Participant {
 
 export interface MusicSuggestion {
   id: string;
+  id_code?: string;
   song_name: string;
   artist_name: string;
   cover_image?: string;
@@ -96,8 +97,9 @@ export class MusicSuggestionService {
   }
 
   updateSuggestion(suggestion: Partial<MusicSuggestion>): Observable<MusicSuggestion> {
-    if (!suggestion.id) throw new Error('Suggestion ID is required for update');
-    return this.http.put<MusicSuggestion>(`${this.API_URL}/${suggestion.id}`, suggestion).pipe(
+    const id = suggestion.id_code || suggestion.id;
+    if (!id) throw new Error('Suggestion ID (or id_code) is required for update');
+    return this.http.put<MusicSuggestion>(`${this.API_URL}/${id}`, suggestion).pipe(
       tap(updated => this.updateLocalState(updated))
     );
   }
@@ -106,7 +108,7 @@ export class MusicSuggestionService {
     return this.http.delete<void>(`${this.API_URL}/${id}`).pipe(
       tap(() => {
         const current = this.suggestionsSubject.value;
-        this.suggestionsSubject.next(current.filter(s => s.id !== id));
+        this.suggestionsSubject.next(current.filter(s => s.id !== id && s.id_code !== id));
       })
     );
   }

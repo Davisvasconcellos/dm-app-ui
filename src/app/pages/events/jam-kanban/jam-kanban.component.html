@@ -213,9 +213,9 @@
                 </td>
                 <td class="px-6 py-4 text-right">
                   <div class="flex items-center justify-end gap-2">
-                    <button (click)="rejectSuggestion(s)" class="p-1.5 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20 rounded-md transition-colors" [title]="'events.admin.kanban.suggestions.actions.reject' | translate">
-                      <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    <button (click)="openDeleteModal(s)" class="group flex items-center justify-center p-2.5 rounded-lg bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 hover:border-red-300 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20 dark:hover:bg-red-500/20 dark:hover:border-red-500/30 transition-all duration-200 shadow-sm" [title]="'events.admin.kanban.suggestions.actions.delete' | translate">
+                      <svg class="w-5 h-5 transition-transform group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                       </svg>
                     </button>
                     <button (click)="approveSuggestion(s)" class="p-1.5 text-green-600 hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-900/20 rounded-md transition-colors" [title]="'events.admin.kanban.suggestions.actions.approve' | translate">
@@ -288,18 +288,16 @@
                 </div>
 
                 <!-- Actions -->
-                <div class="flex items-center gap-2 pt-3 border-t border-gray-100 dark:border-gray-700 mt-auto">
-                  <button (click)="rejectSuggestion(s)" class="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 dark:text-red-400 dark:bg-red-900/10 dark:hover:bg-red-900/20 rounded-lg transition-colors">
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-100 dark:border-gray-700 mt-auto">
+                  <button (click)="openDeleteModal(s)" class="group flex items-center justify-center p-2.5 rounded-lg bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 hover:border-red-300 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20 dark:hover:bg-red-500/20 dark:hover:border-red-500/30 transition-all duration-200 shadow-sm" [title]="'events.admin.kanban.suggestions.actions.delete' | translate">
+                    <svg class="w-5 h-5 transition-transform group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>
-                    {{ 'events.admin.kanban.suggestions.actions.reject' | translate }}
                   </button>
-                  <button (click)="approveSuggestion(s)" class="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-white bg-brand-500 hover:bg-brand-600 rounded-lg transition-colors shadow-sm shadow-brand-500/20">
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <button (click)="approveSuggestion(s)" class="group flex items-center justify-center p-2.5 rounded-lg bg-green-50 text-green-600 border border-green-200 hover:bg-green-100 hover:border-green-300 dark:bg-green-500/10 dark:text-green-400 dark:border-green-500/20 dark:hover:bg-green-500/20 dark:hover:border-green-500/30 transition-all duration-200 shadow-sm" [title]="'events.admin.kanban.suggestions.actions.approve' | translate">
+                    <svg class="w-5 h-5 transition-transform group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                     </svg>
-                    {{ 'events.admin.kanban.suggestions.actions.approve' | translate }}
                   </button>
                 </div>
             </div>
@@ -406,5 +404,42 @@
         <button type="submit" class="flex w-full justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600 sm:w-auto">Inserir</button>
       </div>
     </form>
+  </app-modal>
+
+  <app-modal [isOpen]="isDeleteModalOpen" (close)="closeDeleteModal()" [showCloseButton]="false" className="max-w-[450px] mx-4">
+    <div class="p-6 text-center w-full mx-auto">
+      <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-500">
+        <span class="[&>svg]:h-6 [&>svg]:w-6">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="currentColor">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M9.62684 11.7496C9.04105 11.1638 9.04105 10.2141 9.62684 9.6283C10.2126 9.04252 11.1624 9.04252 11.7482 9.6283L18.9985 16.8786L26.2485 9.62851C26.8343 9.04273 27.7841 9.04273 28.3699 9.62851C28.9556 10.2143 28.9556 11.164 28.3699 11.7498L21.1198 18.9999L28.3699 26.25C28.9556 26.8358 28.9556 27.7855 28.3699 28.3713C27.7841 28.9571 26.8343 28.9571 26.2485 28.3713L18.9985 21.1212L11.7482 28.3715C11.1624 28.9573 10.2126 28.9573 9.62684 28.3715C9.04105 27.7857 9.04105 26.836 9.62684 26.2502L16.8771 18.9999L9.62684 11.7496Z" fill=""/>
+          </svg>
+        </span>
+      </div>
+
+      <h4 class="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90 sm:text-title-sm">
+        {{ 'events.guestV2.suggestions.deleteModal.title' | translate }}
+      </h4>
+      <p class="text-sm leading-6 text-gray-500 dark:text-gray-400">
+        {{ 'events.guestV2.suggestions.deleteModal.message' | translate }}
+        <span class="font-bold text-gray-700 dark:text-gray-300 block mt-1">{{ suggestionToDelete?.song_name }}</span>
+      </p>
+
+      <div class="flex items-center justify-center w-full gap-3 mt-7">
+        <button
+          type="button"
+          class="flex justify-center w-full px-4 py-3 text-sm font-medium text-gray-700 rounded-lg bg-white ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:ring-gray-700 dark:hover:bg-white/[0.03] sm:w-auto"
+          (click)="closeDeleteModal()"
+        >
+          {{ 'events.guestV2.suggestions.deleteModal.cancel' | translate }}
+        </button>
+        <button
+          type="button"
+          class="flex justify-center w-full px-4 py-3 text-sm font-medium text-white rounded-lg bg-red-600 hover:bg-red-500 sm:w-auto"
+          (click)="confirmDelete()"
+        >
+          {{ 'events.guestV2.suggestions.deleteModal.confirm' | translate }}
+        </button>
+      </div>
+    </div>
   </app-modal>
 </div>

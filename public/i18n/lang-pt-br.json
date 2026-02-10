@@ -16,6 +16,32 @@
     "theme": {
       "dark": "Modo Escuro",
       "light": "Modo Claro"
+    },
+    "admin": {
+      "kanban": {
+        "suggestions": {
+          "actions": {
+            "confirm_approve": "Deseja aprovar a música {{song}}?",
+            "confirm_reject": "Deseja rejeitar a música {{song}}?",
+            "confirm_delete": "Deseja excluir a sugestão {{song}}? Todos os convites e participantes serão removidos.",
+            "approve": "Aprovar",
+            "reject": "Rejeitar",
+            "delete": "Excluir"
+          },
+          "filter": {
+            "submitted": "Aguardando Aprovação",
+            "all": "Todas as Sugestões",
+            "search_placeholder": "Buscar música, artista ou criador..."
+          },
+          "table": {
+            "song_artist": "Música / Artista",
+            "suggested_by": "Sugerido por",
+            "participants": "Participantes",
+            "actions": "Ações",
+            "empty": "Nenhuma sugestão encontrada."
+          }
+        }
+      }
     }
   },
   "homeAdmin": {

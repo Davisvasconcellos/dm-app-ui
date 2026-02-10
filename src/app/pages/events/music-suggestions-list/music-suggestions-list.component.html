@@ -435,8 +435,8 @@
 <!-- Inline editing uses the same create form -->
 
 <!-- Delete Confirmation Modal -->
-<app-modal [isOpen]="isDeleteModalOpen" (close)="closeDeleteModal()">
-  <div class="p-6 text-center">
+<app-modal [isOpen]="isDeleteModalOpen" (close)="closeDeleteModal()" [showCloseButton]="false" className="max-w-[450px] mx-4">
+  <div class="p-6 text-center w-full mx-auto">
     <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-500">
       <span class="[&>svg]:h-6 [&>svg]:w-6">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="currentColor">
