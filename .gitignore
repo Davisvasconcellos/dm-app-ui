@@ -3,6 +3,11 @@
 # Ignorar a pasta de imagens públicas
 public/images/
 
+# Environments
+.env
+src/environments/environment.ts
+src/environments/environment.production.ts
+
 # Compiled output
 /dist
 /tmp
