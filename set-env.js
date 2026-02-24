@@ -4,6 +4,11 @@ const dotenv = require('dotenv');
 // Load environment variables
 dotenv.config();
 
+const dir = './src/environments';
+if (!fs.existsSync(dir)) {
+  fs.mkdirSync(dir, { recursive: true });
+}
+
 const envConfigFile = `export const environment = {
   production: false,
   apiUrl: '${process.env.API_URL}',
@@ -18,8 +23,6 @@ const envConfigFile = `export const environment = {
     measurementId: '${process.env.FIREBASE_MEASUREMENT_ID}'
   },
   discogs: {
-    consumerKey: '${process.env.DISCOGS_CONSUMER_KEY}',
-    consumerSecret: '${process.env.DISCOGS_CONSUMER_SECRET}',
     token: '${process.env.DISCOGS_TOKEN}'
   }
 };

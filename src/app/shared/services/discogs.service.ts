@@ -24,8 +24,6 @@ export class DiscogsService {
     : '/discogs-api/database/search';
 
   // Valores vindos do environment
-  private readonly CONSUMER_KEY = environment.discogs?.consumerKey || '';
-  private readonly CONSUMER_SECRET = environment.discogs?.consumerSecret || '';
   private readonly TOKEN = environment.discogs?.token || '';
 
   constructor(private http: HttpClient) {}
