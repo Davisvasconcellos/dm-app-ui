@@ -1,16 +1,29 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, OnDestroy, ApplicationRef, Injector, EnvironmentInjector, createComponent } from '@angular/core';
-import { trigger, state, style, transition, animate, stagger, query } from '@angular/animations';
+import { Component, OnInit, OnDestroy, ApplicationRef, Injector, EnvironmentInjector, createComponent, inject } from '@angular/core';
+import { trigger, style, transition, animate, stagger, query } from '@angular/animations';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { EventService, ApiJam, ApiSong, OnStageResponse } from '../event.service';
 import { AuthService, User } from '../../../shared/services/auth.service';
 import { NotificationComponent } from '../../../shared/components/ui/notification/notification/notification.component';
-import { MusicSuggestionService, MusicSuggestion, Participant } from '../music-suggestion/music-suggestion.service';
+import { MusicSuggestionService, MusicSuggestion } from '../music-suggestion/music-suggestion.service';
 import { ToastService } from '../../../shared/services/toast.service';
 import { MusicSuggestionsListComponent } from '../music-suggestions-list/music-suggestions-list.component';
 import { ModalComponent } from '../../../shared/components/ui/modal/modal.component';
+
+interface Bucket {
+  instrument: string;
+  slots: number;
+  remaining: number;
+  approved?: {
+    display_name?: string;
+    name?: string;
+    avatar_url?: string;
+    avatar?: string;
+    instrument?: string;
+  }[];
+}
 
 @Component({
   selector: 'app-home-guest-v2',
@@ -44,7 +57,7 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
   onStageSongs: ApiSong[] = [];
   playingNowSongs: ApiSong[] = [];
   goToStageSongs: ApiSong[] = [];
-  
+
   // Invites
   invitesForMe: MusicSuggestion[] = [];
   isProcessingInvite: Record<string, boolean> = {};
@@ -62,12 +75,11 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
   myStatusMap: Record<number, string> = {};
   attempting: Record<number, boolean> = {};
   now: number = Date.now();
-  tickHandle: any;
   songJamMap: Record<number, number> = {};
   eventName = '';
   eventBanner: string | null = null;
   esMap: Record<number, EventSource> = {};
-  sseRefreshTimer: any;
+  sseRefreshTimer: unknown;
 
   // SSE & Polling configuration
   debugSse = true;
@@ -76,24 +88,28 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
   lastEventAt = 0;
   lastEventAtMap: Record<number, number> = {};
   sseStatusText = 'SSE 0 • - • -';
-  pollingHandle: any;
+  pollingHandle: unknown;
   backoffUntilMs = 0;
   enablePolling = true;
   jamId: number | null = null;
-  sseWatchdogHandle: any;
-  enableWatchdog = false;
-  useSse = false;
+  sseWatchdogHandle: unknown;
+  enableWatchdog = true;
+  useSse = true;
 
-  isLoadingOpen: boolean = false;
-  isLoadingStage: boolean = false;
+  isLoadingOpen = false;
+  isLoadingStage = false;
   showLog = false;
   readyMap: Record<number, boolean> = {};
-  decisionsLog: Array<{ songId: number; tipo: string; acao: string; at: number }> = [];
-  uiLog: Array<{ msg: string; at: number }> = [];
+  decisionsLog: { songId: number; tipo: string; acao: string; at: number }[] = [];
+  uiLog: { msg: string; at: number }[] = [];
+
+  // Cache for musician data to avoid repeated API calls
+  // private musiciansCache = new Map<number, { timestamp: number, data: any[] }>();
+  // private readonly CACHE_TTL = 300000; // 5 minutes cache
 
   // For prototype UI
   selectedDraftSlots: Record<number, number> = {};
-  playlistSongs: any[] = [];
+  playlistSongs: ApiSong[] = [];
   selectedPlaylistIndex = 0;
   animateFooter = false;
 
@@ -102,7 +118,7 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
   isSidebarOpen = false;
   isProfileMenuOpen = false;
   currentLang = 'pt-br';
-  languages: Array<{ code: 'pt-br' | 'en' | string; label: string; flag: string }> = [
+  languages: { code: 'pt-br' | 'en' | string; label: string; flag: string }[] = [
     { code: 'pt-br', label: 'Português (Brasil)', flag: 'https://flagcdn.com/w40/br.png' },
     { code: 'en', label: 'English (US)', flag: 'https://flagcdn.com/w40/us.png' }
   ];
@@ -111,27 +127,18 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
   isStandalone = false;
   isFullscreen = false;
 
-  // Auto-advance for Standalone Mode
-  autoAdvanceProgress = 0;
-  autoAdvanceTimer: any;
-  
-  // Auto-advance Configuration
-  readonly FIRST_SLIDE_DURATION = 20000; // 20 seconds for the first slide
-  readonly DEFAULT_SLIDE_DURATION = 10000; // 10 seconds for others
-  readonly TIMER_INTERVAL = 100; // 100ms check
+  private translate = inject(TranslateService);
+  private eventService = inject(EventService);
+  private route = inject(ActivatedRoute);
+  private authService = inject(AuthService);
+  private router = inject(Router);
+  private appRef = inject(ApplicationRef);
+  private injector = inject(Injector);
+  private envInjector = inject(EnvironmentInjector);
+  private musicSuggestionService = inject(MusicSuggestionService);
+  private toast = inject(ToastService);
 
-  constructor(
-    private translate: TranslateService,
-    private eventService: EventService,
-    private route: ActivatedRoute,
-    private authService: AuthService,
-    private router: Router,
-    private appRef: ApplicationRef,
-    private injector: Injector,
-    private envInjector: EnvironmentInjector,
-    private musicSuggestionService: MusicSuggestionService,
-    private toast: ToastService
-  ) {
+  constructor() {
     this.useSse = false;
     this.currentLang = localStorage.getItem('lang') || 'pt-br';
     this.translate.use(this.currentLang);
@@ -159,13 +166,14 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
       const standaloneParam = qp.get('standalone') || '';
       this.isStandalone = standaloneParam === '1' || standaloneParam === 'true';
       if (this.isStandalone || viewParam === 'playlist') this.viewMode = 'playlist';
-      if (this.isStandalone) this.startAutoAdvance();
 
       try {
         document.addEventListener('fullscreenchange', () => {
           this.isFullscreen = !!document.fullscreenElement;
         });
-      } catch {}
+      } catch {
+        // Ignored
+      }
 
       if (this.eventIdCode) {
         this.eventService.getPublicEventByIdCodeDetail(this.eventIdCode).subscribe({
@@ -195,14 +203,13 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
         // Após carregar dados básicos, tenta obter selfie do convidado atual
         this.eventService.getEventGuestMe(this.eventIdCode).subscribe({
           next: (guest) => {
-            const url = (guest as any)?.selfie_url || null;
+            const url = (guest as { selfie_url?: string })?.selfie_url || null;
             if (url) this.selfieUrl = url;
           }
         });
 
         this.loadJams();
         this.loadOnStageOnce();
-        this.loadPlaylist();
 
         // Load Suggestions/Invites
         this.musicSuggestionService.loadSuggestions(this.eventIdCode);
@@ -210,7 +217,7 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
           if (this.currentUser?.id_code) {
              this.invitesForMe = suggestions.filter(s => {
               // I am a participant
-              const me = s.participants.find(p => 
+              const me = s.participants.find(p =>
                 (p.user_id_code || String(p.user_id)) === String(this.currentUser?.id_code) ||
                 (p.user_id_code || String(p.user_id)) === String(this.currentUser?.id)
               );
@@ -235,21 +242,21 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
           if (document.hidden) return;
           this.scheduleRefresh();
         });
-      } catch {}
+      } catch {
+        // Ignored
+      }
     });
   }
 
   ngOnDestroy(): void {
-    this.stopAutoAdvance();
-    if (this.tickHandle) clearInterval(this.tickHandle);
     const ids = Object.keys(this.esMap);
     ids.forEach(id => {
-      try { this.esMap[Number(id)].close(); } catch {}
+      try { this.esMap[Number(id)].close(); } catch { /* Ignored */ }
       delete this.esMap[Number(id)];
     });
-    if (this.sseRefreshTimer) clearTimeout(this.sseRefreshTimer);
-    if (this.pollingHandle) clearInterval(this.pollingHandle);
-    if (this.sseWatchdogHandle) clearInterval(this.sseWatchdogHandle);
+    if (this.sseRefreshTimer) clearTimeout(this.sseRefreshTimer as number);
+    if (this.pollingHandle) clearInterval(this.pollingHandle as number);
+    if (this.sseWatchdogHandle) clearInterval(this.sseWatchdogHandle as number);
   }
 
   toggleProfileMenu() {
@@ -271,13 +278,13 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
     this.eventService.getEventOpenJamsSongs(this.eventIdCode).subscribe({
       next: (songs: ApiSong[]) => {
         this.songJamMap = {};
-        songs.forEach((s: any) => {
-          const sid = Number(s?.id);
-          const jid = Number(s?.jam?.id ?? s?.jam_id);
+        songs.forEach((s) => {
+          const sid = Number(s.id);
+          const jid = Number(s.jam?.id ?? s.jam_id);
           if (!Number.isNaN(sid) && !Number.isNaN(jid)) this.songJamMap[sid] = jid;
-          if (!Number.isNaN(sid)) this.readyMap[sid] = (this.readyMap[sid] === true) || !!s?.ready;
+          if (!Number.isNaN(sid)) this.readyMap[sid] = (this.readyMap[sid] === true) || !!s.ready;
 
-          const my = s?.my_application;
+          const my = s.my_application;
           if (my) {
              const instr = String(my.instrument || '');
              const status = String(my.status || 'pending');
@@ -290,12 +297,12 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
           }
         });
 
-        this.plannedSongs = songs.filter((s: any) => {
-          const myStatus = String(s?.my_application?.status || '');
-          const st = String(s?.status || '');
-          const sid = Number((s as any)?.id);
+        this.plannedSongs = songs.filter((s) => {
+          const myStatus = String(s.my_application?.status || '');
+          const st = String(s.status || '');
+          const sid = Number(s.id);
           const sseReady = this.readyMap[sid] === true;
-          const readyField = !!s?.ready;
+          const readyField = !!s.ready;
           const isReady = readyField || sseReady;
 
           if (myStatus === 'rejected') return false;
@@ -321,11 +328,14 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
 
   private loadOnStageOnce(): void {
     if (!this.eventIdCode) return;
+
+    if (this.viewMode === 'playlist') return;
+
     this.isLoadingStage = true;
     this.eventService.getEventMyOnStage(this.eventIdCode).subscribe({
       next: (resp: OnStageResponse) => {
-        const nowPlaying = resp.now_playing ? [resp.now_playing] : [];
-        const upcoming = resp.my_upcoming || [];
+        const nowPlaying = resp.now_playing ? [this.processSongMusicians(resp.now_playing)] : [];
+        const upcoming = (resp.my_upcoming || []).map(s => this.processSongMusicians(s));
 
         this.playingNowSongs = nowPlaying;
         this.goToStageSongs = upcoming;
@@ -335,16 +345,39 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
       },
       error: (err) => {
         this.isLoadingStage = false;
-        // Handle error
+        console.error(err);
       }
     });
+  }
+
+  private processSongMusicians(s: ApiSong): ApiSong {
+    if (!s) return s;
+    const musicians: { name: string; avatar_url: string; instrument: string }[] = [];
+    if (s.instrument_buckets && Array.isArray(s.instrument_buckets)) {
+        (s.instrument_buckets as Bucket[]).forEach((bucket) => {
+            if (Array.isArray(bucket.approved)) {
+                bucket.approved.forEach((candidate) => {
+                    musicians.push({
+                        name: candidate.display_name || candidate.name || 'Músico',
+                        avatar_url: candidate.avatar_url || candidate.avatar || '/images/user/default-avatar.jpg',
+                        instrument: bucket.instrument || candidate.instrument || 'outro'
+                    });
+                });
+            }
+        });
+    }
+
+    if (musicians.length > 0) {
+        return { ...s, musicians };
+    }
+    return s;
   }
 
   private ensureStreams(): void {
     if (!this.eventIdCode || !this.useSse) return;
 
     const idsFromOpen = Array.from(new Set(Object.values(this.songJamMap)));
-    const idsFromStage = Array.from(new Set((this.onStageSongs || []).map(s => Number((s as any)?.jam?.id ?? (s as any)?.jam_id)).filter(n => !Number.isNaN(n))));
+    const idsFromStage = Array.from(new Set((this.onStageSongs || []).map(s => Number(s.jam?.id ?? s.jam_id)).filter(n => !Number.isNaN(n))));
     const jamIds = Array.from(new Set([ ...idsFromOpen, ...idsFromStage, ...(this.jamId ? [this.jamId] : []) ]));
 
     for (const jid of jamIds) {
@@ -370,7 +403,9 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
             // Simplified logic: refresh will filter correctly
           }
           this.scheduleRefresh();
-        } catch {}
+        } catch {
+          // Ignored
+        }
       };
 
       this.esMap[jid] = es;
@@ -378,7 +413,7 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
   }
 
   private scheduleRefresh(): void {
-    if (this.sseRefreshTimer) clearTimeout(this.sseRefreshTimer);
+    if (this.sseRefreshTimer) clearTimeout(this.sseRefreshTimer as number);
     this.sseRefreshTimer = setTimeout(() => {
       this.refreshLists();
     }, 200);
@@ -387,7 +422,6 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
   private refreshLists(): void {
     this.loadJams();
     this.loadOnStageOnce();
-    this.loadPlaylist();
   }
 
   private startPolling(): void {
@@ -408,7 +442,7 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
       });
       if (staleIds.length) {
         staleIds.forEach(jid => {
-          try { this.esMap[jid].close(); } catch {}
+          try { this.esMap[jid].close(); } catch { /* Ignored */ }
           delete this.esMap[jid];
         });
         this.ensureStreams();
@@ -418,16 +452,16 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
 
   // Core Logic from HomeGuestComponent
 
-  getInstrumentBuckets(song: ApiSong): any[] {
-    const s: any = song as any;
+  getInstrumentBuckets(song: ApiSong): Bucket[] {
+    const s = song;
     if (Array.isArray(s.instrument_buckets) && s.instrument_buckets.length > 0) {
-        return s.instrument_buckets;
+        return s.instrument_buckets as Bucket[];
     }
 
-    let buckets: any[] = [];
+    let buckets: Bucket[] = [];
 
     if (Array.isArray(s.instrument_slots)) {
-      buckets = s.instrument_slots.map((slot: any) => ({
+      buckets = s.instrument_slots.map((slot) => ({
         instrument: String(slot.instrument),
         slots: Number(slot.slots || 0),
         remaining: Number(
@@ -438,7 +472,7 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
       }));
     } else {
         const inst = Array.isArray(s.instrumentation) ? s.instrumentation : [];
-        buckets = inst.map((k: any) => ({ instrument: String(k), slots: 0, remaining: 0 }));
+        buckets = inst.map((k) => ({ instrument: String(k), slots: 0, remaining: 0 }));
     }
 
     s.instrument_buckets = buckets;
@@ -449,8 +483,8 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
     return (this.selections[songId] || null) === instrument;
   }
 
-  toggleRequest(song: ApiSong, bucket: any): void {
-    const songId = Number((song as any).id);
+  toggleRequest(song: ApiSong, bucket: Bucket): void {
+    const songId = Number(song.id);
     const key = String(bucket.instrument);
 
     const current = this.selections[songId] || null;
@@ -474,7 +508,7 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
         this.attempting[songId] = false;
         if (ok) {
           this.myStatusMap[songId] = 'pending';
-          this.triggerToast('warning', 'Candidatura enviada', 'Sua candidatura foi registrada e aguarda aprovação.');
+          this.triggerToast('success', 'Candidatura enviada', 'Sua candidatura foi registrada e aguarda aprovação.');
         }
         else this.triggerToast('error', 'Falha ao enviar', 'Não foi possível enviar sua candidatura.');
       },
@@ -496,8 +530,16 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
     });
   }
 
+  next() {
+    this.triggerToast('info', 'Navegação', 'Visualização do próximo item (em breve).');
+  }
+
+  previous() {
+    this.triggerToast('info', 'Navegação', 'Visualização do item anterior (em breve).');
+  }
+
   get currentSong(): ApiSong | null {
-    return this.playingNowSongs.length > 0 && this.playingNowSongs[0].queue_position === 1 ? this.playingNowSongs[0] : null;
+    return this.playingNowSongs.length > 0 ? this.playingNowSongs[0] : null;
   }
 
   get nextSong(): ApiSong | null {
@@ -546,25 +588,25 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
 
     // 1. Voz
     if (norm.includes('voz') || norm.includes('vocal') || norm.includes('cantor') || norm.includes('mic')) return 'voz';
-    
+
     // 2. Guitarra
     if (norm.includes('guitarra') || norm.includes('guitar') || norm.includes('violão') || norm.includes('acoustic')) return 'guitarra';
-    
+
     // 3. Baixo
     if (norm.includes('baixo') || norm.includes('bass')) return 'baixo';
-    
+
     // 4. Teclado
     if (norm.includes('teclado') || norm.includes('piano') || norm.includes('key') || norm.includes('synth') || norm.includes('orgão')) return 'teclado';
-    
+
     // 5. Bateria
     if (norm.includes('bateria') || norm.includes('drum') || norm.includes('batera')) return 'bateria';
-    
+
     // 6. Metais
     if (norm.includes('metais') || norm.includes('horn') || norm.includes('sax') || norm.includes('trompete') || norm.includes('trombone') || norm.includes('flauta') || norm.includes('wind')) return 'metais';
-    
+
     // 7. Percussão
     if (norm.includes('percussão') || norm.includes('percussao') || norm.includes('percussion') || norm.includes('conga') || norm.includes('cajon') || norm.includes('pandeiro')) return 'percussao';
-    
+
     // 8. Cordas
     if (norm.includes('cordas') || norm.includes('string') || norm.includes('violino') || norm.includes('cello') || norm.includes('viola')) return 'cordas';
 
@@ -572,48 +614,23 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
     return 'outro';
   }
 
-  onImageError(event: any) {
-    event.target.src = '/images/user/default-avatar.jpg';
-  }
-
-  loadPlaylist() {
-      // Mock or fetch playlist
-  }
-  
-  startAutoAdvance() {
-      // Logic for standalone auto advance
-  }
-
-  stopAutoAdvance() {
-      // Logic for standalone stop
-  }
-
-  get selectedSong() {
-    return this.playlistSongs[this.selectedPlaylistIndex] || null;
-  }
-
-  get prevPlaylistItem() {
-    return this.selectedPlaylistIndex > 0 ? this.playlistSongs[this.selectedPlaylistIndex - 1] : null;
-  }
-
-  get nextPlaylistItem() {
-    return this.selectedPlaylistIndex < this.playlistSongs.length - 1 ? this.playlistSongs[this.selectedPlaylistIndex + 1] : null;
-  }
-
-  get selectedNextSong() {
-    return this.nextPlaylistItem;
-  }
-
-  setPlaylistIndex(idx: number) {
-    this.selectedPlaylistIndex = idx;
+  onImageError(event: Event) {
+    const img = event.target as HTMLImageElement;
+    if (img && !img.src.includes('default-avatar.jpg')) {
+      img.src = '/images/user/default-avatar.jpg';
+    }
   }
 
   toggleFullscreen() {
     if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch(() => {});
+      document.documentElement.requestFullscreen().catch(() => {
+        // Ignored
+      });
     } else {
       if (document.exitFullscreen) {
-        document.exitFullscreen().catch(() => {});
+        document.exitFullscreen().catch(() => {
+          // Ignored
+        });
       }
     }
   }
@@ -627,7 +644,7 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
 
   getMyInviteInstrument(suggestion: MusicSuggestion): string {
     if (!this.currentUser) return 'outro';
-    const me = suggestion.participants.find(p => 
+    const me = suggestion.participants.find(p =>
       (p.user_id_code || String(p.user_id)) === String(this.currentUser?.id_code) ||
       (p.user_id_code || String(p.user_id)) === String(this.currentUser?.id)
     );
@@ -637,7 +654,7 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
   isAccepted(invite: MusicSuggestion): boolean {
     if (this.recentlyAcceptedInvites.includes(invite.id)) return true;
     if (!this.currentUser) return false;
-    const me = invite.participants.find(p => 
+    const me = invite.participants.find(p =>
       (p.user_id_code || String(p.user_id)) === String(this.currentUser?.id_code) ||
       (p.user_id_code || String(p.user_id)) === String(this.currentUser?.id)
     );

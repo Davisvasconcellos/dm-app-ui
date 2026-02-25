@@ -139,6 +139,13 @@ export interface ApiSong {
   rating_summary?: any;
   queue_position?: number;
   my_application?: { instrument?: string; status?: 'pending' | 'approved' | 'rejected' } | null;
+  musicians?: Array<{
+    name: string;
+    avatar_url?: string;
+    instrument: string;
+    id?: number | string;
+    [key: string]: any;
+  }>;
 }
 
 export interface InstrumentSlotPayload {

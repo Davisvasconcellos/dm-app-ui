@@ -367,7 +367,7 @@ export class JamKanbanComponent implements OnInit, OnDestroy {
 
   openPlaylistWindow(): void {
     if (!this.selectedEventIdCode) return;
-    const url = `/events/home-guest-v2/${this.selectedEventIdCode}?view=playlist&standalone=1`;
+    const url = `/events/playlist/${this.selectedEventIdCode}`;
     window.open(url, '_blank', 'noopener,noreferrer');
   }
 

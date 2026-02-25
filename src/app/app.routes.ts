@@ -723,6 +723,11 @@ export const routes: Routes = [
                 canActivate: [AutoCheckinGuard],
                 title: 'Home do Convidado V2 (Sem layout)'
             },
+            {
+                path: 'events/playlist/:id_code',
+                loadComponent: () => import('./pages/events/playlist/playlist.component').then(m => m.PlaylistComponent),
+                title: 'Playlist (Telão)'
+            },
     ]
   },
   {
