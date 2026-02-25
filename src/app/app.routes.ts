@@ -20,7 +20,7 @@ import { FaqsComponent } from './pages/faqs/faqs.component';
 import { BlankComponent } from './pages/blank/blank.component';
 import { NotFoundComponent } from './pages/other-page/not-found/not-found.component';
 import { AppLayoutComponent } from './shared/layout/app-layout/app-layout.component';
-import { AppHeaderLayoutComponent } from './shared/layout/app-header-layout/app-header-layout.component';
+//import { AppHeaderLayoutComponent } from './shared/layout/app-header-layout/app-header-layout.component';
 import { Error500Component } from './pages/other-page/error-500/error-500.component';
 import { Error503Component } from './pages/other-page/error-503/error-503.component';
 import { ComingSoonComponent } from './pages/other-page/coming-soon/coming-soon.component';
@@ -143,37 +143,37 @@ export const routes: Routes = [
         component: EcommerceComponent,
         pathMatch: 'full',
         title:
-          'Angular Template',
+          'DM-APP',
       },
       {
         path:'analytics',
         component:AnalyticsComponent,
-        title:'Angular Analytics Dashboard'
+        title:'DM-APP Analytics Dashboard'
       },
       {
         path:'marketing',
         component:MarketingComponent,
-        title:'Angular Marketing Dashboard'
+        title:'DM-APP Marketing Dashboard'
       },
       {
         path:'crm',
         component:CrmComponent,
-        title:'Angular CRM Dashboard'
+        title:'DM-APP CRM Dashboard'
       },
       {
         path:'stocks',
         component:StocksComponent,
-        title:'Angular Stocks Dashboard'
+        title:'DM-APP Stocks Dashboard'
       },
       {
         path:'saas',
         component:SaasComponent,
-        title:'Angular SaaS Dashboard'
+        title:'DM-APP SaaS Dashboard'
       },
       {
         path:'logistics',
         component:LogisticsComponent,
-        title:'Angular Logistics Dashboard'
+        title:'DM-APP Logistics Dashboard'
       },
       {
         path: 'financial',
@@ -185,98 +185,98 @@ export const routes: Routes = [
       {
         path:'calendar',
         component:CalenderComponent,
-        title:'Angular Calender'
+        title:'DM-APP Calendar'
       },
       // ecommerce pages
       {
         path:'products-list',
         component:ProductListComponent,
-        title:'Angular Product List Dashboard'
+        title:'DM-APP Product List Dashboard'
       },
       {
         path:'add-product',
         component:AddProductComponent,
-        title:'Angular Add Product Dashboard'
+        title:'DM-APP Add Product Dashboard'
       },
       {
         path:'billing',
         component:BillingComponent,
-        title:'Angular Ecommerce Billing Dashboard'
+        title:'DM-APP Ecommerce Billing Dashboard'
       },
       {
         path:'invoices',
         component:InvoiceComponent,
-        title:'Angular Ecommerce Invoice Dashboard'
+        title:'DM-APP Ecommerce Invoice Dashboard'
       },
       {
         path:'single-invoice',
         component:SingleInvoiceComponent,
-        title:'Angular Single Invoice Dashboard'
+        title:'DM-APP Single Invoice Dashboard'
       },
       {
         path:'create-invoice',
         component:CreateInvoiceComponent,
-        title:'Angular Create Invoice Dashboard'
+        title:'DM-APP Create Invoice Dashboard'
       },
       {
         path:'transactions',
         component:TransactionsComponent,
-        title:'Angular Transactions Dashboard'
+        title:'DM-APP Transactions Dashboard'
       },
       {
         path:'single-transaction',
         component:SingleTransactionComponent,
-        title:'Angular Single Transaction Dashboard'
+        title:'DM-APP Single Transaction Dashboard'
       },
       {
         path:'profile',
         component:ProfileComponent,
-        title:'Angular Profile Dashboard'
+        title:'DM-APP Profile Dashboard'
       },
       {
         path:'profile-new',
         component:ProfileNewComponent,
-        title:'Angular New Profile Dashboard'
+        title:'DM-APP New Profile Dashboard'
       },
       {
         path:'profile-qr',
         component:ProfileQrComponent,
-        title:'Angular Profile QR Dashboard'
+        title:'DM-APP Profile QR Dashboard'
       },
       {
         path:'task-list',
         component:TaskListComponent,
-        title:'Angular Task List Dashboard'
+        title:'DM-APP Task List Dashboard'
       },
       {
         path:'task-kanban',
         component:TaskKanbanComponent,
-        title:'Angular Task Kanban Dashboard'
+        title:'DM-APP Task Kanban Dashboard'
       },
       {
         path:'form-elements',
         component:FormElementsComponent,
-        title:'Angular Form Elements Dashboard'
+        title:'DM-APP Form Elements Dashboard'
       },
       {
         path:'form-layout',
         component:FormLayoutComponent,
-        title:'Angular Form Layout Dashboard'
+        title:'DM-APP Form Layout Dashboard'
       },
       {
         path:'basic-tables',
         component:BasicTablesComponent,
-        title:'Angular Basic Tables Dashboard'
+        title:'DM-APP Basic Tables Dashboard'
       },
       {
         path:'data-tables',
         component:DataTablesComponent,
-        title:'Angular Data Tables Dashboard'
+        title:'DM-APP Data Tables Dashboard'
       },
       {
         path:'file-manager',
         component:FileManagerComponent,
-        title:'Angular File Manager Dashboard'
+        title:'DM-APP File Manager Dashboard'
       },
       {
         path:'upload-demo',
@@ -296,29 +296,29 @@ export const routes: Routes = [
       {
         path:'pricing-tables',
         component:PricingTablesComponent,
-        title:'Angular Pricing Dashboard'
+        title:'DM-APP Pricing Dashboard'
       },
       {
         path:'faq',
         component:FaqsComponent,
-        title:'Angular Faqs Dashboard'
+        title:'DM-APP Faqs Dashboard'
       },
       {
         path:'api-keys',
         component:ApiKeysComponent,
-        title:'Angular Api Keys Dashboard'
+        title:'DM-APP Api Keys Dashboard'
       },
       {
         path:'integrations',
         component:IntegrationsComponent,
-        title:'Angular Integrations Dashboard'
+        title:'DM-APP Integrations Dashboard'
       },
       {
         path:'check-user-status',
         component:CheckUserStatusComponent,
         canActivate: [AuthGuard, RoleGuard],
         data: { expectedRoles: ['waiter'] },
-        title:'Angular Check User Status'
+        title:'DM-APP Check User Status'
       },
       {
         path: 'master',
@@ -458,163 +458,163 @@ export const routes: Routes = [
       {
         path:'blank',
         component:BlankComponent,
-        title:'Angular Blank Dashboard'
+        title:'DM-APP Blank Dashboard'
       },
       {
         path:'chat',
         component:ChatsComponent,
-        title:'Angular Chats Dashboard'
+        title:'DM-APP Chats Dashboard'
       },
       // support tickets
       {
         path:'support-tickets',
         component:TicketListComponent,
-        title:'Angular Support Tickets Dashboard'
+        title:'DM-APP Support Tickets Dashboard'
       },
       {
         path:'support-ticket-reply',
         component:TicketReplyComponent,
-        title:'Angular Ticket Details Dashboard'
+        title:'DM-APP Ticket Details Dashboard'
       },
       {
         path:'inbox',
         component:EmailInboxComponent,
-        title:'Angular Email Inbox Dashboard'
+        title:'DM-APP Email Inbox Dashboard'
       },
       {
         path:'inbox-details',
         component:EmailDetailsComponent,
-        title:'Angular Email Inbox Details Dashboard'
+        title:'DM-APP Email Inbox Details Dashboard'
       },
       {
         path:'invoice',
         component:InvoicesComponent,
-        title:'Angular Invoice Details Dashboard'
+        title:'DM-APP Invoice Details Dashboard'
       },
       {
         path:'line-chart',
         component:LineChartComponent,
-        title:'Angular Line Chart Dashboard'
+        title:'DM-APP Line Chart Dashboard'
       },
       {
         path:'bar-chart',
         component:BarChartComponent,
-        title:'Angular Bar Chart Dashboard'
+        title:'DM-APP Bar Chart Dashboard'
       },
       {
         path:'pie-chart',
         component:PieChartComponent,
-        title:'Angular Pie Chart Dashboard'
+        title:'DM-APP Pie Chart Dashboard'
       },
       {
         path:'alerts',
         component:AlertsComponent,
-        title:'Angular Alerts Dashboard'
+        title:'DM-APP Alerts Dashboard'
       },
       {
         path:'avatars',
         component:AvatarElementComponent,
-        title:'Angular Avatars Dashboard'
+        title:'DM-APP Avatars Dashboard'
       },
       {
         path:'badge',
         component:BadgesComponent,
-        title:'Angular Badges Dashboard'
+        title:'DM-APP Badges Dashboard'
       },
       {
         path:'breadcrumb',
         component:BreadcrumbComponent,
-        title:'Angular Breadcrumb Dashboard'
+        title:'DM-APP Breadcrumb Dashboard'
       },
       {
         path:'buttons',
         component:ButtonsComponent,
-        title:'Angular Buttons Dashboard'
+        title:'DM-APP Buttons Dashboard'
       },
       {
         path:'buttons-group',
         component:ButtonGroupComponent,
-        title:'Angular Buttons Group Dashboard'
+        title:'DM-APP Buttons Group Dashboard'
       },
       {
         path:'cards',
         component:CardsComponent,
-        title:'Angular Cards Dashboard'
+        title:'DM-APP Cards Dashboard'
       },
       {
         path:'carousel',
         component:CarouselComponent,
-        title:'Angular Carousel Dashboard'
+        title:'DM-APP Carousel Dashboard'
       },
       {
         path:'dropdowns',
         component:DropdownsComponent,
-        title:'Angular Dropdown Dashboard'
+        title:'DM-APP Dropdown Dashboard'
       },
       {
         path:'images',
         component:ImagesComponent,
-        title:'Angular Images Dashboard'
+        title:'DM-APP Images Dashboard'
       },
       {
         path:'links',
         component:LinksComponent,
-        title:'Angular Links Dashboard'
+        title:'DM-APP Links Dashboard'
       },
       {
         path:'list',
         component:ListsComponent,
-        title:'Angular Lists Dashboard'
+        title:'DM-APP Lists Dashboard'
       },
       {
         path:'modals',
         component:ModalsComponent,
-        title:'Angular Modals Dashboard'
+        title:'DM-APP Modals Dashboard'
       },
       {
         path:'notifications',
         component:NotificationsComponent,
-        title:'Angular Notifications Dashboard'
+        title:'DM-APP Notifications Dashboard'
       },
       {
         path:'pagination',
         component:PaginationsComponent,
-        title:'Angular Pagination Dashboard'
+        title:'DM-APP Pagination Dashboard'
       },
       {
         path:'popovers',
         component:PopoversComponent,
-        title:'Angular Popovers Dashboard'
+        title:'DM-APP Popovers Dashboard'
       },
       {
         path:'progress-bar',
         component:ProgressBarComponent,
-        title:'Angular Progressbar Dashboard'
+        title:'DM-APP Progressbar Dashboard'
       },
       {
         path:'ribbons',
         component:RibbonsComponent,
-        title:'Angular Ribbons Dashboard'
+        title:'DM-APP Ribbons Dashboard'
       },
       {
         path:'spinners',
         component:SpinnersComponent,
-        title:'Angular Spinners Dashboard'
+        title:'DM-APP Spinners Dashboard'
       },
       {
         path:'tabs',
         component:TabsComponent,
-        title:'Angular Tabs Dashboard'
+        title:'DM-APP Tabs Dashboard'
       },
       {
         path:'tooltips',
         component:TooltipsComponent,
-        title:'Angular Tooltips Dashboard'
+        title:'DM-APP Tooltips Dashboard'
       },
       {
         path:'videos',
         component:VideosComponent,
-        title:'Angular Videos Dashboard'
+        title:'DM-APP Videos Dashboard'
       },
       {
         path: 'events/event-list-admin',
@@ -644,11 +644,11 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/events/jam-admin/jam-admin.component').then(m => m.JamAdminComponent),
         title: 'Criar Jam'
       },
-  {
-    path: 'map-test',
-    component: MapTestComponent,
-    title: 'Mapa de Teste',
-  },
+      {
+        path: 'map-test',
+        component: MapTestComponent,
+        title: 'Mapa de Teste',
+      },
     ]
   },
   {
@@ -659,22 +659,22 @@ export const routes: Routes = [
       {
         path:'text-generator',
         component:TextGeneratorComponent,
-        title:'Angular AI Text Generator'
+        title:'DM-APP AI Text Generator'
       },
       {
         path:'image-generator',
         component:ImageGeneratorComponent,
-        title:'Angular AI Image Generator'
+        title:'DM-APP AI Image Generator'
       },
       {
         path:'code-generator',
         component:CodeGeneratorComponent,
-        title:'Angular AI Code Generator'
+        title:'DM-APP AI Code Generator'
       },
       {
         path:'video-generator',
         component:VideoGeneratorComponent,
-        title:'Angular AI Video Generator'
+        title:'DM-APP AI Video Generator'
       },
       {
         path: 'events/answer/:id_code',
@@ -728,12 +728,12 @@ export const routes: Routes = [
   {
     path:'coming-soon',
     component:ComingSoonComponent,
-    title:'Angular Coming soon Dashboard'
+    title:'DM-APP Coming soon Dashboard'
   },
   {
     path:'maintenance',
     component:MaintenanceComponent,
-    title:'Angular Maintenance Dashboard'
+    title:'DM-APP Maintenance Dashboard'
   },
   {
     path:'no-permission',
@@ -743,7 +743,7 @@ export const routes: Routes = [
   {
     path:'success',
     component:SuccessComponent,
-    title:'Angular Success Dashboard'
+    title:'DM-APP Success Dashboard'
   },
   {
     path:'end-quest-success',
@@ -755,50 +755,50 @@ export const routes: Routes = [
     path:'signin',
     component:SignInComponent,
     canActivate: [GuestGuard],
-    title:'Angular Sign In Dashboard'
+    title:'DM-APP Sign In Dashboard'
   },
   {
     path:'signout',
     component:SignoutComponent,
-    title:'Angular Sign Out'
+    title:'DM-APP Sign Out'
   },
   {
     path:'logout',
     component:LogoutComponent,
-    title:'Angular Logout'
+    title:'DM-APP Logout'
   },
   {
     path:'signup',
     component:SignUpComponent,
     canActivate: [GuestGuard],
-    title:'Angular Sign Up Dashboard'
+    title:'DM-APP Sign Up Dashboard'
   },
   {
     path:'reset-password',
     component:ResetPasswordComponent,
     canActivate: [GuestGuard],
-    title:'Angular Reset Password Dashboard'
+    title:'DM-APP Reset Password Dashboard'
   },
   {
     path:'two-step-verification',
     component:TwoStepVerificationComponent,
     canActivate: [GuestGuard],
-    title:'Angular Two Step Verification Dashboard'
+    title:'DM-APP Two Step Verification Dashboard'
   },
   // error pages
   {
     path:'error-500',
     component:Error500Component,
-    title:'Angular Error 500 Dashboard'
+    title:'DM-APP Error 500 Dashboard'
   },
   {
     path:'error-503',
     component:Error503Component,
-    title:'Angular Error 503 Dashboard'
+    title:'DM-APP Error 503 Dashboard'
   },
   {
     path:'**',
     component:NotFoundComponent,
-    title:'Angular NotFound Dashboard'
+    title:'DM-APP NotFound Dashboard'
   },
 ];
