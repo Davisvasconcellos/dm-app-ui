@@ -343,112 +343,112 @@ export const routes: Routes = [
         component:HomeAdminComponent,
         canActivate: [AuthGuard, RoleGuard],
         data: { expectedRoles: ['admin'] },
-        title:'Vibe Sessions Admin | BeerClubPub - Angular Admin Dashboard Template'
+        title:'DM-APP Configurações | DM-APP'
       },
       {
         path:'pub/master',
         component:HomeMasterComponent,
         canActivate: [AuthGuard, RoleGuard],
         data: { expectedRoles: ['master'] },
-        title:'Vibe Sessions Master | BeerClubPub - Angular Admin Dashboard Template'
+        title:'DM-APP Master | DM-APP'
       },
       {
         path:'pub/user',
         component:HomeUserComponent,
         canActivate: [AuthGuard, RoleGuard],
         data: { expectedRoles: ['user'] },
-        title:'Vibe Sessions User | BeerClubPub - Angular Admin Dashboard Template'
+        title:'DM-APP User | DM-APP'
       },
       {
         path:'pub/waiter',
         component:HomeWaiterComponent,
         canActivate: [AuthGuard, RoleGuard],
         data: { expectedRoles: ['waiter'] },
-        title:'Vibe Sessions Waiter | BeerClubPub - Angular Admin Dashboard Template'
+        title:'DM-APP Waiter | DM-APP'
       },
       {
         path:'pub/waiter/scan-qr',
         component:QrScannerComponent,
         canActivate: [AuthGuard, RoleGuard],
         data: { expectedRoles: ['waiter'] },
-        title:'Leitor QR | BeerClubPub'
+        title:'Leitor QR | DM-APP'
       },
       {
         path:'pub/waiter/orders',
         component:OrdersComponent,
         canActivate: [AuthGuard, RoleGuard],
         data: { expectedRoles: ['waiter'] },
-        title:'Vibe Sessions Pedidos | BeerClubPub - Angular Admin Dashboard Template'
+        title:'DM-APP Pedidos | DM-APP'
       },
       {
         path:'pub/waiter/menu',
         component:MenuComponent,
         canActivate: [AuthGuard, RoleGuard],
         data: { expectedRoles: ['waiter'] },
-        title:'Vibe Sessions Cardápio | BeerClubPub - Angular Admin Dashboard Template'
+        title:'DM-APP Cardápio | DM-APP'
       },
       {
         path:'pub/waiter/tables',
         component:TablesComponent,
         canActivate: [AuthGuard, RoleGuard],
         data: { expectedRoles: ['waiter'] },
-        title:'Vibe Sessions Mesas | BeerClubPub - Angular Admin Dashboard Template'
+        title:'DM-APP Mesas | DM-APP'
       },
       {
         path:'pub/waiter/payments',
         component:PaymentsComponent,
         canActivate: [AuthGuard, RoleGuard],
         data: { expectedRoles: ['waiter'] },
-        title:'Vibe Sessions Pagamentos | BeerClubPub - Angular Admin Dashboard Template'
+        title:'DM-APP Pagamentos | DM-APP'
       },
       {
         path:'pub/admin/admin-dashboard',
         component:AdminDashboardComponent,
         canActivate: [AuthGuard, RoleGuard],
         data: { expectedRoles: ['admin'] },
-        title:'Vibe Sessions Dashboard Admin | BeerClubPub - Angular Admin Dashboard Template'
+        title:'DM-APP Dashboard Admin | DM-APP'
       },
       {
         path:'pub/admin/product-list',
         component:AdminProductListComponent,
         canActivate: [AuthGuard, RoleGuard],
         data: { expectedRoles: ['admin'] },
-        title:'Vibe Sessions Lista de Produtos | BeerClubPub - Angular Admin Dashboard Template'
+        title:'DM-APP Lista de Produtos | DM-APP'
       },
       {
         path:'pub/admin/add-product',
         component:AdminAddProductComponent,
         canActivate: [AuthGuard, RoleGuard],
         data: { expectedRoles: ['admin'] },
-        title:'Vibe Sessions Cadastro de Produto | BeerClubPub - Angular Admin Dashboard Template'
+        title:'DM-APP Cadastro de Produto | DM-APP'
       },
       {
         path:'pub/admin/config',
         component:ConfigComponent,
         canActivate: [AuthGuard, RoleGuard],
         data: { expectedRoles: ['admin'] },
-        title:'Vibe Sessions Configurações | BeerClubPub - Angular Admin Dashboard Template'
+        title:'DM-APP Configurações | DM-APP'
       },
       {
         path:'pub/admin/clients',
         component:ClientsComponent,
         canActivate: [AuthGuard, RoleGuard],
         data: { expectedRoles: ['admin'] },
-        title:'Vibe Sessions Clientes | BeerClubPub - Angular Admin Dashboard Template'
+        title:'DM-APP Clientes | DM-APP'
       },
       {
         path:'pub/admin/waiters',
         component:WaitersComponent,
         canActivate: [AuthGuard, RoleGuard],
         data: { expectedRoles: ['admin'] },
-        title:'Vibe Sessions Garçons | BeerClubPub - Angular Admin Dashboard Template'
+        title:'DM-APP Garçons | DM-APP'
       },
       {
         path:'pub/admin/tables',
         component:AdminTablesComponent,
         canActivate: [AuthGuard, RoleGuard],
         data: { expectedRoles: ['admin'] },
-        title:'Vibe Sessions Mesas | BeerClubPub - Angular Admin Dashboard Template'
+        title:'DM-APP Mesas | DM-APP'
       },
       {
         path:'stream',

@@ -27,6 +27,10 @@ app.use(cors({
 // Middleware para parsing JSON
 app.use(express.json());
 
+app.get('/', (req, res) => {
+  res.send('Welcome to DM-APP API');
+});
+
 // Servir arquivos estáticos da pasta public
 app.use('/images', express.static(path.join(__dirname, 'public/images'), {
   setHeaders: (res) => {
@@ -519,7 +523,7 @@ function buildRichPdfHTML({
           <img class="shape-bottom" src="${gridUrl}" alt="grid" />
           <div class="hero" style="z-index:1;">
             <img class="logo" src="${logoUrl}" alt="Logo" width="231" height="48" />
-            <p class="strap">Vibe Sessions Project</p>
+            <p class="strap">DM-APP</p>
           </div>
         </section>
       </div>

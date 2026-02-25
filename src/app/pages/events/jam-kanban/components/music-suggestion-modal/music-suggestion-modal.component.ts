@@ -320,7 +320,7 @@ export class MusicSuggestionModalComponent implements OnInit, OnChanges, OnDestr
     // Or just sum them?
     // Usually, if I set "2 Guitars" and add 1 Guitarist, I still need 1 more Guitar.
     // So 'slots' usually represents the TOTAL vacancies or TOTAL positions?
-    // In Vibe Sessions, 'slots' usually means "Total spots for this instrument".
+    // In DM-APP, 'slots' usually means "Total spots for this instrument".
     // If I add a participant, they consume a slot.
     // So if I want 2 Guitars TOTAL, and I have 1 participant, I set slots=2.
     // BUT, the 'instrumentSlots' UI is "Add Empty Slots" or "Define Total Slots"?

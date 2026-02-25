@@ -31,9 +31,9 @@ const envConfigFile = `export const environment = {
 const envProdConfigFile = `export const environment = {
   production: true,
   // API pública em produção
-  apiUrl: '${process.env.API_URL_PROD}',
-  // Utilitário (upload/imagens/PDFs) dentro da própria aplicação
-  utilityUrl: '${process.env.UTILITY_URL_PROD}',
+  apiUrl: '${process.env.API_URL_PROD || process.env.API_URL}',
+  //utilityUrl: '${process.env.UTILITY_URL_PROD || process.env.UTILITY_URL}',
+  utilityUrl: 'undefined',
   firebase: {
     apiKey: '${process.env.FIREBASE_API_KEY}',
     authDomain: '${process.env.FIREBASE_AUTH_DOMAIN}',

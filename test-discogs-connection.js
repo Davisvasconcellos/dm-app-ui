@@ -11,7 +11,7 @@ console.log(`URL Alvo: ${url}`);
 const options = {
   headers: {
     // Discogs EXIGE User-Agent (Node.js permite enviar, o navegador bloqueia)
-    'User-Agent': 'VibeSessionsTestScript/1.0' 
+    'User-Agent': 'DM-APP/1.0'
   }
 };
 

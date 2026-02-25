@@ -7,7 +7,7 @@
       "^/discogs-api": ""
     },
     "headers": {
-      "User-Agent": "VibeSessionsApp/1.0"
+      "User-Agent": "DM-APP/1.0"
     },
     "logLevel": "debug"
   }

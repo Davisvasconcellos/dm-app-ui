@@ -1,6 +1,6 @@
 # Integração Google Drive na API (Node.js/Express)
 
-Como não tenho acesso direto ao repositório da API (`beerclub-api`), preparei este guia com o código exato que você precisa adicionar lá.
+Como não tenho acesso direto ao repositório da API (`dm-app-api`), preparei este guia com o código exato que você precisa adicionar lá.
 
 ## 1. Configuração no Google Cloud Console
 1. Acesse o [Google Cloud Console](https://console.cloud.google.com/).
