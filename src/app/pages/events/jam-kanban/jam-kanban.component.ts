@@ -1,19 +1,32 @@
-import { Component, OnInit, OnDestroy, ApplicationRef, Injector, EnvironmentInjector, createComponent } from '@angular/core';
+import { Component, OnInit, OnDestroy, ApplicationRef, Injector, EnvironmentInjector, createComponent, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BoardColumnComponent } from '../../../shared/components/task/kanban/board-column/board-column.component';
 import { Task } from '../../../shared/components/task/kanban/types/types';
 import { DndDropEvent, DndModule } from 'ngx-drag-drop';
 import { ModalComponent } from '../../../shared/components/ui/modal/modal.component';
-import { EventService, EventListItem, ApiJam, ApiSong } from '../event.service';
+import { EventService, EventListItem, ApiJam, ApiSong, CreateSongAutoPayload } from '../event.service';
 import { NotificationComponent } from '../../../shared/components/ui/notification/notification/notification.component';
-import { forkJoin, of } from 'rxjs';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import { MusicSuggestionService, MusicSuggestion } from '../music-suggestion/music-suggestion.service';
 import { MusicSuggestionModalComponent } from './components/music-suggestion-modal/music-suggestion-modal.component';
 
 type SongStatus = 'planned' | 'open_for_candidates' | 'on_stage' | 'played' | 'canceled';
 
+interface Participant {
+  user_id: string;
+  instrument: string;
+  [key: string]: any;
+}
+
+interface MusicModalData {
+  song_name: string;
+  artist_name: string;
+  cover_image?: string;
+  catalog_id?: number;
+  slots?: Record<string, number>;
+  participants?: Participant[];
+}
 
 @Component({
   selector: 'app-jam-kanban',
@@ -23,6 +36,13 @@ type SongStatus = 'planned' | 'open_for_candidates' | 'on_stage' | 'played' | 'c
   styleUrl: './jam-kanban.component.css'
 })
 export class JamKanbanComponent implements OnInit, OnDestroy {
+  private eventService = inject(EventService);
+  private musicSuggestionService = inject(MusicSuggestionService);
+  private translate = inject(TranslateService);
+  private appRef = inject(ApplicationRef);
+  private injector = inject(Injector);
+  private envInjector = inject(EnvironmentInjector);
+
   events: EventListItem[] = [];
   selectedEventIdCode = '';
   selectedJam: ApiJam | null = null;
@@ -34,14 +54,14 @@ export class JamKanbanComponent implements OnInit, OnDestroy {
   activeView: 'setlist' | 'suggestions' = 'setlist';
   suggestionViewMode: 'list' | 'grid' = 'list';
   suggestionFilter: 'SUBMITTED' | 'ALL' = 'SUBMITTED';
-  suggestionSearchText: string = '';
+  suggestionSearchText = '';
   suggestions: MusicSuggestion[] = []; // Raw data from API
   filteredSuggestions: MusicSuggestion[] = []; // Filtered data for UI
-  
+
   // Pagination
-  currentPage: number = 1;
-  itemsPerPage: number = 10;
-  
+  currentPage = 1;
+  itemsPerPage = 10;
+
   suggestionsCount = 0;
 
   songs: ApiSong[] = [];
@@ -51,18 +71,9 @@ export class JamKanbanComponent implements OnInit, OnDestroy {
   private refreshTimerId: any = null;
   private readonly refreshIntervalMs = 60000;
 
-  constructor(
-    private eventService: EventService,
-    private musicSuggestionService: MusicSuggestionService,
-    private translate: TranslateService,
-    private appRef: ApplicationRef,
-    private injector: Injector,
-    private envInjector: EnvironmentInjector
-  ) {}
-
   ngOnInit(): void {
     this.eventService.getEvents().subscribe({ next: (items) => this.events = items, error: () => this.events = [] });
-    
+
     // Subscribe to suggestions updates
     this.musicSuggestionService.suggestions$.subscribe(suggestions => {
       this.suggestions = suggestions;
@@ -87,7 +98,7 @@ export class JamKanbanComponent implements OnInit, OnDestroy {
     // 1. Text Search Filter
     if (this.suggestionSearchText && this.suggestionSearchText.trim()) {
       const term = this.suggestionSearchText.toLowerCase().trim();
-      result = result.filter(s => 
+      result = result.filter(s =>
         s.song_name.toLowerCase().includes(term) ||
         s.artist_name.toLowerCase().includes(term) ||
         (s.creator?.name || '').toLowerCase().includes(term)
@@ -142,12 +153,12 @@ export class JamKanbanComponent implements OnInit, OnDestroy {
   // Music Modal
   isMusicModalOpen = false;
   selectedSuggestionForModal: MusicSuggestion | null = null;
-  availableUsers: any[] = [];
+  availableUsers: { id: number | string; name: string; avatar: string }[] = [];
 
-  openAddModal() { 
-    if (!this.selectedEventIdCode) return; 
+  openAddModal() {
+    if (!this.selectedEventIdCode) return;
     this.selectedSuggestionForModal = null;
-    this.isMusicModalOpen = true; 
+    this.isMusicModalOpen = true;
   }
 
   closeMusicModal() {
@@ -235,14 +246,14 @@ export class JamKanbanComponent implements OnInit, OnDestroy {
         return;
       }
       const instrumentSlots = Object.entries(data.slots || {})
-          .filter(([_, count]) => (count as number) > 0)
-          .map(([inst, count]) => ({ 
-            instrument: this.mapInstrumentKey(inst), 
+          .filter(([, count]) => (count as number) > 0)
+          .map(([inst, count]) => ({
+            instrument: this.mapInstrumentKey(inst),
             slots: count as number,
             required: true,
-            fallback_allowed: true 
+            fallback_allowed: true
           }));
-      const preApproved = participants.map((p: any) => ({
+      const preApproved = participants.map((p: Participant) => ({
         user_id: p.user_id,
         instrument: this.mapInstrumentKey(p.instrument)
       }));
@@ -265,19 +276,21 @@ export class JamKanbanComponent implements OnInit, OnDestroy {
     } else {
       // Create via createSongAuto (Song + Slots)
       const instrumentSlots = Object.entries(data.slots || {})
-          .filter(([_, count]) => (count as number) > 0)
-          .map(([inst, count]) => ({ 
-            instrument: this.mapInstrumentKey(inst), 
+          .filter(([, count]) => (count as number) > 0)
+          .map(([inst, count]) => ({
+            instrument: this.mapInstrumentKey(inst),
             slots: count as number,
             required: false,
-            fallback_allowed: true 
+            fallback_allowed: true
           }));
 
-      const payload: any = {
+      const payload: CreateSongAutoPayload = {
         title: data.song_name,
         artist: data.artist_name,
+        cover_image: data.cover_image,
+        catalog_id: data.catalog_id,
         instrument_slots: instrumentSlots,
-        pre_approved_candidates: participants.map((p: any) => ({
+        pre_approved_candidates: participants.map((p: Participant) => ({
           user_id: p.user_id,
           instrument: this.mapInstrumentKey(p.instrument)
         })),
@@ -286,23 +299,21 @@ export class JamKanbanComponent implements OnInit, OnDestroy {
 
       this.eventService.createSongAuto(this.selectedEventIdCode, payload).subscribe({
         next: (res) => {
-          const songId = res.song.id;
-          const jamId = res.jam.id;
           this.triggerToast('success', 'Música adicionada', `"${data.song_name}" foi adicionada.`);
           this.closeMusicModal();
           if (this.selectedJam && res.jam.id === this.selectedJam.id) {
             const song = res.song;
-            this.tasks.unshift({ 
-              id: String(song.id), 
-              title: song.title, 
-              dueDate: '', 
-              assignee: '/images/user/user-01.jpg', 
-              status: (song.status as SongStatus) || 'planned', 
-              category: { name: 'Jam', color: 'default' }, 
-              expanded: false, 
-              song, 
-              ready: false, 
-              orderIndex: (typeof (song as any).order_index === 'number' ? Number((song as any).order_index) : undefined) 
+            this.tasks.unshift({
+              id: String(song.id),
+              title: song.title,
+              dueDate: '',
+              assignee: '/images/user/user-01.jpg',
+              status: (song.status as SongStatus) || 'planned',
+              category: { name: 'Jam', color: 'default' },
+              expanded: false,
+              song,
+              ready: false,
+              orderIndex: (typeof (song as any).order_index === 'number' ? Number((song as any).order_index) : undefined)
             });
           }
         },
@@ -381,9 +392,9 @@ export class JamKanbanComponent implements OnInit, OnDestroy {
 
     const oldIndex = this.tasks.findIndex(t => t.id === task.id);
     if (oldIndex > -1) this.tasks.splice(oldIndex, 1);
-    
+
     task.status = newStatus;
-    this.tasks.push(task); 
+    this.tasks.push(task);
 
     if (this.selectedEventIdCode && this.selectedJam && task.song) {
        this.eventService.moveSongStatus(this.selectedEventIdCode, this.selectedJam.id, task.song.id, newStatus).subscribe({
@@ -392,13 +403,13 @@ export class JamKanbanComponent implements OnInit, OnDestroy {
     }
   }
 
-  handleEditTask(task: Task) {
+  handleEditTask(_task: Task) {
     this.triggerToast('info', 'Em breve', 'Edição de música será implementada em breve.');
   }
 
   handleDeleteTask(task: Task) {
     if (!task.song || !this.selectedEventIdCode || !this.selectedJam) return;
-    
+
     if (confirm(`Tem certeza que deseja remover "${task.title}"?`)) {
        this.eventService.deleteSong(this.selectedEventIdCode, this.selectedJam.id, task.song.id).subscribe({
          next: () => {
@@ -468,7 +479,7 @@ export class JamKanbanComponent implements OnInit, OnDestroy {
 
   confirmDelete() {
     if (!this.suggestionToDelete) return;
-    
+
     const id = this.suggestionToDelete.id_code;
     if (!id) {
       this.triggerToast('error', 'Erro', 'Sugestão sem id_code. Não foi possível remover.');

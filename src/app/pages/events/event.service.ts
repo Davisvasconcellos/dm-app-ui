@@ -112,31 +112,53 @@ export interface ApiJam {
   songs?: ApiSong[];
 }
 
+export interface ApiInstrumentSlot {
+  instrument: string;
+  slots: number;
+  required?: boolean;
+  fallback_allowed?: boolean;
+  approved_count?: number;
+  pending_count?: number;
+  remaining_slots?: number;
+}
+
+export interface BucketUser {
+  id: number | string;
+  name?: string;
+  display_name?: string;
+  username?: string;
+  avatar_url?: string;
+  photo_url?: string;
+}
+
+export interface InstrumentBucket {
+  instrument: string;
+  slots: number;
+  approved?: BucketUser[];
+  pending?: BucketUser[];
+  remaining?: number;
+  [key: string]: any;
+}
+
 export interface ApiSong {
   id: number;
   title: string;
   artist?: string | null;
+  cover_image?: string | null;
+  catalog_id?: number | null;
   key?: string | null; // tom
   tempo_bpm?: number | null;
   notes?: string | null;
   status?: 'planned' | 'open_for_candidates' | 'on_stage' | 'played' | 'canceled';
   ready?: boolean | null;
   order_index?: number | null;
-  instrument_buckets?: any[];
-  instrument_slots?: Array<{
-    instrument: string;
-    slots: number;
-    required?: boolean;
-    fallback_allowed?: boolean;
-    approved_count?: number;
-    pending_count?: number;
-    remaining_slots?: number;
-  }>;
+  instrument_buckets?: InstrumentBucket[];
+  instrument_slots?: ApiInstrumentSlot[];
   release_batch?: number;
   jam?: { id: number; name?: string; status?: string } | null;
   jam_id?: number; // compat
   instrumentation?: string[]; // compat
-  rating_summary?: any;
+  rating_summary?: { average?: number; count?: number; [key: string]: any };
   queue_position?: number;
   my_application?: { instrument?: string; status?: 'pending' | 'approved' | 'rejected' } | null;
   musicians?: Array<{
@@ -173,6 +195,8 @@ export interface AutoInstrumentSlotPayload {
 export interface CreateSongAutoPayload {
   title: string;
   artist?: string;
+  cover_image?: string | null;
+  catalog_id?: number | null;
   key?: string;
   tempo_bpm?: number;
   notes?: string;
@@ -622,7 +646,7 @@ export class EventService {
   }
 
   streamJam(eventId: string | number, jamId: string | number): EventSource {
-    const stub: any = {
+    const stub: Partial<EventSource> = {
       onopen: null,
       onmessage: null,
       onerror: null,
@@ -633,7 +657,7 @@ export class EventService {
     return stub as EventSource;
   }
 
- 
+
 
   getEventJamId(eventId: string | number): Observable<number | null> {
     const token = this.authService.getAuthToken();

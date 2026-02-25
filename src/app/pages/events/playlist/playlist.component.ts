@@ -19,15 +19,20 @@ export class PlaylistComponent implements OnInit, OnDestroy {
   playlistSongs: any[] = [];
   playingNowSongs: any[] = [];
   goToStageSongs: any[] = [];
-  
+
   isLoadingStage: boolean = false;
   selectedPlaylistIndex = 0;
   animateFooter = false;
+  isSidebarOpen = true; // Sidebar toggle state
 
   // Auto Advance
   autoAdvanceTimer: any = null;
-  private readonly SLIDE_DURATION_FIRST = 20000; // 20s for current song
-  private readonly SLIDE_DURATION_NEXT = 10000;  // 10s for next songs
+  progressInterval: any = null;
+  progressPercent = 0;
+  
+  private readonly DURATION_INDEX_0 = 20000; // 20s
+  private readonly DURATION_INDEX_1 = 20000; // 20s
+  private readonly DURATION_OTHERS = 10000;  // 10s
 
   constructor(
     private eventService: EventService,
@@ -75,22 +80,22 @@ export class PlaylistComponent implements OnInit, OnDestroy {
                     }
                 });
             }
-            
-            return { 
-                ...s, 
+
+            return {
+                ...s,
                 jam_id: j.id,
-                musicians: musicians.length > 0 ? musicians : (s as any).musicians 
+                musicians: musicians.length > 0 ? musicians : (s as any).musicians
             };
         }));
 
         // Filtra músicas que estão 'on_stage'
         const onStage = allSongs.filter(s => s.status === 'on_stage');
-        
+
         // Ordena por índice de ordem ou ID
         onStage.sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
 
         this.onStageSongs = onStage;
-        
+
         if (onStage.length > 0) {
           // Assume a primeira como tocando agora e o resto como próxima
           // A lógica do backend pode variar, mas para playlist visual isso funciona bem
@@ -100,7 +105,7 @@ export class PlaylistComponent implements OnInit, OnDestroy {
           this.playingNowSongs = [];
           this.goToStageSongs = [];
         }
-        
+
         this.isLoadingStage = false;
         this.loadPlaylist();
         this.ensureAutoAdvance();
@@ -128,23 +133,38 @@ export class PlaylistComponent implements OnInit, OnDestroy {
     this.selectedPlaylistIndex = index;
     this.stopAutoAdvance();
     // Reinicia o timer após interação manual
-    this.startAutoAdvance(); 
+    this.startAutoAdvance();
   }
 
   startAutoAdvance() {
     this.stopAutoAdvance();
-    
+
     if (this.playlistSongs.length === 0) return;
 
-    const isFirst = this.selectedPlaylistIndex === 0;
-    const duration = isFirst ? this.SLIDE_DURATION_FIRST : this.SLIDE_DURATION_NEXT;
+    // Determine duration based on index
+    let duration = this.DURATION_OTHERS;
+    if (this.selectedPlaylistIndex === 0) duration = this.DURATION_INDEX_0;
+    else if (this.selectedPlaylistIndex === 1) duration = this.DURATION_INDEX_1;
+
+    const startTime = Date.now();
+    this.progressPercent = 0;
 
     this.zone.runOutsideAngular(() => {
-        this.autoAdvanceTimer = setTimeout(() => {
-            this.zone.run(() => {
-                this.nextSlide();
-            });
-        }, duration);
+        // Progress Bar Loop
+        this.progressInterval = setInterval(() => {
+            const elapsed = Date.now() - startTime;
+            const pct = Math.min((elapsed / duration) * 100, 100);
+            
+            this.progressPercent = pct;
+            this.cdr.detectChanges();
+
+            if (elapsed >= duration) {
+                this.zone.run(() => {
+                    this.stopAutoAdvance(); // Clear interval
+                    this.nextSlide();
+                });
+            }
+        }, 100); // Update every 100ms for smooth-ish bar
     });
   }
 
@@ -152,6 +172,10 @@ export class PlaylistComponent implements OnInit, OnDestroy {
     if (this.autoAdvanceTimer) {
         clearTimeout(this.autoAdvanceTimer);
         this.autoAdvanceTimer = null;
+    }
+    if (this.progressInterval) {
+        clearInterval(this.progressInterval);
+        this.progressInterval = null;
     }
   }
 
@@ -173,7 +197,7 @@ export class PlaylistComponent implements OnInit, OnDestroy {
   }
 
   private ensureAutoAdvance() {
-    if (!this.autoAdvanceTimer && this.playlistSongs.length > 0) {
+    if (!this.progressInterval && this.playlistSongs.length > 0) {
         this.startAutoAdvance();
     }
   }
@@ -184,5 +208,23 @@ export class PlaylistComponent implements OnInit, OnDestroy {
 
   onImageError(event: any) {
     event.target.src = '/images/user/default-avatar.jpg';
+  }
+
+  toggleSidebar() {
+    this.isSidebarOpen = !this.isSidebarOpen;
+  }
+
+  toggleFullscreen() {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {
+        // Ignored
+      });
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen().catch(() => {
+          // Ignored
+        });
+      }
+    }
   }
 }

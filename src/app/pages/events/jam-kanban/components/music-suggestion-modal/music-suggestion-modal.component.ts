@@ -38,23 +38,23 @@ export class MusicSuggestionModalComponent implements OnInit, OnChanges, OnDestr
   @Input() suggestion: MusicSuggestion | null = null;
   @Input() users: any[] = []; // Available users to add as guests (pre-loaded or searchable)
   @Input() eventId: string = ''; // Required for friend search
-  
+
   @Output() close = new EventEmitter<void>();
   @Output() save = new EventEmitter<any>();
 
   form: FormGroup;
   participants: any[] = [];
-  
+
   // Discogs Search
   searchMusicControl = new FormControl('');
   musicResults: DiscogsResult[] = [];
   selectedMusic: DiscogsResult | null = null;
   isSearchingMusic = false;
-  
+
   // Instrument slots logic
   instrumentOptions = ['voz', 'violao', 'guitarra', 'baixo', 'bateria', 'teclado', 'percussao', 'sopro', 'outros'];
   instrumentSlots: Record<string, number> = {};
-  
+
   // Add Guest logic
   friendQuery = '';
   friends: any[] = [];
@@ -63,7 +63,7 @@ export class MusicSuggestionModalComponent implements OnInit, OnChanges, OnDestr
   selectedGuestName = '';
   selectedGuestAvatar = '';
   selectedGuestInstrument = '';
-  
+
   private destroy$ = new Subject<void>();
   private searchSubject = new Subject<string>();
 
@@ -93,15 +93,15 @@ export class MusicSuggestionModalComponent implements OnInit, OnChanges, OnDestr
   getSlotCount(instrument: string): number {
     return this.instrumentSlots[instrument] || 0;
   }
-  
+
   hasSelectedSlots(): boolean {
     return Object.values(this.instrumentSlots).some((v) => Number(v) > 0);
   }
-  
+
   canSubmit(): boolean {
     return this.form.valid && (this.hasSelectedSlots() || this.hasParticipantInstruments());
   }
-  
+
   private hasParticipantInstruments(): boolean {
     return (this.participants || []).some(p => !!p?.instrument);
   }
@@ -174,7 +174,7 @@ export class MusicSuggestionModalComponent implements OnInit, OnChanges, OnDestr
     this.isInviteFormOpen = false;
     this.resetGuestSelection();
   }
-  
+
   resetGuestSelection() {
     this.selectedGuestId = '';
     this.selectedGuestName = '';
@@ -191,10 +191,10 @@ export class MusicSuggestionModalComponent implements OnInit, OnChanges, OnDestr
     });
 
     this.participants = suggestion.participants ? [...suggestion.participants] : [];
-    
+
     // Reset and populate slots if available (future proofing, currently manual slots might be inferred or stored elsewhere)
-    this.instrumentSlots = {}; 
-    // If suggestion has slots data, we would populate it here. 
+    this.instrumentSlots = {};
+    // If suggestion has slots data, we would populate it here.
     // For now, we assume slots are derived from participants or stored separately if we add that field to MusicSuggestion.
     // But since we are reusing MusicSuggestion interface which might not have 'slots' property explicitly mapped yet
     // we'll leave it empty or try to map if provided in 'any'.
@@ -220,16 +220,16 @@ export class MusicSuggestionModalComponent implements OnInit, OnChanges, OnDestr
   selectMusic(music: DiscogsResult) {
     this.selectedMusic = music;
     this.musicResults = [];
-    
+
     let artist = 'Desconhecido';
     let song = music.title;
-    
+
     if (music.title.includes(' - ')) {
       const parts = music.title.split(' - ');
       artist = parts[0];
       song = parts.slice(1).join(' - ');
     }
-    
+
     this.form.patchValue({
       song_name: song,
       artist_name: artist
@@ -314,7 +314,7 @@ export class MusicSuggestionModalComponent implements OnInit, OnChanges, OnDestr
     }
 
     const formValue = this.form.value;
-    
+
     // Generate final slots: Manual Slots + Participants
     // We want to keep the manual counts as the base, and ensure we have enough slots for participants?
     // Or just sum them?
@@ -354,10 +354,10 @@ export class MusicSuggestionModalComponent implements OnInit, OnChanges, OnDestr
     // If I have 1 friend (Guitar) and I want 1 MORE, I should probably set badge to 2? Or badge to 1 (meaning 1 empty)?
     // Let's assume the badge is "Total Slots" for simplicity in Admin.
     // If I add a participant, I should probably make sure the slot count is at least that high.
-    
+
     // Let's merge:
     const finalSlots: Record<string, number> = { ...this.instrumentSlots };
-    
+
     // Ensure slots exist for all participants
     this.participants.forEach(p => {
         const inst = p.instrument;
@@ -384,7 +384,7 @@ export class MusicSuggestionModalComponent implements OnInit, OnChanges, OnDestr
             this.participants.forEach(p => {
                if(p.instrument) participantCounts[p.instrument] = (participantCounts[p.instrument] || 0) + 1;
             });
-            
+
             // Merge:
             // If I set Guitar=2 manually, and have 1 Guitarist. I probably mean 2 Total.
             // If I set Guitar=0 manually, and have 1 Guitarist. I mean 1 Total.
@@ -392,7 +392,7 @@ export class MusicSuggestionModalComponent implements OnInit, OnChanges, OnDestr
             // This ambiguity is tricky.
             // Let's assume Badge = "Total Spots".
             // So we take the Max of (Badge, ParticipantCount).
-            
+
             // Actually, the user said "slots com os badges tocando".
             // Let's just take the Manual Slots as "Requested Vacancies" on top of participants?
             // "Quero adicionar uma música, com 1 Guitarra e 1 Baixo (vagos), e já colocar o Fulano na Bateria".
@@ -401,32 +401,33 @@ export class MusicSuggestionModalComponent implements OnInit, OnChanges, OnDestr
             // So it seems like Sum is the right approach if Badge = "Open/Wanted".
             // Let's go with SUM.
             // Final Slots = Manual_Badge_Count + Participant_Count.
-            
+
             if (inst) {
                // We will calculate this after the loop
             }
         }
     });
-    
+
     const participantCounts: Record<string, number> = {};
     this.participants.forEach(p => {
        if(p.instrument) participantCounts[p.instrument] = (participantCounts[p.instrument] || 0) + 1;
     });
-    
+
     Object.entries(participantCounts).forEach(([inst, count]) => {
         finalSlots[inst] = (finalSlots[inst] || 0) + count;
     });
-    
-    // NOTE: This assumes Badge = "Extra Slots / Vacancies". 
+
+    // NOTE: This assumes Badge = "Extra Slots / Vacancies".
     // If Badge = "Total Slots", this would be wrong.
     // Given the UI "click to add", it usually implies adding *more*.
     // So "Sum" feels intuitive for "Building a band".
-    
+
     const payload = {
       ...formValue,
       participants: this.participants,
       slots: finalSlots,
-      cover_image: this.selectedMusic?.cover_image || this.selectedMusic?.thumb || null
+      cover_image: this.selectedMusic?.cover_image || this.selectedMusic?.thumb || null,
+      catalog_id: this.selectedMusic?.id || null
     };
 
     if (this.suggestion) {

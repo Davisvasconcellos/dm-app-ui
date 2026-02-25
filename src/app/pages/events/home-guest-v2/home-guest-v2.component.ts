@@ -4,26 +4,13 @@ import { trigger, style, transition, animate, stagger, query } from '@angular/an
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { EventService, ApiJam, ApiSong, OnStageResponse } from '../event.service';
+import { EventService, ApiJam, ApiSong, OnStageResponse, InstrumentBucket } from '../event.service';
 import { AuthService, User } from '../../../shared/services/auth.service';
 import { NotificationComponent } from '../../../shared/components/ui/notification/notification/notification.component';
 import { MusicSuggestionService, MusicSuggestion } from '../music-suggestion/music-suggestion.service';
 import { ToastService } from '../../../shared/services/toast.service';
 import { MusicSuggestionsListComponent } from '../music-suggestions-list/music-suggestions-list.component';
 import { ModalComponent } from '../../../shared/components/ui/modal/modal.component';
-
-interface Bucket {
-  instrument: string;
-  slots: number;
-  remaining: number;
-  approved?: {
-    display_name?: string;
-    name?: string;
-    avatar_url?: string;
-    avatar?: string;
-    instrument?: string;
-  }[];
-}
 
 @Component({
   selector: 'app-home-guest-v2',
@@ -354,13 +341,13 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
     if (!s) return s;
     const musicians: { name: string; avatar_url: string; instrument: string }[] = [];
     if (s.instrument_buckets && Array.isArray(s.instrument_buckets)) {
-        (s.instrument_buckets as Bucket[]).forEach((bucket) => {
+        (s.instrument_buckets as InstrumentBucket[]).forEach((bucket) => {
             if (Array.isArray(bucket.approved)) {
                 bucket.approved.forEach((candidate) => {
                     musicians.push({
                         name: candidate.display_name || candidate.name || 'Músico',
-                        avatar_url: candidate.avatar_url || candidate.avatar || '/images/user/default-avatar.jpg',
-                        instrument: bucket.instrument || candidate.instrument || 'outro'
+                        avatar_url: candidate.avatar_url || candidate.photo_url || '/images/user/default-avatar.jpg',
+                        instrument: bucket.instrument || 'outro'
                     });
                 });
             }
@@ -452,13 +439,13 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
 
   // Core Logic from HomeGuestComponent
 
-  getInstrumentBuckets(song: ApiSong): Bucket[] {
+  getInstrumentBuckets(song: ApiSong): InstrumentBucket[] {
     const s = song;
     if (Array.isArray(s.instrument_buckets) && s.instrument_buckets.length > 0) {
-        return s.instrument_buckets as Bucket[];
+        return s.instrument_buckets;
     }
 
-    let buckets: Bucket[] = [];
+    let buckets: InstrumentBucket[] = [];
 
     if (Array.isArray(s.instrument_slots)) {
       buckets = s.instrument_slots.map((slot) => ({
@@ -468,11 +455,13 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
           slot?.remaining_slots ?? (
             Number(slot.slots || 0) - Number(slot.approved_count || 0)
           )
-        )
+        ),
+        approved: [],
+        pending: []
       }));
     } else {
         const inst = Array.isArray(s.instrumentation) ? s.instrumentation : [];
-        buckets = inst.map((k) => ({ instrument: String(k), slots: 0, remaining: 0 }));
+        buckets = inst.map((k) => ({ instrument: String(k), slots: 0, remaining: 0, approved: [], pending: [] }));
     }
 
     s.instrument_buckets = buckets;
@@ -483,7 +472,7 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
     return (this.selections[songId] || null) === instrument;
   }
 
-  toggleRequest(song: ApiSong, bucket: Bucket): void {
+  toggleRequest(song: ApiSong, bucket: InstrumentBucket): void {
     const songId = Number(song.id);
     const key = String(bucket.instrument);
 

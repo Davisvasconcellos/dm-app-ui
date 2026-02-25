@@ -334,7 +334,11 @@ export class AppSidebarComponent {
     // Subscribe to combined observables to close submenus when all are false
     this.subscription.add(
       combineLatest([this.isExpanded$, this.isMobileOpen$, this.isHovered$]).subscribe(
-        ([isExpanded, isMobileOpen, isHovered]) => {
+        (values: any[]) => {
+          const isExpanded = values[0];
+          const isMobileOpen = values[1];
+          const isHovered = values[2];
+          
           if (!isExpanded && !isMobileOpen && !isHovered) {
             // this.openSubmenu = null;
             // this.savedSubMenuHeights = { ...this.subMenuHeights };
