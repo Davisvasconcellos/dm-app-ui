@@ -1,19 +1,21 @@
-import { Component, OnInit, OnDestroy, Input, Output, EventEmitter, ChangeDetectorRef, NgZone } from '@angular/core';
+import { Component, OnInit, OnDestroy, Input, Output, EventEmitter, ChangeDetectorRef, NgZone, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { EventService } from '../event.service';
 import { TranslateModule } from '@ngx-translate/core';
+import { QRCodeComponent } from 'angularx-qrcode';
 import { ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'app-playlist',
   standalone: true,
-  imports: [CommonModule, TranslateModule],
+  imports: [CommonModule, TranslateModule, QRCodeComponent],
   templateUrl: './playlist.component.html',
   styleUrl: './playlist.component.css'
 })
 export class PlaylistComponent implements OnInit, OnDestroy {
   @Input() eventIdCode: string = '';
   @Input() isEmbedded: boolean = false; // Se true, está dentro do HomeGuest. Se false, é standalone/janela.
+  @ViewChild('scrollContainer') scrollContainer?: ElementRef<HTMLDivElement>;
 
   onStageSongs: any[] = [];
   playlistSongs: any[] = [];
@@ -24,12 +26,17 @@ export class PlaylistComponent implements OnInit, OnDestroy {
   selectedPlaylistIndex = 0;
   animateFooter = false;
   isSidebarOpen = true; // Sidebar toggle state
+  musiciansFlipped = false;
+  isHeaderShifted = false;
 
   // Auto Advance
   autoAdvanceTimer: any = null;
+  autoAdvanceDelayTimeout: any = null; // Track the 1s delay timeout
   progressInterval: any = null;
   progressPercent = 0;
-  
+  showAnimations = true; // Use to force re-trigger of CSS animations
+  private flipTimeout: any = null;
+
   private readonly DURATION_INDEX_0 = 20000; // 20s
   private readonly DURATION_INDEX_1 = 20000; // 20s
   private readonly DURATION_OTHERS = 10000;  // 10s
@@ -39,7 +46,7 @@ export class PlaylistComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private cdr: ChangeDetectorRef,
     private zone: NgZone
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     // Se não veio por Input, tenta pegar da rota (modo standalone via URL)
@@ -61,31 +68,32 @@ export class PlaylistComponent implements OnInit, OnDestroy {
   }
 
   private loadGlobalStage(): void {
+    if (this.isLoadingStage && !this.isEmbedded) return; // Simple guard to avoid parallel loads in standalone
     this.isLoadingStage = true;
     this.eventService.getEventJams(this.eventIdCode).subscribe({
       next: (jams) => {
         const allSongs = jams.flatMap(j => (j.songs || []).map(s => {
-            // Process musicians from instrument_buckets if available
-            let musicians: any[] = [];
-            if (s.instrument_buckets && Array.isArray(s.instrument_buckets)) {
-                s.instrument_buckets.forEach((bucket: any) => {
-                    if (Array.isArray(bucket.approved)) {
-                        bucket.approved.forEach((candidate: any) => {
-                            musicians.push({
-                                name: candidate.display_name || candidate.name || 'Músico',
-                                avatar_url: candidate.avatar_url || candidate.avatar || '/images/user/default-avatar.jpg',
-                                instrument: bucket.instrument || candidate.instrument || 'outro'
-                            });
-                        });
-                    }
+          // Process musicians from instrument_buckets if available
+          let musicians: any[] = [];
+          if (s.instrument_buckets && Array.isArray(s.instrument_buckets)) {
+            s.instrument_buckets.forEach((bucket: any) => {
+              if (Array.isArray(bucket.approved)) {
+                bucket.approved.forEach((candidate: any) => {
+                  musicians.push({
+                    name: candidate.display_name || candidate.name || 'Músico',
+                    avatar_url: candidate.avatar_url || candidate.avatar || '/images/user/default-avatar.jpg',
+                    instrument: bucket.instrument || candidate.instrument || 'outro'
+                  });
                 });
-            }
+              }
+            });
+          }
 
-            return {
-                ...s,
-                jam_id: j.id,
-                musicians: musicians.length > 0 ? musicians : (s as any).musicians
-            };
+          return {
+            ...s,
+            jam_id: j.id,
+            musicians: musicians.length > 0 ? musicians : (s as any).musicians
+          };
         }));
 
         // Filtra músicas que estão 'on_stage'
@@ -121,7 +129,7 @@ export class PlaylistComponent implements OnInit, OnDestroy {
     this.playlistSongs = [...this.onStageSongs];
     // Se a playlist mudou, reseta o índice se estiver fora dos limites
     if (this.selectedPlaylistIndex >= this.playlistSongs.length) {
-        this.selectedPlaylistIndex = 0;
+      this.selectedPlaylistIndex = 0;
     }
   }
 
@@ -134,6 +142,33 @@ export class PlaylistComponent implements OnInit, OnDestroy {
     this.stopAutoAdvance();
     // Reinicia o timer após interação manual
     this.startAutoAdvance();
+    this.scrollToCurrent();
+  }
+
+  private scrollToCurrent(): void {
+    if (!this.scrollContainer) return;
+
+    // Use a small timeout to ensure transition/render is done
+    setTimeout(() => {
+      const container = this.scrollContainer?.nativeElement;
+      if (!container) return;
+
+      if (this.selectedPlaylistIndex === 0) {
+        container.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
+
+      const items = container.getElementsByClassName('playlist-item');
+      if (items[this.selectedPlaylistIndex]) {
+        const item = items[this.selectedPlaylistIndex] as HTMLElement;
+        const offsetTop = item.offsetTop;
+        const containerHeight = container.clientHeight;
+
+        // Centraliza o item um pouco acima do meio para contexto
+        const targetScroll = offsetTop - (containerHeight / 3);
+        container.scrollTo({ top: Math.max(0, targetScroll), behavior: 'smooth' });
+      }
+    }, 100);
   }
 
   startAutoAdvance() {
@@ -141,64 +176,100 @@ export class PlaylistComponent implements OnInit, OnDestroy {
 
     if (this.playlistSongs.length === 0) return;
 
+    this.progressPercent = 0;
+    this.musiciansFlipped = false;
+    this.isHeaderShifted = false;
+    this.cdr.detectChanges(); // Força zerar a barra visualmente imediatamente
+
+    // Force re-trigger text and avatar animations
+    this.showAnimations = false;
+
     // Determine duration based on index
     let duration = this.DURATION_OTHERS;
     if (this.selectedPlaylistIndex === 0) duration = this.DURATION_INDEX_0;
     else if (this.selectedPlaylistIndex === 1) duration = this.DURATION_INDEX_1;
 
-    const startTime = Date.now();
-    this.progressPercent = 0;
+    if (this.flipTimeout) clearTimeout(this.flipTimeout);
 
-    this.zone.runOutsideAngular(() => {
-        // Progress Bar Loop
-        this.progressInterval = setInterval(() => {
-            const elapsed = Date.now() - startTime;
-            const pct = Math.min((elapsed / duration) * 100, 100);
-            
-            this.progressPercent = pct;
-            this.cdr.detectChanges();
+    this.autoAdvanceDelayTimeout = setTimeout(() => {
+      this.showAnimations = true;
+      const startTime = Date.now();
 
-            if (elapsed >= duration) {
-                this.zone.run(() => {
-                    this.stopAutoAdvance(); // Clear interval
-                    this.nextSlide();
-                });
-            }
-        }, 100); // Update every 100ms for smooth-ish bar
-    });
+      // Start header shift timer (approx 2s into the auto-advance)
+      setTimeout(() => {
+        if (this.selectedPlaylistIndex === 0 || this.selectedPlaylistIndex === 1) {
+          this.isHeaderShifted = true;
+          this.cdr.detectChanges();
+        }
+      }, 2000);
+
+      // Start flip timer after reveal animation (approx 5s after start)
+      this.flipTimeout = setTimeout(() => {
+        this.musiciansFlipped = true;
+        this.cdr.detectChanges();
+      }, 5000);
+
+      // Progress Bar Loop
+      this.progressInterval = setInterval(() => {
+        const elapsed = Date.now() - startTime;
+        const pct = Math.min((elapsed / duration) * 100, 100);
+
+        this.progressPercent = pct;
+        this.cdr.detectChanges();
+
+        if (elapsed >= duration) {
+          this.stopAutoAdvance(); // Clear interval
+          this.nextSlide();
+        }
+      }, 100); // Update every 100ms for smooth-ish bar
+    }, 1000);
   }
 
   stopAutoAdvance() {
     if (this.autoAdvanceTimer) {
-        clearTimeout(this.autoAdvanceTimer);
-        this.autoAdvanceTimer = null;
+      clearTimeout(this.autoAdvanceTimer);
+      this.autoAdvanceTimer = null;
+    }
+    if (this.autoAdvanceDelayTimeout) {
+      clearTimeout(this.autoAdvanceDelayTimeout);
+      this.autoAdvanceDelayTimeout = null;
     }
     if (this.progressInterval) {
-        clearInterval(this.progressInterval);
-        this.progressInterval = null;
+      clearInterval(this.progressInterval);
+      this.progressInterval = null;
     }
+    if (this.flipTimeout) {
+      clearTimeout(this.flipTimeout);
+      this.flipTimeout = null;
+    }
+    this.musiciansFlipped = false;
+    this.isHeaderShifted = false;
   }
 
   nextSlide() {
     if (this.playlistSongs.length === 0) return;
 
     if (this.selectedPlaylistIndex < this.playlistSongs.length - 1) {
-        this.selectedPlaylistIndex++;
-        this.animateFooter = true;
-        setTimeout(() => this.animateFooter = false, 500);
-        this.startAutoAdvance();
+      this.selectedPlaylistIndex++;
+      this.animateFooter = true;
+      setTimeout(() => this.animateFooter = false, 500);
+      this.startAutoAdvance();
     } else {
-        // Chegou ao fim, reinicia o loop
-        this.selectedPlaylistIndex = 0;
-        
-        // Recarrega dados para pegar atualizações
-        this.loadGlobalStage();
+      // Chegou ao fim, reinicia o loop
+      // Recarrega dados para pegar atualizações e reiniciar tudo
+      this.selectedPlaylistIndex = 0;
+      this.animateFooter = true;
+      setTimeout(() => this.animateFooter = false, 500);
+
+      this.loadGlobalStage();
+      this.scrollToCurrent();
+      // startAutoAdvance() will be called inside loadGlobalStage -> ensureAutoAdvance
     }
   }
 
   private ensureAutoAdvance() {
     if (!this.progressInterval && this.playlistSongs.length > 0) {
-        this.startAutoAdvance();
+      this.startAutoAdvance();
     }
   }
 

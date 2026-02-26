@@ -86,10 +86,7 @@ export class JamKanbanComponent implements OnInit, OnDestroy {
       this.jamStream.close();
       this.jamStream = null;
     }
-    if (this.refreshTimerId) {
-      clearInterval(this.refreshTimerId);
-      this.refreshTimerId = null;
-    }
+    this.stopPolling();
   }
 
   applyClientFilters() {
@@ -171,6 +168,21 @@ export class JamKanbanComponent implements OnInit, OnDestroy {
     this.refreshSuggestions();
     this.loadEventGuests();
     this.loadJamsAndSongs();
+    this.startPolling();
+  }
+
+  startPolling() {
+    this.stopPolling();
+    this.refreshTimerId = setInterval(() => {
+      this.onRefreshClick();
+    }, this.refreshIntervalMs);
+  }
+
+  stopPolling() {
+    if (this.refreshTimerId) {
+      clearInterval(this.refreshTimerId);
+      this.refreshTimerId = null;
+    }
   }
 
   loadJamsAndSongs() {
@@ -246,13 +258,13 @@ export class JamKanbanComponent implements OnInit, OnDestroy {
         return;
       }
       const instrumentSlots = Object.entries(data.slots || {})
-          .filter(([, count]) => (count as number) > 0)
-          .map(([inst, count]) => ({
-            instrument: this.mapInstrumentKey(inst),
-            slots: count as number,
-            required: true,
-            fallback_allowed: true
-          }));
+        .filter(([, count]) => (count as number) > 0)
+        .map(([inst, count]) => ({
+          instrument: this.mapInstrumentKey(inst),
+          slots: count as number,
+          required: true,
+          fallback_allowed: true
+        }));
       const preApproved = participants.map((p: Participant) => ({
         user_id: p.user_id,
         instrument: this.mapInstrumentKey(p.instrument)
@@ -276,13 +288,13 @@ export class JamKanbanComponent implements OnInit, OnDestroy {
     } else {
       // Create via createSongAuto (Song + Slots)
       const instrumentSlots = Object.entries(data.slots || {})
-          .filter(([, count]) => (count as number) > 0)
-          .map(([inst, count]) => ({
-            instrument: this.mapInstrumentKey(inst),
-            slots: count as number,
-            required: false,
-            fallback_allowed: true
-          }));
+        .filter(([, count]) => (count as number) > 0)
+        .map(([inst, count]) => ({
+          instrument: this.mapInstrumentKey(inst),
+          slots: count as number,
+          required: false,
+          fallback_allowed: true
+        }));
 
       const payload: CreateSongAutoPayload = {
         title: data.song_name,
@@ -397,9 +409,9 @@ export class JamKanbanComponent implements OnInit, OnDestroy {
     this.tasks.push(task);
 
     if (this.selectedEventIdCode && this.selectedJam && task.song) {
-       this.eventService.moveSongStatus(this.selectedEventIdCode, this.selectedJam.id, task.song.id, newStatus).subscribe({
-         error: () => this.triggerToast('error', 'Erro', 'Falha ao mover música.')
-       });
+      this.eventService.moveSongStatus(this.selectedEventIdCode, this.selectedJam.id, task.song.id, newStatus).subscribe({
+        error: () => this.triggerToast('error', 'Erro', 'Falha ao mover música.')
+      });
     }
   }
 
@@ -411,13 +423,13 @@ export class JamKanbanComponent implements OnInit, OnDestroy {
     if (!task.song || !this.selectedEventIdCode || !this.selectedJam) return;
 
     if (confirm(`Tem certeza que deseja remover "${task.title}"?`)) {
-       this.eventService.deleteSong(this.selectedEventIdCode, this.selectedJam.id, task.song.id).subscribe({
-         next: () => {
-           this.tasks = this.tasks.filter(t => t.id !== task.id);
-           this.triggerToast('success', 'Removido', 'Música removida.');
-         },
-         error: () => this.triggerToast('error', 'Erro', 'Falha ao remover música.')
-       });
+      this.eventService.deleteSong(this.selectedEventIdCode, this.selectedJam.id, task.song.id).subscribe({
+        next: () => {
+          this.tasks = this.tasks.filter(t => t.id !== task.id);
+          this.triggerToast('success', 'Removido', 'Música removida.');
+        },
+        error: () => this.triggerToast('error', 'Erro', 'Falha ao remover música.')
+      });
     }
   }
 
@@ -446,7 +458,7 @@ export class JamKanbanComponent implements OnInit, OnDestroy {
     const eventId = this.selectedEventIdCode;
     const orderedIds = this.tasks.filter(t => t.status === 'open_for_candidates' && t.ready).map(t => t.id);
     if (jam && eventId) {
-      this.eventService.updateSongOrder(eventId, jam.id, 'open_for_candidates', orderedIds).subscribe({ next: () => {}, error: () => {} });
+      this.eventService.updateSongOrder(eventId, jam.id, 'open_for_candidates', orderedIds).subscribe({ next: () => { }, error: () => { } });
     }
   }
 
