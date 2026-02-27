@@ -1,9 +1,12 @@
-import { Component, OnInit, OnDestroy, Input, Output, EventEmitter, ChangeDetectorRef, NgZone, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, Input, Output, EventEmitter, ChangeDetectorRef, NgZone, ViewChild, ElementRef, inject, EnvironmentInjector, Injector, createComponent, ApplicationRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { EventService } from '../event.service';
 import { TranslateModule } from '@ngx-translate/core';
 import { QRCodeComponent } from 'angularx-qrcode';
 import { ActivatedRoute } from '@angular/router';
+import { ResilienceService } from '../../../shared/services/resilience.service';
+import { Subject, takeUntil, of, retry, timer } from 'rxjs';
+import { NotificationComponent } from '../../../shared/components/ui/notification/notification/notification.component';
 
 @Component({
   selector: 'app-playlist',
@@ -36,6 +39,11 @@ export class PlaylistComponent implements OnInit, OnDestroy {
   progressPercent = 0;
   showAnimations = true; // Use to force re-trigger of CSS animations
   private flipTimeout: any = null;
+  private destroy$ = new Subject<void>();
+  private resilienceService = inject(ResilienceService);
+  private appRef = inject(ApplicationRef); // I'll check if I need more
+  private injector = inject(Injector);
+  private envInjector = inject(EnvironmentInjector);
 
   private readonly DURATION_INDEX_0 = 20000; // 20s
   private readonly DURATION_INDEX_1 = 20000; // 20s
@@ -48,7 +56,12 @@ export class PlaylistComponent implements OnInit, OnDestroy {
     private zone: NgZone
   ) { }
 
+  private readonly reloadTrigger$ = new Subject<void>();
+
   ngOnInit(): void {
+    this.initResilientReloader();
+    this.subscribeToResilienceState();
+
     // Se não veio por Input, tenta pegar da rota (modo standalone via URL)
     if (!this.eventIdCode) {
       this.route.paramMap.subscribe(params => {
@@ -63,66 +76,111 @@ export class PlaylistComponent implements OnInit, OnDestroy {
     }
   }
 
-  ngOnDestroy(): void {
-    this.stopAutoAdvance();
-  }
-
-  private loadGlobalStage(): void {
-    if (this.isLoadingStage && !this.isEmbedded) return; // Simple guard to avoid parallel loads in standalone
-    this.isLoadingStage = true;
-    this.eventService.getEventJams(this.eventIdCode).subscribe({
+  private initResilientReloader() {
+    this.resilienceService.pollWithResilience(
+      () => {
+        if (!this.eventIdCode) return of(null);
+        this.isLoadingStage = true;
+        return this.eventService.getEventJams(this.eventIdCode);
+      },
+      999999, // Long interval, we trigger it manually
+      3,
+      `playlist_${this.eventIdCode}`
+    ).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe({
       next: (jams) => {
-        const allSongs = jams.flatMap(j => (j.songs || []).map(s => {
-          // Process musicians from instrument_buckets if available
-          let musicians: any[] = [];
-          if (s.instrument_buckets && Array.isArray(s.instrument_buckets)) {
-            s.instrument_buckets.forEach((bucket: any) => {
-              if (Array.isArray(bucket.approved)) {
-                bucket.approved.forEach((candidate: any) => {
-                  musicians.push({
-                    name: candidate.display_name || candidate.name || 'Músico',
-                    avatar_url: candidate.avatar_url || candidate.avatar || '/images/user/default-avatar.jpg',
-                    instrument: bucket.instrument || candidate.instrument || 'outro'
-                  });
-                });
-              }
-            });
-          }
-
-          return {
-            ...s,
-            jam_id: j.id,
-            musicians: musicians.length > 0 ? musicians : (s as any).musicians
-          };
-        }));
-
-        // Filtra músicas que estão 'on_stage'
-        const onStage = allSongs.filter(s => s.status === 'on_stage');
-
-        // Ordena por índice de ordem ou ID
-        onStage.sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
-
-        this.onStageSongs = onStage;
-
-        if (onStage.length > 0) {
-          // Assume a primeira como tocando agora e o resto como próxima
-          // A lógica do backend pode variar, mas para playlist visual isso funciona bem
-          this.playingNowSongs = [onStage[0]];
-          this.goToStageSongs = onStage.slice(1);
-        } else {
-          this.playingNowSongs = [];
-          this.goToStageSongs = [];
-        }
-
-        this.isLoadingStage = false;
-        this.loadPlaylist();
-        this.ensureAutoAdvance();
+        if (!jams || !Array.isArray(jams)) return;
+        this.processJams(jams);
       },
       error: (err) => {
         this.isLoadingStage = false;
         console.error('Error loading global stage', err);
       }
     });
+
+    // Listen to manual triggers
+    this.reloadTrigger$.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(() => {
+      // Logic handled by the custom ResilienceService if we refactor it slightly
+      // For now, we'll just use the existing loadGlobalStage with a manual retry logic
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.stopAutoAdvance();
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  private loadGlobalStage(): void {
+    if (this.isLoadingStage && !this.isEmbedded) return;
+    this.isLoadingStage = true;
+
+    this.eventService.getEventJams(this.eventIdCode).pipe(
+      this.resilienceService.withFailover(`playlist_${this.eventIdCode}`),
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: (jams) => {
+        if (!jams || !Array.isArray(jams)) {
+          this.isLoadingStage = false;
+          return;
+        }
+        this.processJams(jams);
+      },
+      error: (err) => {
+        this.isLoadingStage = false;
+        console.error('Error loading global stage', err);
+      }
+    });
+  }
+
+  private processJams(jams: any[]) {
+    const allSongs = jams.flatMap(j => (j.songs || []).map(s => {
+      // Process musicians from instrument_buckets if available
+      let musicians: any[] = [];
+      if (s.instrument_buckets && Array.isArray(s.instrument_buckets)) {
+        s.instrument_buckets.forEach((bucket: any) => {
+          if (Array.isArray(bucket.approved)) {
+            bucket.approved.forEach((candidate: any) => {
+              musicians.push({
+                name: candidate.display_name || candidate.name || 'Músico',
+                avatar_url: candidate.avatar_url || candidate.avatar || '/images/user/default-avatar.jpg',
+                instrument: bucket.instrument || candidate.instrument || 'outro'
+              });
+            });
+          }
+        });
+      }
+
+      return {
+        ...s,
+        jam_id: j.id,
+        musicians: musicians.length > 0 ? musicians : (s as any).musicians
+      };
+    }));
+
+    // Filtra músicas que estão 'on_stage'
+    const onStage = allSongs.filter(s => s.status === 'on_stage');
+
+    // Ordena por índice de ordem ou ID
+    onStage.sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
+
+    this.onStageSongs = onStage;
+
+    if (onStage.length > 0) {
+      // Assume a primeira como tocando agora e o resto como próxima
+      this.playingNowSongs = [onStage[0]];
+      this.goToStageSongs = onStage.slice(1);
+    } else {
+      this.playingNowSongs = [];
+      this.goToStageSongs = [];
+    }
+
+    this.isLoadingStage = false;
+    this.loadPlaylist();
+    this.ensureAutoAdvance();
   }
 
   loadPlaylist() {
@@ -297,5 +355,46 @@ export class PlaylistComponent implements OnInit, OnDestroy {
         });
       }
     }
+  }
+
+  private subscribeToResilienceState() {
+    this.resilienceService.getState().pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(state => {
+      if (state.status === 'down') {
+        this.triggerToast('warning', 'Modo Offline Ativado', 'Servidor instável. Exibindo última playlist conhecida.');
+      } else if (state.status === 'unstable') {
+        this.triggerToast('info', 'Conexão Instável', 'Tentando reconectar com o servidor...');
+      }
+    });
+  }
+
+  private triggerToast(variant: 'success' | 'info' | 'warning' | 'error', title: string, description?: string) {
+    const compRef = createComponent(NotificationComponent, {
+      environmentInjector: this.envInjector,
+      elementInjector: this.injector,
+    });
+    compRef.setInput('variant', variant);
+    compRef.setInput('title', title);
+    compRef.setInput('description', description);
+    compRef.setInput('hideDuration', 4000);
+
+    // Check if we can attach to body (similar to HomeGuestV2)
+    // We need ApplicationRef injected
+    const appRef = inject(ApplicationRef);
+    appRef.attachView(compRef.hostView);
+
+    const host = compRef.location.nativeElement as HTMLElement;
+    host.style.position = 'fixed';
+    host.style.top = '16px';
+    host.style.right = '16px';
+    host.style.zIndex = '2147483647';
+    host.style.pointerEvents = 'auto';
+    document.body.appendChild(host);
+
+    setTimeout(() => {
+      appRef.detachView(compRef.hostView);
+      compRef.destroy();
+    }, 4500);
   }
 }

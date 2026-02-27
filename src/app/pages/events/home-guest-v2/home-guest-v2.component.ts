@@ -11,6 +11,8 @@ import { MusicSuggestionService, MusicSuggestion } from '../music-suggestion/mus
 import { ToastService } from '../../../shared/services/toast.service';
 import { MusicSuggestionsListComponent } from '../music-suggestions-list/music-suggestions-list.component';
 import { ModalComponent } from '../../../shared/components/ui/modal/modal.component';
+import { ResilienceService } from '../../../shared/services/resilience.service';
+import { Subject, takeUntil, of } from 'rxjs';
 
 @Component({
   selector: 'app-home-guest-v2',
@@ -124,6 +126,8 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
   private envInjector = inject(EnvironmentInjector);
   private musicSuggestionService = inject(MusicSuggestionService);
   private toast = inject(ToastService);
+  private resilienceService = inject(ResilienceService);
+  private destroy$ = new Subject<void>();
 
   constructor() {
     this.useSse = false;
@@ -182,7 +186,7 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
           error: (err) => {
             const status = Number(err?.status || 0);
             if (status === 403 && this.eventIdCode) {
-               this.router.navigate([`/events/checkin/${this.eventIdCode}`], { queryParams: { returnUrl: `/events/home-guest-v2/${this.eventIdCode}` } });
+              this.router.navigate([`/events/checkin/${this.eventIdCode}`], { queryParams: { returnUrl: `/events/home-guest-v2/${this.eventIdCode}` } });
             }
           }
         });
@@ -202,7 +206,7 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
         this.musicSuggestionService.loadSuggestions(this.eventIdCode);
         this.musicSuggestionService.suggestions$.subscribe(suggestions => {
           if (this.currentUser?.id_code) {
-             this.invitesForMe = suggestions.filter(s => {
+            this.invitesForMe = suggestions.filter(s => {
               // I am a participant
               const me = s.participants.find(p =>
                 (p.user_id_code || String(p.user_id)) === String(this.currentUser?.id_code) ||
@@ -215,12 +219,13 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
               const isAccepted = me && me.status === 'ACCEPTED';
               const isRejectedRecently = this.recentlyRejectedInvites.includes(s.id);
               return (isPending || isAccepted) && !isCreator && s.status !== 'REJECTED' && s.status !== 'APPROVED' && !isRejectedRecently;
-             });
+            });
           }
         });
       }
 
       this.startPolling();
+      this.subscribeToResilienceState();
       if (this.enableWatchdog) this.startSseWatchdog();
 
       // Visibility change handler
@@ -244,6 +249,8 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
     if (this.sseRefreshTimer) clearTimeout(this.sseRefreshTimer as number);
     if (this.pollingHandle) clearInterval(this.pollingHandle as number);
     if (this.sseWatchdogHandle) clearInterval(this.sseWatchdogHandle as number);
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   toggleProfileMenu() {
@@ -262,8 +269,15 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
   loadJams(): void {
     if (!this.eventIdCode) return;
     this.isLoadingOpen = true;
-    this.eventService.getEventOpenJamsSongs(this.eventIdCode).subscribe({
+    this.eventService.getEventOpenJamsSongs(this.eventIdCode).pipe(
+      this.resilienceService.withFailover(`home_guest_${this.eventIdCode}_open`, 3),
+      takeUntil(this.destroy$)
+    ).subscribe({
       next: (songs: ApiSong[]) => {
+        if (!songs || !Array.isArray(songs)) {
+          this.isLoadingOpen = false;
+          return;
+        }
         this.songJamMap = {};
         songs.forEach((s) => {
           const sid = Number(s.id);
@@ -273,14 +287,14 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
 
           const my = s.my_application;
           if (my) {
-             const instr = String(my.instrument || '');
-             const status = String(my.status || 'pending');
-             this.selections[sid] = instr || null;
-             this.lockDeadline[sid] = this.now;
-             this.submitted[sid] = true;
-             this.submitError[sid] = status === 'rejected';
-             this.approvedMap[sid] = status === 'approved';
-             this.myStatusMap[sid] = status;
+            const instr = String(my.instrument || '');
+            const status = String(my.status || 'pending');
+            this.selections[sid] = instr || null;
+            this.lockDeadline[sid] = this.now;
+            this.submitted[sid] = true;
+            this.submitError[sid] = status === 'rejected';
+            this.approvedMap[sid] = status === 'approved';
+            this.myStatusMap[sid] = status;
           }
         });
 
@@ -307,7 +321,7 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
         this.isLoadingOpen = false;
         const status = Number(err?.status || 0);
         if (status === 403 && this.eventIdCode) {
-           this.router.navigate([`/events/checkin/${this.eventIdCode}`], { queryParams: { returnUrl: `/events/home-guest-v2/${this.eventIdCode}` } });
+          this.router.navigate([`/events/checkin/${this.eventIdCode}`], { queryParams: { returnUrl: `/events/home-guest-v2/${this.eventIdCode}` } });
         }
       }
     });
@@ -315,12 +329,18 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
 
   private loadOnStageOnce(): void {
     if (!this.eventIdCode) return;
-
     if (this.viewMode === 'playlist') return;
 
     this.isLoadingStage = true;
-    this.eventService.getEventMyOnStage(this.eventIdCode).subscribe({
+    this.eventService.getEventMyOnStage(this.eventIdCode).pipe(
+      this.resilienceService.withFailover(`home_guest_${this.eventIdCode}_stage`, 3),
+      takeUntil(this.destroy$)
+    ).subscribe({
       next: (resp: OnStageResponse) => {
+        if (!resp) {
+          this.isLoadingStage = false;
+          return;
+        }
         const nowPlaying = resp.now_playing ? [this.processSongMusicians(resp.now_playing)] : [];
         const upcoming = (resp.my_upcoming || []).map(s => this.processSongMusicians(s));
 
@@ -341,21 +361,21 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
     if (!s) return s;
     const musicians: { name: string; avatar_url: string; instrument: string }[] = [];
     if (s.instrument_buckets && Array.isArray(s.instrument_buckets)) {
-        (s.instrument_buckets as InstrumentBucket[]).forEach((bucket) => {
-            if (Array.isArray(bucket.approved)) {
-                bucket.approved.forEach((candidate) => {
-                    musicians.push({
-                        name: candidate.display_name || candidate.name || 'Músico',
-                        avatar_url: candidate.avatar_url || candidate.photo_url || '/images/user/default-avatar.jpg',
-                        instrument: bucket.instrument || 'outro'
-                    });
-                });
-            }
-        });
+      (s.instrument_buckets as InstrumentBucket[]).forEach((bucket) => {
+        if (Array.isArray(bucket.approved)) {
+          bucket.approved.forEach((candidate) => {
+            musicians.push({
+              name: candidate.display_name || candidate.name || 'Músico',
+              avatar_url: candidate.avatar_url || candidate.photo_url || '/images/user/default-avatar.jpg',
+              instrument: bucket.instrument || 'outro'
+            });
+          });
+        }
+      });
     }
 
     if (musicians.length > 0) {
-        return { ...s, musicians };
+      return { ...s, musicians };
     }
     return s;
   }
@@ -365,7 +385,7 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
 
     const idsFromOpen = Array.from(new Set(Object.values(this.songJamMap)));
     const idsFromStage = Array.from(new Set((this.onStageSongs || []).map(s => Number(s.jam?.id ?? s.jam_id)).filter(n => !Number.isNaN(n))));
-    const jamIds = Array.from(new Set([ ...idsFromOpen, ...idsFromStage, ...(this.jamId ? [this.jamId] : []) ]));
+    const jamIds = Array.from(new Set([...idsFromOpen, ...idsFromStage, ...(this.jamId ? [this.jamId] : [])]));
 
     for (const jid of jamIds) {
       if (!jid || this.esMap[jid]) continue;
@@ -413,10 +433,33 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
 
   private startPolling(): void {
     if (this.pollingHandle) return;
-    this.pollingHandle = setInterval(() => {
-      if (document.hidden) return;
-      this.refreshLists();
-    }, 60000);
+
+    this.resilienceService.pollWithResilience(
+      () => {
+        if (document.hidden) return of(null);
+        this.refreshLists();
+        return of(true);
+      },
+      60000,
+      3,
+      `home_guest_${this.eventIdCode}`
+    ).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe();
+
+    this.pollingHandle = 1;
+  }
+
+  private subscribeToResilienceState() {
+    this.resilienceService.getState().pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(state => {
+      if (state.status === 'down') {
+        this.triggerToast('warning', 'Modo Offline Ativado', 'Servidor instável. Exibindo últimos dados carregados.');
+      } else if (state.status === 'unstable') {
+        this.triggerToast('info', 'Conexão Instável', 'Tentando atualizar seus dados...');
+      }
+    });
   }
 
   private startSseWatchdog(): void {
@@ -442,7 +485,7 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
   getInstrumentBuckets(song: ApiSong): InstrumentBucket[] {
     const s = song;
     if (Array.isArray(s.instrument_buckets) && s.instrument_buckets.length > 0) {
-        return s.instrument_buckets;
+      return s.instrument_buckets;
     }
 
     let buckets: InstrumentBucket[] = [];
@@ -460,8 +503,8 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
         pending: []
       }));
     } else {
-        const inst = Array.isArray(s.instrumentation) ? s.instrumentation : [];
-        buckets = inst.map((k) => ({ instrument: String(k), slots: 0, remaining: 0, approved: [], pending: [] }));
+      const inst = Array.isArray(s.instrumentation) ? s.instrumentation : [];
+      buckets = inst.map((k) => ({ instrument: String(k), slots: 0, remaining: 0, approved: [], pending: [] }));
     }
 
     s.instrument_buckets = buckets;

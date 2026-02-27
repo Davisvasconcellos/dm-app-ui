@@ -7,7 +7,8 @@
       </div>
       <div>
         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Evento</label>
-        <select [(ngModel)]="selectedEventIdCode" (ngModelChange)="onSelectEvent($event)" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
+        <select [(ngModel)]="selectedEventIdCode" (ngModelChange)="onSelectEvent($event)"
+          class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
           <option value="">— Escolha o evento —</option>
           <option *ngFor="let e of events" [value]="e.id_code">{{ e.eventName }}</option>
         </select>
@@ -15,77 +16,77 @@
     </div>
 
     <!-- Card 2: Event Details -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 relative overflow-hidden min-h-[160px] flex flex-col justify-center group">
-        <!-- Background Image -->
-        <div *ngIf="selectedEvent?.image" 
-             class="absolute inset-0 z-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
-             [style.backgroundImage]="'url(' + selectedEvent?.image + ')'">
-             <div class="absolute inset-0 bg-gradient-to-r from-black/90 via-black/70 to-transparent"></div>
-        </div>
-        
-        <!-- Placeholder Background if no image -->
-        <div *ngIf="!selectedEvent?.image" class="absolute inset-0 z-0 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800"></div>
+    <div
+      class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 relative overflow-hidden min-h-[160px] flex flex-col justify-center group">
+      <!-- Background Image -->
+      <div *ngIf="selectedEvent?.image"
+        class="absolute inset-0 z-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
+        [style.backgroundImage]="'url(' + selectedEvent?.image + ')'">
+        <div class="absolute inset-0 bg-gradient-to-r from-black/90 via-black/70 to-transparent"></div>
+      </div>
 
-        <!-- Content -->
-        <div class="relative z-10" *ngIf="selectedEvent">
-            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2" [class.text-white]="selectedEvent.image">{{ selectedEvent.eventName }}</h2>
-            <div class="flex flex-col gap-1">
-                <div class="flex items-center gap-2 text-gray-600 dark:text-gray-300" [class.text-gray-200]="selectedEvent.image">
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    <span>{{ selectedEvent.startDate | date:'dd/MM/yyyy HH:mm' }}</span>
-                </div>
-                <div *ngIf="selectedEvent.description" class="mt-2 text-sm text-gray-500 dark:text-gray-400 line-clamp-2" [class.text-gray-300]="selectedEvent.image">
-                    {{ selectedEvent.description }}
-                </div>
-            </div>
-        </div>
+      <!-- Placeholder Background if no image -->
+      <div *ngIf="!selectedEvent?.image"
+        class="absolute inset-0 z-0 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800">
+      </div>
 
-        <!-- Empty State -->
-        <div class="relative z-10 flex flex-col items-center justify-center text-gray-400" *ngIf="!selectedEvent">
-            <svg class="w-12 h-12 mb-2 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+      <!-- Content -->
+      <div class="relative z-10" *ngIf="selectedEvent">
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2" [class.text-white]="selectedEvent.image">{{
+          selectedEvent.eventName }}</h2>
+        <div class="flex flex-col gap-1">
+          <div class="flex items-center gap-2 text-gray-600 dark:text-gray-300"
+            [class.text-gray-200]="selectedEvent.image">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
-            <span class="text-sm">Selecione um evento para ver os detalhes</span>
+            <span>{{ selectedEvent.startDate | date:'dd/MM/yyyy HH:mm' }}</span>
+          </div>
+          <div *ngIf="selectedEvent.description" class="mt-2 text-sm text-gray-500 dark:text-gray-400 line-clamp-2"
+            [class.text-gray-300]="selectedEvent.image">
+            {{ selectedEvent.description }}
+          </div>
         </div>
+      </div>
+
+      <!-- Empty State -->
+      <div class="relative z-10 flex flex-col items-center justify-center text-gray-400" *ngIf="!selectedEvent">
+        <svg class="w-12 h-12 mb-2 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+            d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+        </svg>
+        <span class="text-sm">Selecione um evento para ver os detalhes</span>
+      </div>
     </div>
   </div>
 
   <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 relative">
     <div class="flex items-center justify-between mb-4">
       <div class="bg-gray-100 dark:bg-gray-700/50 p-1 rounded-lg flex items-center gap-1">
-        <button 
-          (click)="activeView = 'setlist'"
-          [class.bg-white]="activeView === 'setlist'"
-          [class.dark:bg-gray-600]="activeView === 'setlist'"
-          [class.shadow-sm]="activeView === 'setlist'"
-          [class.text-gray-900]="activeView === 'setlist'"
-          [class.dark:text-white]="activeView === 'setlist'"
-          [class.text-gray-500]="activeView !== 'setlist'"
-          [class.dark:text-gray-400]="activeView !== 'setlist'"
+        <button (click)="activeView = 'setlist'" [class.bg-white]="activeView === 'setlist'"
+          [class.dark:bg-gray-600]="activeView === 'setlist'" [class.shadow-sm]="activeView === 'setlist'"
+          [class.text-gray-900]="activeView === 'setlist'" [class.dark:text-white]="activeView === 'setlist'"
+          [class.text-gray-500]="activeView !== 'setlist'" [class.dark:text-gray-400]="activeView !== 'setlist'"
           class="group relative flex items-center gap-2 px-4 py-1.5 text-sm font-medium rounded-md transition-all duration-200">
           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
           </svg>
           <span>Setlist da Jam</span>
         </button>
-        <button 
-          (click)="activeView = 'suggestions'"
-          [class.bg-white]="activeView === 'suggestions'"
-          [class.dark:bg-gray-600]="activeView === 'suggestions'"
-          [class.shadow-sm]="activeView === 'suggestions'"
-          [class.text-gray-900]="activeView === 'suggestions'"
-          [class.dark:text-white]="activeView === 'suggestions'"
-          [class.text-gray-500]="activeView !== 'suggestions'"
-          [class.dark:text-gray-400]="activeView !== 'suggestions'"
+        <button (click)="activeView = 'suggestions'" [class.bg-white]="activeView === 'suggestions'"
+          [class.dark:bg-gray-600]="activeView === 'suggestions'" [class.shadow-sm]="activeView === 'suggestions'"
+          [class.text-gray-900]="activeView === 'suggestions'" [class.dark:text-white]="activeView === 'suggestions'"
+          [class.text-gray-500]="activeView !== 'suggestions'" [class.dark:text-gray-400]="activeView !== 'suggestions'"
           class="group relative flex items-center gap-2 px-4 py-1.5 text-sm font-medium rounded-md transition-all duration-200">
           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 18v-5.25m0 0a6.01 6.01 0 001.5-.189m-1.5.189a6.01 6.01 0 01-1.5-.189m3.75 2.625a3 3 0 003.75-3.75 3 3 0 00-3-7.5 3 3 0 00-3 3 3 3 0 003.75 3.75z" />
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M12 18v-5.25m0 0a6.01 6.01 0 001.5-.189m-1.5.189a6.01 6.01 0 01-1.5-.189m3.75 2.625a3 3 0 003.75-3.75 3 3 0 00-3-7.5 3 3 0 00-3 3 3 3 0 003.75 3.75z" />
           </svg>
           <span>Sugestões</span>
-          <span *ngIf="suggestionsCount > 0" class="ml-1 inline-flex items-center justify-center bg-red-500 text-white text-[10px] font-bold px-1.5 h-4 rounded-full min-w-[16px] animate-pulse">
-            {{ suggestionsCount }}
+          <span *ngIf="openSuggestionsCount > 0"
+            class="ml-1 inline-flex items-center justify-center bg-red-500 text-white text-[10px] font-bold px-1.5 h-4 rounded-full min-w-[16px] animate-pulse">
+            {{ openSuggestionsCount }}
           </span>
         </button>
       </div>
@@ -97,292 +98,385 @@
           <!-- Old filter location removed -->
         </div>
 
-        <button type="button" (click)="onRefreshClick()" 
-                [disabled]="!selectedEventIdCode" 
-                [class.opacity-50]="!selectedEventIdCode" 
-                [class.cursor-not-allowed]="!selectedEventIdCode" 
-                class="group flex items-center gap-2 px-3 py-1.5 bg-blue-600/10 hover:bg-blue-600/20 border border-blue-500/20 hover:border-blue-500/40 rounded-full transition-all active:scale-95">
-          <svg class="w-3 h-3 text-blue-500 group-hover:rotate-180 transition-transform duration-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        <button type="button" (click)="onRefreshClick()" [disabled]="!selectedEventIdCode"
+          [class.opacity-50]="!selectedEventIdCode" [class.cursor-not-allowed]="!selectedEventIdCode"
+          class="group flex items-center gap-2 px-3 py-1.5 bg-blue-600/10 hover:bg-blue-600/20 border border-blue-500/20 hover:border-blue-500/40 rounded-full transition-all active:scale-95">
+          <svg class="w-3 h-3 text-blue-500 group-hover:rotate-180 transition-transform duration-500" fill="none"
+            viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
           </svg>
-          <span class="text-blue-500 font-bold text-[9px] uppercase tracking-widest">{{ 'events.guestV2.dashboard.refresh' | translate }}</span>
+          <span class="text-blue-500 font-bold text-[9px] uppercase tracking-widest">{{
+            'events.guestV2.dashboard.refresh' | translate }}</span>
         </button>
-        <button (click)="openPlaylistWindow()" [disabled]="!selectedEventIdCode" [class.opacity-50]="!selectedEventIdCode" [class.cursor-not-allowed]="!selectedEventIdCode" class="px-3 py-1.5 text-xs font-medium rounded-md border border-blue-500 text-blue-600 hover:bg-blue-50 dark:border-blue-600 dark:text-blue-400 dark:hover:bg-blue-900/20">Abrir Playlist</button>
-        <button (click)="openAddModal()" [disabled]="!selectedEventIdCode" [class.opacity-50]="!selectedEventIdCode" [class.cursor-not-allowed]="!selectedEventIdCode" class="px-3 py-1.5 text-xs font-medium rounded-md bg-blue-500 text-white">Adicionar música</button>
+        <button (click)="openPlaylistWindow()" [disabled]="!selectedEventIdCode"
+          [class.opacity-50]="!selectedEventIdCode" [class.cursor-not-allowed]="!selectedEventIdCode"
+          class="px-3 py-1.5 text-xs font-medium rounded-md border border-blue-500 text-blue-600 hover:bg-blue-50 dark:border-blue-600 dark:text-blue-400 dark:hover:bg-blue-900/20">Abrir
+          Playlist</button>
+        <button (click)="openAddModal()" [disabled]="!selectedEventIdCode" [class.opacity-50]="!selectedEventIdCode"
+          [class.cursor-not-allowed]="!selectedEventIdCode"
+          class="px-3 py-1.5 text-xs font-medium rounded-md bg-blue-500 text-white">Adicionar música</button>
       </div>
     </div>
     @if (activeView === 'setlist') {
-      <div class="grid grid-cols-1 border-t border-gray-200 divide-x divide-gray-200 dark:divide-white/[0.05] mt-7 dark:border-white/[0.05] sm:mt-0 sm:grid-cols-2 xl:grid-cols-4">
-        <app-board-column title="Planned" [tasks]="plannedTasks" status="planned" [eventIdCode]="selectedEventIdCode" [jamId]="selectedJam?.id" (taskDropped)="handleTaskDrop($event)" (editTask)="handleEditTask($event)" (deleteTask)="handleDeleteTask($event)" (readyToggled)="handleReadyToggled($event)" (expandedToggled)="handleExpandedToggled($event)" />
-        <app-board-column title="Open for Candidates" [tasks]="openTasks" status="open_for_candidates" [eventIdCode]="selectedEventIdCode" [jamId]="selectedJam?.id" (taskDropped)="handleTaskDrop($event)" (editTask)="handleEditTask($event)" (deleteTask)="handleDeleteTask($event)" (readyToggled)="handleReadyToggled($event)" (expandedToggled)="handleExpandedToggled($event)" />
-        <app-board-column title="On Stage" [tasks]="onStageTasks" status="on_stage" [eventIdCode]="selectedEventIdCode" [jamId]="selectedJam?.id" (taskDropped)="handleTaskDrop($event)" (editTask)="handleEditTask($event)" (deleteTask)="handleDeleteTask($event)" (readyToggled)="handleReadyToggled($event)" (expandedToggled)="handleExpandedToggled($event)" />
-        <app-board-column title="Played" [tasks]="playedTasks" status="played" [eventIdCode]="selectedEventIdCode" [jamId]="selectedJam?.id" (taskDropped)="handleTaskDrop($event)" (editTask)="handleEditTask($event)" (deleteTask)="handleDeleteTask($event)" (readyToggled)="handleReadyToggled($event)" (expandedToggled)="handleExpandedToggled($event)" />
-      </div>
+    <div
+      class="grid grid-cols-1 border-t border-gray-200 divide-x divide-gray-200 dark:divide-white/[0.05] mt-7 dark:border-white/[0.05] sm:mt-0 sm:grid-cols-2 xl:grid-cols-4">
+      <app-board-column title="Planned" [tasks]="plannedTasks" status="planned" [eventIdCode]="selectedEventIdCode"
+        [jamId]="selectedJam?.id" (taskDropped)="handleTaskDrop($event)" (editTask)="handleEditTask($event)"
+        (deleteTask)="handleDeleteTask($event)" (readyToggled)="handleReadyToggled($event)"
+        (expandedToggled)="handleExpandedToggled($event)" />
+      <app-board-column title="Open for Candidates" [tasks]="openTasks" status="open_for_candidates"
+        [eventIdCode]="selectedEventIdCode" [jamId]="selectedJam?.id" (taskDropped)="handleTaskDrop($event)"
+        (editTask)="handleEditTask($event)" (deleteTask)="handleDeleteTask($event)"
+        (readyToggled)="handleReadyToggled($event)" (expandedToggled)="handleExpandedToggled($event)" />
+      <app-board-column title="On Stage" [tasks]="onStageTasks" status="on_stage" [eventIdCode]="selectedEventIdCode"
+        [jamId]="selectedJam?.id" (taskDropped)="handleTaskDrop($event)" (editTask)="handleEditTask($event)"
+        (deleteTask)="handleDeleteTask($event)" (readyToggled)="handleReadyToggled($event)"
+        (expandedToggled)="handleExpandedToggled($event)" />
+      <app-board-column title="Played" [tasks]="playedTasks" status="played" [eventIdCode]="selectedEventIdCode"
+        [jamId]="selectedJam?.id" (taskDropped)="handleTaskDrop($event)" (editTask)="handleEditTask($event)"
+        (deleteTask)="handleDeleteTask($event)" (readyToggled)="handleReadyToggled($event)"
+        (expandedToggled)="handleExpandedToggled($event)" />
+    </div>
     }
 
     @if (activeView === 'suggestions') {
-      <div class="mt-7">
-        <!-- Toolbar: Search, Filters & View Toggle -->
-        <div class="flex flex-col md:flex-row items-center justify-between gap-4 mb-6 bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
-          <!-- Left: Search -->
-          <div class="relative w-full md:w-96">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            </div>
-            <input type="text" 
-                   [(ngModel)]="suggestionSearchText" 
-                   (ngModelChange)="applyClientFilters()"
-                   class="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md leading-5 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm" 
-                   [placeholder]="'events.admin.kanban.suggestions.filter.search_placeholder' | translate">
+    <div class="mt-7">
+      <!-- Toolbar: Search, Filters & View Toggle -->
+      <div
+        class="flex flex-col md:flex-row items-center justify-between gap-4 mb-6 bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
+        <!-- Left: Search -->
+        <div class="relative w-full md:w-96">
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
           </div>
-
-          <!-- Right: Filters & Toggles -->
-          <div class="flex items-center gap-3 w-full md:w-auto">
-            <!-- Status Filter -->
-            <select [(ngModel)]="suggestionFilter" (ngModelChange)="refreshSuggestions()" class="block w-full md:w-auto px-3 py-2 text-sm border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:ring-blue-500 focus:border-blue-500 shadow-sm">
-              <option value="SUBMITTED">{{ 'events.admin.kanban.suggestions.filter.submitted' | translate }}</option>
-              <option value="ALL">{{ 'events.admin.kanban.suggestions.filter.all' | translate }}</option>
-            </select>
-
-            <!-- View Mode Toggle -->
-            <div class="flex items-center bg-gray-100 dark:bg-gray-700/50 p-1 rounded-lg shrink-0">
-              <button (click)="suggestionViewMode = 'list'" [class.bg-white]="suggestionViewMode === 'list'" [class.dark:bg-gray-600]="suggestionViewMode === 'list'" [class.shadow-sm]="suggestionViewMode === 'list'" [class.text-gray-900]="suggestionViewMode === 'list'" [class.dark:text-white]="suggestionViewMode === 'list'" [class.text-gray-500]="suggestionViewMode !== 'list'" [class.dark:text-gray-400]="suggestionViewMode !== 'list'" class="p-1.5 rounded-md transition-all">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              </button>
-              <button (click)="suggestionViewMode = 'grid'" [class.bg-white]="suggestionViewMode === 'grid'" [class.dark:bg-gray-600]="suggestionViewMode === 'grid'" [class.shadow-sm]="suggestionViewMode === 'grid'" [class.text-gray-900]="suggestionViewMode === 'grid'" [class.dark:text-white]="suggestionViewMode === 'grid'" [class.text-gray-500]="suggestionViewMode !== 'grid'" [class.dark:text-gray-400]="suggestionViewMode !== 'grid'" class="p-1.5 rounded-md transition-all">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                </svg>
-              </button>
-            </div>
-          </div>
+          <input type="text" [(ngModel)]="suggestionSearchText" (ngModelChange)="applyClientFilters()"
+            class="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md leading-5 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            [placeholder]="'events.admin.kanban.suggestions.filter.search_placeholder' | translate">
         </div>
 
-        <!-- List View -->
-        <div *ngIf="suggestionViewMode === 'list'" class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-          <table class="w-full text-left border-collapse">
-            <thead>
-              <tr class="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
-                <th class="px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ 'events.admin.kanban.suggestions.table.song_artist' | translate }}</th>
-                <th class="px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ 'events.admin.kanban.suggestions.table.suggested_by' | translate }}</th>
-                <th class="px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ 'events.admin.kanban.suggestions.table.participants' | translate }}</th>
-                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ 'events.admin.kanban.suggestions.table.actions' | translate }}</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-              <tr *ngFor="let s of paginatedSuggestions" class="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
-                <td class="px-6 py-4">
-                  <div class="flex items-center gap-3">
-                    <div class="flex-shrink-0 w-12 h-12 rounded-md overflow-hidden bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600">
-                        <img [src]="s.cover_image || '/images/cards/card-01.jpg'" 
-                             (error)="onAlbumImageError($event)"
-                             class="w-full h-full object-cover" 
-                             alt="Capa do álbum">
-                    </div>
-                    <div class="flex flex-col">
-                      <span class="text-sm font-medium text-gray-900 dark:text-white">{{ s.song_name }}</span>
-                      <span class="text-xs text-gray-500 dark:text-gray-400">{{ s.artist_name }}</span>
-                    </div>
+        <!-- Right: Filters & Toggles -->
+        <div class="flex items-center gap-3 w-full md:w-auto">
+          <!-- Status Toggle Buttons -->
+          <div class="flex items-center bg-gray-100 dark:bg-gray-700/50 p-1 rounded-lg shrink-0">
+            <button 
+              (click)="suggestionFilter = 'OPEN'; applyClientFilters()"
+              [class.bg-white]="suggestionFilter === 'OPEN'"
+              [class.dark:bg-gray-600]="suggestionFilter === 'OPEN'"
+              [class.shadow-sm]="suggestionFilter === 'OPEN'"
+              [class.text-blue-600]="suggestionFilter === 'OPEN'"
+              [class.dark:text-blue-400]="suggestionFilter === 'OPEN'"
+              [class.text-gray-500]="suggestionFilter !== 'OPEN'"
+              class="flex items-center gap-2 px-4 py-1.5 text-xs font-semibold rounded-md transition-all">
+              <span>Abertos</span>
+              <span class="px-1.5 py-0.5 rounded-full text-[10px]" [class.bg-blue-100]="suggestionFilter === 'OPEN'" [class.text-blue-600]="suggestionFilter === 'OPEN'" [class.bg-gray-200]="suggestionFilter !== 'OPEN'" [class.text-gray-600]="suggestionFilter !== 'OPEN'">
+                {{ openSuggestionsCount }}
+              </span>
+            </button>
+            <button 
+              (click)="suggestionFilter = 'CLOSED'; applyClientFilters()"
+              [class.bg-white]="suggestionFilter === 'CLOSED'"
+              [class.dark:bg-gray-600]="suggestionFilter === 'CLOSED'"
+              [class.shadow-sm]="suggestionFilter === 'CLOSED'"
+              [class.text-blue-600]="suggestionFilter === 'CLOSED'"
+              [class.dark:text-blue-400]="suggestionFilter === 'CLOSED'"
+              [class.text-gray-500]="suggestionFilter !== 'CLOSED'"
+              class="flex items-center gap-2 px-4 py-1.5 text-xs font-semibold rounded-md transition-all">
+              <span>Finalizados</span>
+              <span class="px-1.5 py-0.5 rounded-full text-[10px]" [class.bg-blue-100]="suggestionFilter === 'CLOSED'" [class.text-blue-600]="suggestionFilter === 'CLOSED'" [class.bg-gray-200]="suggestionFilter !== 'CLOSED'" [class.text-gray-600]="suggestionFilter !== 'CLOSED'">
+                {{ closedSuggestionsCount }}
+              </span>
+            </button>
+          </div>
+
+          <!-- View Mode Toggle -->
+          <div class="flex items-center bg-gray-100 dark:bg-gray-700/50 p-1 rounded-lg shrink-0">
+            <button (click)="suggestionViewMode = 'list'" [class.bg-white]="suggestionViewMode === 'list'"
+              [class.dark:bg-gray-600]="suggestionViewMode === 'list'" [class.shadow-sm]="suggestionViewMode === 'list'"
+              [class.text-gray-900]="suggestionViewMode === 'list'"
+              [class.dark:text-white]="suggestionViewMode === 'list'"
+              [class.text-gray-500]="suggestionViewMode !== 'list'"
+              [class.dark:text-gray-400]="suggestionViewMode !== 'list'" class="p-1.5 rounded-md transition-all">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+            <button (click)="suggestionViewMode = 'grid'" [class.bg-white]="suggestionViewMode === 'grid'"
+              [class.dark:bg-gray-600]="suggestionViewMode === 'grid'" [class.shadow-sm]="suggestionViewMode === 'grid'"
+              [class.text-gray-900]="suggestionViewMode === 'grid'"
+              [class.dark:text-white]="suggestionViewMode === 'grid'"
+              [class.text-gray-500]="suggestionViewMode !== 'grid'"
+              [class.dark:text-gray-400]="suggestionViewMode !== 'grid'" class="p-1.5 rounded-md transition-all">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- List View -->
+      <div *ngIf="suggestionViewMode === 'list'"
+        class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
+              <th class="px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{
+                'events.admin.kanban.suggestions.table.song_artist' | translate }}</th>
+              <th class="px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{
+                'events.admin.kanban.suggestions.table.suggested_by' | translate }}</th>
+              <th class="px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{
+                'events.admin.kanban.suggestions.table.participants' | translate }}</th>
+              <th
+                class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                {{ 'events.admin.kanban.suggestions.table.actions' | translate }}</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+            <tr *ngFor="let s of paginatedSuggestions"
+              class="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
+              <td class="px-6 py-4">
+                <div class="flex items-center gap-3">
+                  <div
+                    class="flex-shrink-0 w-12 h-12 rounded-md overflow-hidden bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600">
+                    <img [src]="s.cover_image || '/images/cards/card-01.jpg'" (error)="onAlbumImageError($event)"
+                      class="w-full h-full object-cover" alt="Capa do álbum">
                   </div>
-                </td>
-                <td class="px-6 py-4">
-                  <div class="flex items-center gap-2">
-                    <img [src]="s.creator?.avatar_url || '/images/user/default-avatar.jpg'" class="w-10 h-10 rounded-full object-cover" alt="">
-                    <span class="text-sm text-gray-700 dark:text-gray-300">{{ s.creator?.name }}</span>
+                  <div class="flex flex-col">
+                    <span class="text-sm font-medium text-gray-900 dark:text-white">{{ s.song_name }}</span>
+                    <span class="text-xs text-gray-500 dark:text-gray-400">{{ s.artist_name }}</span>
                   </div>
-                </td>
-                <td class="px-6 py-4">
-                  <div class="flex -space-x-2 pb-1 pl-1">
-                    <div *ngFor="let p of s.participants" class="relative group cursor-help" [title]="p.name + ' (' + p.instrument + ')'">
-                      <img [src]="p.avatar || '/images/user/default-avatar.jpg'" 
-                           class="inline-block h-8 w-8 rounded-full ring-2 object-cover transition-all" 
-                           [ngClass]="{
+                </div>
+              </td>
+              <td class="px-6 py-4">
+                <div class="flex items-center gap-2">
+                  <img [src]="s.creator?.avatar_url || '/images/user/default-avatar.jpg'"
+                    class="w-10 h-10 rounded-full object-cover" alt="">
+                  <span class="text-sm text-gray-700 dark:text-gray-300">{{ s.creator?.name }}</span>
+                </div>
+              </td>
+              <td class="px-6 py-4">
+                <div class="flex -space-x-2 pb-1 pl-1">
+                  <div *ngFor="let p of s.participants" class="relative group cursor-help"
+                    [title]="p.name + ' (' + p.instrument + ')'">
+                    <img [src]="p.avatar || '/images/user/default-avatar.jpg'"
+                      class="inline-block h-8 w-8 rounded-full ring-2 object-cover transition-all" [ngClass]="{
                              'ring-yellow-400': p.status === 'PENDING',
                              'ring-white dark:ring-gray-800': p.status !== 'PENDING',
                              'grayscale': p.status === 'PENDING'
                            }"
-                           [style.filter]="p.status === 'REJECTED' ? 'grayscale(100%) brightness(40%) sepia(100%) hue-rotate(-50deg) saturate(600%) contrast(0.8)' : ''"
-                           alt="">
-                      <div class="absolute -bottom-1 -right-1 bg-gray-900 text-white text-[8px] px-1 rounded-full border border-white dark:border-gray-800 shadow-sm z-10">{{ p.instrument.slice(0,3) }}</div>
-                    </div>
-                  </div>
-                </td>
-                <td class="px-6 py-4 text-right">
-                  <div class="flex items-center justify-end gap-2">
-                    <button (click)="openDeleteModal(s)" class="group flex items-center justify-center p-2.5 rounded-lg bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 hover:border-red-300 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20 dark:hover:bg-red-500/20 dark:hover:border-red-500/30 transition-all duration-200 shadow-sm" [title]="'events.admin.kanban.suggestions.actions.delete' | translate">
-                      <svg class="w-5 h-5 transition-transform group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                    </button>
-                    <button (click)="approveSuggestion(s)" class="p-1.5 text-green-600 hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-900/20 rounded-md transition-colors" [title]="'events.admin.kanban.suggestions.actions.approve' | translate">
-                      <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                      </svg>
-                    </button>
-                  </div>
-                </td>
-              </tr>
-              <tr *ngIf="filteredSuggestions.length === 0">
-                <td colspan="4" class="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
-                  {{ 'events.admin.kanban.suggestions.table.empty' | translate }}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <!-- Grid View -->
-        <div *ngIf="suggestionViewMode === 'grid'" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          <div *ngFor="let s of paginatedSuggestions" class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 flex flex-col overflow-hidden group hover:shadow-md transition-all duration-200">
-            
-            <!-- Banner Image Area -->
-            <div class="h-32 relative flex-shrink-0 bg-gray-100 dark:bg-gray-800">
-                <img [src]="s.cover_image || '/images/cards/card-01.jpg'" 
-                     (error)="onAlbumImageError($event)"
-                     class="w-full h-full object-cover" 
-                     alt="Capa do álbum">
-                
-                <!-- Overlay Gradient for better contrast if needed, or just pure image -->
-                <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
-
-                <!-- Creator Avatar (Overlapping) -->
-                <div class="absolute -bottom-8 right-4">
-                    <img [src]="s.creator?.avatar_url || '/images/user/default-avatar.jpg'" 
-                         class="w-16 h-16 rounded-full object-cover border-4 border-white dark:border-gray-900 shadow-sm" 
-                         [title]="'Sugerido por ' + s.creator?.name">
-                </div>
-            </div>
-
-            <!-- Content Area -->
-            <div class="p-4 pt-10 flex flex-col gap-4 flex-1">
-                <!-- Header Info -->
-                <div class="flex flex-col gap-0.5 pr-14">
-                    <h4 class="font-bold text-lg text-gray-900 dark:text-white line-clamp-1" [title]="s.song_name">{{ s.song_name }}</h4>
-                    <p class="text-sm text-gray-500 dark:text-gray-400 font-medium line-clamp-1">{{ s.artist_name }}</p>
-                </div>
-
-                <!-- Participants -->
-                <div class="flex-1">
-                  <div class="flex items-center gap-2 mb-2">
-                    <span class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Participantes</span>
-                    <span class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-500 px-1.5 rounded-full">{{ s.participants.length }}</span>
-                  </div>
-                  
-                  <div class="flex flex-wrap gap-2">
-                    <div *ngFor="let p of s.participants" class="flex items-center gap-1.5 bg-gray-50 dark:bg-gray-700/50 border border-gray-100 dark:border-gray-600/50 px-2 py-1 rounded-md">
-                      <img [src]="p.avatar || '/images/user/default-avatar.jpg'" 
-                           class="w-4 h-4 rounded-full object-cover"
-                           [ngClass]="{'grayscale': p.status === 'PENDING'}"
-                           [style.filter]="p.status === 'REJECTED' ? 'grayscale(100%) brightness(40%) sepia(100%) hue-rotate(-50deg) saturate(600%) contrast(0.8)' : ''">
-                      <span class="text-xs text-gray-700 dark:text-gray-300 font-medium" 
-                            [ngClass]="{'text-gray-400': p.status === 'REJECTED', 'text-gray-500': p.status === 'PENDING'}">
-                        {{ p.name.split(' ')[0] }}
-                      </span>
-                      <span class="text-[10px] text-gray-400">({{ p.instrument }})</span>
-                    </div>
+                      [style.filter]="p.status === 'REJECTED' ? 'grayscale(100%) brightness(40%) sepia(100%) hue-rotate(-50deg) saturate(600%) contrast(0.8)' : ''"
+                      alt="">
+                    <div
+                      class="absolute -bottom-1 -right-1 bg-gray-900 text-white text-[8px] px-1 rounded-full border border-white dark:border-gray-800 shadow-sm z-10">
+                      {{ p.instrument.slice(0,3) }}</div>
                   </div>
                 </div>
-
-                <!-- Actions -->
-                <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-100 dark:border-gray-700 mt-auto">
-                  <button (click)="openDeleteModal(s)" class="group flex items-center justify-center p-2.5 rounded-lg bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 hover:border-red-300 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20 dark:hover:bg-red-500/20 dark:hover:border-red-500/30 transition-all duration-200 shadow-sm" [title]="'events.admin.kanban.suggestions.actions.delete' | translate">
-                    <svg class="w-5 h-5 transition-transform group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </td>
+              <td class="px-6 py-4 text-right">
+                <div class="flex items-center justify-end gap-2">
+                  <button (click)="openDeleteModal(s)"
+                    class="group flex items-center justify-center p-2.5 rounded-lg bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 hover:border-red-300 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20 dark:hover:bg-red-500/20 dark:hover:border-red-500/30 transition-all duration-200 shadow-sm"
+                    [title]="'events.admin.kanban.suggestions.actions.delete' | translate">
+                    <svg class="w-5 h-5 transition-transform group-hover:scale-110" fill="none" viewBox="0 0 24 24"
+                      stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>
                   </button>
-                  <button (click)="approveSuggestion(s)" class="group flex items-center justify-center p-2.5 rounded-lg bg-green-50 text-green-600 border border-green-200 hover:bg-green-100 hover:border-green-300 dark:bg-green-500/10 dark:text-green-400 dark:border-green-500/20 dark:hover:bg-green-500/20 dark:hover:border-green-500/30 transition-all duration-200 shadow-sm" [title]="'events.admin.kanban.suggestions.actions.approve' | translate">
-                    <svg class="w-5 h-5 transition-transform group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <button *ngIf="s.status === 'SUBMITTED'" (click)="approveSuggestion(s)"
+                    class="p-1.5 text-green-600 hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-900/20 rounded-md transition-colors"
+                    [title]="'events.admin.kanban.suggestions.actions.approve' | translate">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                     </svg>
                   </button>
                 </div>
+              </td>
+            </tr>
+            <tr *ngIf="filteredSuggestions.length === 0">
+              <td colspan="4" class="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                {{ 'events.admin.kanban.suggestions.table.empty' | translate }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Grid View -->
+      <div *ngIf="suggestionViewMode === 'grid'"
+        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div *ngFor="let s of paginatedSuggestions"
+          class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 flex flex-col overflow-hidden group hover:shadow-md transition-all duration-200">
+
+          <!-- Banner Image Area -->
+          <div class="h-32 relative flex-shrink-0 bg-gray-100 dark:bg-gray-800">
+            <img [src]="s.cover_image || '/images/cards/card-01.jpg'" (error)="onAlbumImageError($event)"
+              class="w-full h-full object-cover" alt="Capa do álbum">
+
+            <!-- Overlay Gradient for better contrast if needed, or just pure image -->
+            <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+
+            <!-- Creator Avatar (Overlapping) -->
+            <div class="absolute -bottom-8 right-4">
+              <img [src]="s.creator?.avatar_url || '/images/user/default-avatar.jpg'"
+                class="w-16 h-16 rounded-full object-cover border-4 border-white dark:border-gray-900 shadow-sm"
+                [title]="'Sugerido por ' + s.creator?.name">
             </div>
           </div>
-          
-          <div *ngIf="filteredSuggestions.length === 0" class="col-span-full py-12 text-center text-gray-500 dark:text-gray-400 border border-dashed border-gray-300 dark:border-gray-700 rounded-lg">
-            {{ 'events.admin.kanban.suggestions.table.empty' | translate }}
+
+          <!-- Content Area -->
+          <div class="p-4 pt-10 flex flex-col gap-4 flex-1">
+            <!-- Header Info -->
+            <div class="flex flex-col gap-0.5 pr-14">
+              <h4 class="font-bold text-lg text-gray-900 dark:text-white line-clamp-1" [title]="s.song_name">{{
+                s.song_name }}</h4>
+              <p class="text-sm text-gray-500 dark:text-gray-400 font-medium line-clamp-1">{{ s.artist_name }}</p>
+            </div>
+
+            <!-- Participants -->
+            <div class="flex-1">
+              <div class="flex items-center gap-2 mb-2">
+                <span
+                  class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Participantes</span>
+                <span class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-500 px-1.5 rounded-full">{{
+                  s.participants.length }}</span>
+              </div>
+
+              <div class="flex flex-wrap gap-2">
+                <div *ngFor="let p of s.participants"
+                  class="flex items-center gap-1.5 bg-gray-50 dark:bg-gray-700/50 border border-gray-100 dark:border-gray-600/50 px-2 py-1 rounded-md">
+                  <img [src]="p.avatar || '/images/user/default-avatar.jpg'" class="w-4 h-4 rounded-full object-cover"
+                    [ngClass]="{'grayscale': p.status === 'PENDING'}"
+                    [style.filter]="p.status === 'REJECTED' ? 'grayscale(100%) brightness(40%) sepia(100%) hue-rotate(-50deg) saturate(600%) contrast(0.8)' : ''">
+                  <span class="text-xs text-gray-700 dark:text-gray-300 font-medium"
+                    [ngClass]="{'text-gray-400': p.status === 'REJECTED', 'text-gray-500': p.status === 'PENDING'}">
+                    {{ p.name.split(' ')[0] }}
+                  </span>
+                  <span class="text-[10px] text-gray-400">({{ p.instrument }})</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-100 dark:border-gray-700 mt-auto">
+              <button (click)="openDeleteModal(s)"
+                class="group flex items-center justify-center p-2.5 rounded-lg bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 hover:border-red-300 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20 dark:hover:bg-red-500/20 dark:hover:border-red-500/30 transition-all duration-200 shadow-sm"
+                [title]="'events.admin.kanban.suggestions.actions.delete' | translate">
+                <svg class="w-5 h-5 transition-transform group-hover:scale-110" fill="none" viewBox="0 0 24 24"
+                  stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+              <button *ngIf="s.status === 'SUBMITTED'" (click)="approveSuggestion(s)"
+                class="group flex items-center justify-center p-2.5 rounded-lg bg-green-50 text-green-600 border border-green-200 hover:bg-green-100 hover:border-green-300 dark:bg-green-500/10 dark:text-green-400 dark:border-green-500/20 dark:hover:bg-green-500/20 dark:hover:border-green-500/30 transition-all duration-200 shadow-sm"
+                [title]="'events.admin.kanban.suggestions.actions.approve' | translate">
+                <svg class="w-5 h-5 transition-transform group-hover:scale-110" fill="none" viewBox="0 0 24 24"
+                  stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
 
-        <!-- Pagination -->
-        <div *ngIf="filteredSuggestions.length > itemsPerPage" class="flex items-center justify-between border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3 sm:px-6 mt-4 rounded-lg shadow-sm">
-          <div class="flex flex-1 justify-between sm:hidden">
-            <button (click)="changePage(currentPage - 1)" [disabled]="currentPage === 1" class="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50">Previous</button>
-            <button (click)="changePage(currentPage + 1)" [disabled]="currentPage === totalPages" class="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50">Next</button>
+        <div *ngIf="filteredSuggestions.length === 0"
+          class="col-span-full py-12 text-center text-gray-500 dark:text-gray-400 border border-dashed border-gray-300 dark:border-gray-700 rounded-lg">
+          {{ 'events.admin.kanban.suggestions.table.empty' | translate }}
+        </div>
+      </div>
+
+      <!-- Pagination -->
+      <div *ngIf="filteredSuggestions.length > itemsPerPage"
+        class="flex items-center justify-between border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3 sm:px-6 mt-4 rounded-lg shadow-sm">
+        <div class="flex flex-1 justify-between sm:hidden">
+          <button (click)="changePage(currentPage - 1)" [disabled]="currentPage === 1"
+            class="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50">Previous</button>
+          <button (click)="changePage(currentPage + 1)" [disabled]="currentPage === totalPages"
+            class="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50">Next</button>
+        </div>
+        <div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+          <div>
+            <p class="text-sm text-gray-700 dark:text-gray-300">
+              {{ 'events.admin.kanban.pagination.showing' | translate }}
+              <span class="font-medium">{{ (currentPage - 1) * itemsPerPage + 1 }}</span>
+              {{ 'events.admin.kanban.pagination.to' | translate }}
+              <span class="font-medium">{{ currentPage * itemsPerPage > filteredSuggestions.length ?
+                filteredSuggestions.length : currentPage * itemsPerPage }}</span>
+              {{ 'events.admin.kanban.pagination.of' | translate }}
+              <span class="font-medium">{{ filteredSuggestions.length }}</span>
+              {{ 'events.admin.kanban.pagination.results' | translate }}
+            </p>
           </div>
-          <div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
-            <div>
-              <p class="text-sm text-gray-700 dark:text-gray-300">
-                {{ 'events.admin.kanban.pagination.showing' | translate }}
-                <span class="font-medium">{{ (currentPage - 1) * itemsPerPage + 1 }}</span>
-                {{ 'events.admin.kanban.pagination.to' | translate }}
-                <span class="font-medium">{{ currentPage * itemsPerPage > filteredSuggestions.length ? filteredSuggestions.length : currentPage * itemsPerPage }}</span>
-                {{ 'events.admin.kanban.pagination.of' | translate }}
-                <span class="font-medium">{{ filteredSuggestions.length }}</span>
-                {{ 'events.admin.kanban.pagination.results' | translate }}
-              </p>
-            </div>
-            <div>
-              <nav class="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
-                <button (click)="changePage(currentPage - 1)" [disabled]="currentPage === 1" class="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50 dark:ring-gray-600 dark:hover:bg-gray-700">
-                  <span class="sr-only">Previous</span>
-                  <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                    <path fill-rule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clip-rule="evenodd" />
-                  </svg>
+          <div>
+            <nav class="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+              <button (click)="changePage(currentPage - 1)" [disabled]="currentPage === 1"
+                class="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50 dark:ring-gray-600 dark:hover:bg-gray-700">
+                <span class="sr-only">Previous</span>
+                <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                  <path fill-rule="evenodd"
+                    d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z"
+                    clip-rule="evenodd" />
+                </svg>
+              </button>
+              <ng-container *ngFor="let p of [].constructor(totalPages); let i = index">
+                <button
+                  *ngIf="totalPages <= 7 || i < 3 || i > totalPages - 4 || (i >= currentPage - 2 && i <= currentPage)"
+                  (click)="changePage(i + 1)" [class.bg-blue-600]="currentPage === i + 1"
+                  [class.text-white]="currentPage === i + 1" [class.text-gray-900]="currentPage !== i + 1"
+                  [class.dark:text-gray-300]="currentPage !== i + 1" [class.ring-gray-300]="currentPage !== i + 1"
+                  [class.dark:ring-gray-600]="currentPage !== i + 1"
+                  class="relative inline-flex items-center px-4 py-2 text-sm font-semibold ring-1 ring-inset focus:z-20 focus:outline-offset-0 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                  {{ i + 1 }}
                 </button>
-                <ng-container *ngFor="let p of [].constructor(totalPages); let i = index">
-                    <button *ngIf="totalPages <= 7 || i < 3 || i > totalPages - 4 || (i >= currentPage - 2 && i <= currentPage)"
-                            (click)="changePage(i + 1)"
-                            [class.bg-blue-600]="currentPage === i + 1"
-                            [class.text-white]="currentPage === i + 1"
-                            [class.text-gray-900]="currentPage !== i + 1"
-                            [class.dark:text-gray-300]="currentPage !== i + 1"
-                            [class.ring-gray-300]="currentPage !== i + 1"
-                            [class.dark:ring-gray-600]="currentPage !== i + 1"
-                            class="relative inline-flex items-center px-4 py-2 text-sm font-semibold ring-1 ring-inset focus:z-20 focus:outline-offset-0 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                      {{ i + 1 }}
-                    </button>
-                    <span *ngIf="totalPages > 7 && i === 3 && currentPage > 4" class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-700 ring-1 ring-inset ring-gray-300 focus:outline-offset-0">...</span>
-                </ng-container>
-                <button (click)="changePage(currentPage + 1)" [disabled]="currentPage === totalPages" class="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50 dark:ring-gray-600 dark:hover:bg-gray-700">
-                  <span class="sr-only">Next</span>
-                  <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                    <path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd" />
-                  </svg>
-                </button>
-              </nav>
-            </div>
+                <span *ngIf="totalPages > 7 && i === 3 && currentPage > 4"
+                  class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-700 ring-1 ring-inset ring-gray-300 focus:outline-offset-0">...</span>
+              </ng-container>
+              <button (click)="changePage(currentPage + 1)" [disabled]="currentPage === totalPages"
+                class="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50 dark:ring-gray-600 dark:hover:bg-gray-700">
+                <span class="sr-only">Next</span>
+                <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                  <path fill-rule="evenodd"
+                    d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z"
+                    clip-rule="evenodd" />
+                </svg>
+              </button>
+            </nav>
           </div>
         </div>
       </div>
+    </div>
     }
 
     @if (isLoading) {
-      <div class="absolute inset-0 z-10 grid place-items-center bg-white/70 dark:bg-gray-800/70">
-        <div class="w-12 h-12 rounded-full border-4 border-gray-300 dark:border-gray-700 border-t-brand-500 dark:border-t-brand-500 animate-spin"></div>
+    <div class="absolute inset-0 z-10 grid place-items-center bg-white/70 dark:bg-gray-800/70">
+      <div
+        class="w-12 h-12 rounded-full border-4 border-gray-300 dark:border-gray-700 border-t-brand-500 dark:border-t-brand-500 animate-spin">
       </div>
+    </div>
     }
   </div>
 
-  <app-music-suggestion-modal
-    [isOpen]="isMusicModalOpen"
-    [suggestion]="selectedSuggestionForModal"
-    [users]="availableUsers"
-    [eventId]="selectedEventIdCode"
-    (close)="closeMusicModal()"
+  <app-music-suggestion-modal [isOpen]="isMusicModalOpen" [suggestion]="selectedSuggestionForModal"
+    [users]="availableUsers" [eventId]="selectedEventIdCode" (close)="closeMusicModal()"
     (save)="onMusicModalSave($event)">
   </app-music-suggestion-modal>
 
-  <app-modal [isOpen]="isDeleteModalOpen" (close)="closeDeleteModal()" [showCloseButton]="false" className="max-w-[450px] mx-4">
+  <app-modal [isOpen]="isDeleteModalOpen" (close)="closeDeleteModal()" [showCloseButton]="false"
+    className="max-w-[450px] mx-4">
     <div class="p-6 text-center w-full mx-auto">
-      <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-500">
+      <div
+        class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-500">
         <span class="[&>svg]:h-6 [&>svg]:w-6">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="currentColor">
-            <path fill-rule="evenodd" clip-rule="evenodd" d="M9.62684 11.7496C9.04105 11.1638 9.04105 10.2141 9.62684 9.6283C10.2126 9.04252 11.1624 9.04252 11.7482 9.6283L18.9985 16.8786L26.2485 9.62851C26.8343 9.04273 27.7841 9.04273 28.3699 9.62851C28.9556 10.2143 28.9556 11.164 28.3699 11.7498L21.1198 18.9999L28.3699 26.25C28.9556 26.8358 28.9556 27.7855 28.3699 28.3713C27.7841 28.9571 26.8343 28.9571 26.2485 28.3713L18.9985 21.1212L11.7482 28.3715C11.1624 28.9573 10.2126 28.9573 9.62684 28.3715C9.04105 27.7857 9.04105 26.836 9.62684 26.2502L16.8771 18.9999L9.62684 11.7496Z" fill=""/>
+            <path fill-rule="evenodd" clip-rule="evenodd"
+              d="M9.62684 11.7496C9.04105 11.1638 9.04105 10.2141 9.62684 9.6283C10.2126 9.04252 11.1624 9.04252 11.7482 9.6283L18.9985 16.8786L26.2485 9.62851C26.8343 9.04273 27.7841 9.04273 28.3699 9.62851C28.9556 10.2143 28.9556 11.164 28.3699 11.7498L21.1198 18.9999L28.3699 26.25C28.9556 26.8358 28.9556 27.7855 28.3699 28.3713C27.7841 28.9571 26.8343 28.9571 26.2485 28.3713L18.9985 21.1212L11.7482 28.3715C11.1624 28.9573 10.2126 28.9573 9.62684 28.3715C9.04105 27.7857 9.04105 26.836 9.62684 26.2502L16.8771 18.9999L9.62684 11.7496Z"
+              fill="" />
           </svg>
         </span>
       </div>
@@ -392,22 +486,19 @@
       </h4>
       <p class="text-sm leading-6 text-gray-500 dark:text-gray-400">
         {{ 'events.guestV2.suggestions.deleteModal.message' | translate }}
-        <span class="font-bold text-gray-700 dark:text-gray-300 block mt-1">{{ suggestionToDelete?.song_name }}</span>
+        <span class="font-bold text-gray-700 dark:text-gray-300 block mt-1">{{ suggestionToDelete?.song_name ||
+          taskToDelete?.title }}</span>
       </p>
 
       <div class="flex items-center justify-center w-full gap-3 mt-7">
-        <button
-          type="button"
+        <button type="button"
           class="flex justify-center w-full px-4 py-3 text-sm font-medium text-gray-700 rounded-lg bg-white ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:ring-gray-700 dark:hover:bg-white/[0.03] sm:w-auto"
-          (click)="closeDeleteModal()"
-        >
+          (click)="closeDeleteModal()">
           {{ 'events.guestV2.suggestions.deleteModal.cancel' | translate }}
         </button>
-        <button
-          type="button"
+        <button type="button"
           class="flex justify-center w-full px-4 py-3 text-sm font-medium text-white rounded-lg bg-red-600 hover:bg-red-500 sm:w-auto"
-          (click)="confirmDelete()"
-        >
+          (click)="confirmDelete()">
           {{ 'events.guestV2.suggestions.deleteModal.confirm' | translate }}
         </button>
       </div>

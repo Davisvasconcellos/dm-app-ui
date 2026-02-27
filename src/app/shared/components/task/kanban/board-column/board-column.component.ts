@@ -12,7 +12,18 @@ import { DndModule, DndDropEvent } from 'ngx-drag-drop';
     DndModule,
   ],
   templateUrl: './board-column.component.html',
-  styles: ``
+  styles: `
+    .dndDragover .dndPlaceholder {
+      background-color: rgba(59, 130, 246, 0.1);
+      border-color: #3b82f6;
+      border-style: solid;
+      transform: scale(1.02);
+      transition: all 0.2s ease;
+    }
+    .dark .dndDragover .dndPlaceholder {
+      background-color: rgba(59, 130, 246, 0.2);
+    }
+  `
 })
 export class BoardColumnComponent {
 

@@ -10,6 +10,9 @@ import { NotificationComponent } from '../../../shared/components/ui/notificatio
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import { MusicSuggestionService, MusicSuggestion } from '../music-suggestion/music-suggestion.service';
 import { MusicSuggestionModalComponent } from './components/music-suggestion-modal/music-suggestion-modal.component';
+import { ResilienceService } from '../../../shared/services/resilience.service';
+import { Subject, of } from 'rxjs';
+import { takeUntil, switchMap } from 'rxjs/operators';
 
 type SongStatus = 'planned' | 'open_for_candidates' | 'on_stage' | 'played' | 'canceled';
 
@@ -42,6 +45,8 @@ export class JamKanbanComponent implements OnInit, OnDestroy {
   private appRef = inject(ApplicationRef);
   private injector = inject(Injector);
   private envInjector = inject(EnvironmentInjector);
+  private resilienceService = inject(ResilienceService);
+  private destroy$ = new Subject<void>();
 
   events: EventListItem[] = [];
   selectedEventIdCode = '';
@@ -52,11 +57,14 @@ export class JamKanbanComponent implements OnInit, OnDestroy {
   }
 
   activeView: 'setlist' | 'suggestions' = 'setlist';
-  suggestionViewMode: 'list' | 'grid' = 'list';
-  suggestionFilter: 'SUBMITTED' | 'ALL' = 'SUBMITTED';
+  suggestionViewMode: 'list' | 'grid' = 'grid';
+  suggestionFilter: 'OPEN' | 'CLOSED' = 'OPEN';
   suggestionSearchText = '';
   suggestions: MusicSuggestion[] = []; // Raw data from API
   filteredSuggestions: MusicSuggestion[] = []; // Filtered data for UI
+  
+  openSuggestionsCount = 0;
+  closedSuggestionsCount = 0;
 
   // Pagination
   currentPage = 1;
@@ -64,6 +72,7 @@ export class JamKanbanComponent implements OnInit, OnDestroy {
 
   suggestionsCount = 0;
 
+  jams: ApiJam[] = [];
   songs: ApiSong[] = [];
   tasks: Task[] = [];
   isLoading = false;
@@ -87,10 +96,23 @@ export class JamKanbanComponent implements OnInit, OnDestroy {
       this.jamStream = null;
     }
     this.stopPolling();
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   applyClientFilters() {
     let result = this.suggestions;
+
+    // 0. Calculate Counts (Independent of active search/filter)
+    this.openSuggestionsCount = this.suggestions.filter(s => s.status === 'SUBMITTED').length;
+    this.closedSuggestionsCount = this.suggestions.filter(s => s.status === 'APPROVED' || s.status === 'REJECTED').length;
+
+    // 1. Status Filter (Client-side)
+    if (this.suggestionFilter === 'OPEN') {
+      result = result.filter(s => s.status === 'SUBMITTED');
+    } else if (this.suggestionFilter === 'CLOSED') {
+      result = result.filter(s => s.status === 'APPROVED' || s.status === 'REJECTED');
+    }
 
     // 1. Text Search Filter
     if (this.suggestionSearchText && this.suggestionSearchText.trim()) {
@@ -103,7 +125,7 @@ export class JamKanbanComponent implements OnInit, OnDestroy {
     }
 
     this.filteredSuggestions = result;
-    this.suggestionsCount = this.suggestions.length;
+    this.suggestionsCount = result.length;
     this.currentPage = 1; // Reset to first page on filter change
   }
 
@@ -127,19 +149,19 @@ export class JamKanbanComponent implements OnInit, OnDestroy {
   }
 
   get plannedTasks(): Task[] {
-    return this.tasks.filter(t => t.status === 'planned');
+    return this.tasks.filter(t => t.status === 'planned').sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
   }
 
   get openTasks(): Task[] {
-    return this.tasks.filter(t => t.status === 'open_for_candidates');
+    return this.tasks.filter(t => t.status === 'open_for_candidates').sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
   }
 
   get onStageTasks(): Task[] {
-    return this.tasks.filter(t => t.status === 'on_stage');
+    return this.tasks.filter(t => t.status === 'on_stage').sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
   }
 
   get playedTasks(): Task[] {
-    return this.tasks.filter(t => t.status === 'played');
+    return this.tasks.filter(t => t.status === 'played').sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
   }
 
   onRefreshClick() {
@@ -169,37 +191,72 @@ export class JamKanbanComponent implements OnInit, OnDestroy {
     this.loadEventGuests();
     this.loadJamsAndSongs();
     this.startPolling();
+    this.subscribeToResilienceState();
   }
 
   startPolling() {
     this.stopPolling();
-    this.refreshTimerId = setInterval(() => {
-      this.onRefreshClick();
-    }, this.refreshIntervalMs);
+
+    this.resilienceService.pollWithResilience(
+      () => {
+        this.onRefreshClick();
+        return of(true);
+      },
+      this.refreshIntervalMs,
+      3,
+      `jam_kanban_${this.selectedEventIdCode}`
+    ).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe();
   }
 
   stopPolling() {
-    if (this.refreshTimerId) {
-      clearInterval(this.refreshTimerId);
-      this.refreshTimerId = null;
-    }
+    // Polling is now handled by takeUntil(this.destroy$) and the resilience operator
+    // but we can still use this to reset if needed
   }
 
-  loadJamsAndSongs() {
+  private subscribeToResilienceState() {
+    this.resilienceService.getState().pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(state => {
+      if (state.status === 'down') {
+        this.triggerToast('warning', 'Modo Offline (Kanban)', 'Servidor instável. Exibindo última versão do quadro.');
+      } else if (state.status === 'unstable') {
+        this.triggerToast('info', 'Conexão Instável', 'Tentando atualizar o quadro...');
+      }
+    });
+  }
+
+  loadJamsAndSongs(forceRefresh: boolean = false) {
     if (!this.selectedEventIdCode) return;
     this.isLoading = true;
-    this.eventService.getEventJams(this.selectedEventIdCode).subscribe({
+    
+    // 1. If force refresh, clear local persistence cache first
+    const cacheKey = `jam_kanban_${this.selectedEventIdCode}_jams`;
+    if (forceRefresh) {
+      this.resilienceService.clearCache(cacheKey);
+    }
+
+    // 2. Prepare the observable.
+    let jams$ = this.eventService.getEventJams(this.selectedEventIdCode);
+    
+    // 3. Apply failover only if not forcing refresh
+    if (!forceRefresh) {
+      jams$ = jams$.pipe(
+        this.resilienceService.withFailover(cacheKey, 3)
+      );
+    }
+
+    jams$.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe({
       next: (jams) => {
-        if (jams.length > 0) {
-          this.selectedJam = jams[0];
-          const songs = this.selectedJam.songs || [];
-          this.songs = songs;
-          this.mapSongsToTasks(songs);
-        } else {
-          this.selectedJam = null;
-          this.tasks = [];
+        if (!jams || !Array.isArray(jams)) {
           this.isLoading = false;
+          return;
         }
+        this.jams = jams;
+        this.processJamsAndSongs(jams);
       },
       error: (err) => {
         console.error('Erro ao carregar Jams:', err);
@@ -209,6 +266,19 @@ export class JamKanbanComponent implements OnInit, OnDestroy {
         this.triggerToast('error', 'Erro', 'Falha ao carregar Jams do evento.');
       }
     });
+  }
+
+  private processJamsAndSongs(jams: ApiJam[]) {
+    if (jams.length > 0) {
+      this.selectedJam = jams[0];
+      const songs = this.selectedJam.songs || [];
+      this.songs = songs;
+      this.mapSongsToTasks(songs);
+    } else {
+      this.selectedJam = null;
+      this.tasks = [];
+      this.isLoading = false;
+    }
   }
 
   private mapSongsToTasks(songs: ApiSong[]) {
@@ -399,18 +469,90 @@ export class JamKanbanComponent implements OnInit, OnDestroy {
     const task = event.data as Task;
     const oldStatus = task.status;
     const newStatus = status as SongStatus;
+    
+    // 1. Determine target index (default to end of column)
+    let targetIndex = event.index;
 
-    if (oldStatus === newStatus && event.index === undefined) return;
+    // 2. Early exit if nothing changed
+    if (oldStatus === newStatus && targetIndex === undefined) return;
 
-    const oldIndex = this.tasks.findIndex(t => t.id === task.id);
-    if (oldIndex > -1) this.tasks.splice(oldIndex, 1);
+    // 3. Prepare column tasks for reindexing
+    let columnTasks = this.tasks
+      .filter(t => t.status === newStatus)
+      .sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
 
-    task.status = newStatus;
-    this.tasks.push(task);
+    // 4. Handle intra-column move logic
+    if (oldStatus === newStatus) {
+      const oldIdxInColumn = columnTasks.findIndex(t => t.id === task.id);
+      if (oldIdxInColumn > -1) {
+        columnTasks.splice(oldIdxInColumn, 1);
+        // Correct index if shifting down
+        if (targetIndex !== undefined && targetIndex > oldIdxInColumn) {
+          targetIndex--;
+        }
+      }
+    } else {
+      // Cross-column: remove from global first to prevent duplicates
+      const globalIdx = this.tasks.findIndex(t => t.id === task.id);
+      if (globalIdx > -1) this.tasks.splice(globalIdx, 1);
+      task.status = newStatus;
+    }
 
+    // 5. Apply insertion
+    const finalIndex = targetIndex !== undefined ? targetIndex : columnTasks.length;
+    columnTasks.splice(finalIndex, 0, task);
+
+    // 6. Local re-indexing (temporary until server reload)
+    // Find min index in the target column to keep the sequence base
+    const existingIndices = columnTasks
+      .filter(t => t.id !== task.id && typeof t.orderIndex === 'number')
+      .map(t => t.orderIndex as number);
+    
+    const baseOffset = existingIndices.length > 0 
+      ? Math.min(...existingIndices) 
+      : (task.orderIndex || 1);
+
+    columnTasks.forEach((t, i) => {
+      t.orderIndex = (Number.isFinite(baseOffset) ? baseOffset : 1) + i;
+    });
+
+    // 7. Ensure consistency of global tasks array and trigger change detection
+    if (oldStatus !== newStatus) {
+      this.tasks.push(task);
+    }
+    this.tasks = [...this.tasks]; // Trigger Angular change detection
+
+    // 8. Backend Sync & Forced Refresh (Sequential Execution)
     if (this.selectedEventIdCode && this.selectedJam && task.song) {
-      this.eventService.moveSongStatus(this.selectedEventIdCode, this.selectedJam.id, task.song.id, newStatus).subscribe({
-        error: () => this.triggerToast('error', 'Erro', 'Falha ao mover música.')
+      const eventId = this.selectedEventIdCode;
+      const jamId = this.selectedJam.id;
+      const songId = task.song.id;
+      const orderedIds = columnTasks.map(t => t.song?.id).filter(id => id !== undefined) as number[];
+
+      // Build the sequential chain
+      const statusUpdate$ = (oldStatus !== newStatus)
+        ? this.eventService.moveSongStatus(eventId, jamId, songId, newStatus)
+        : of(null);
+
+      statusUpdate$.pipe(
+        switchMap(() => {
+          if (newStatus !== 'canceled') {
+            return this.eventService.updateSongOrder(eventId, jamId, newStatus as any, orderedIds);
+          }
+          return of(null);
+        }),
+        takeUntil(this.destroy$)
+      ).subscribe({
+        next: () => {
+          // Success! Small delay to let backend settle, then reload bypassing cache
+          setTimeout(() => this.loadJamsAndSongs(true), 500);
+        },
+        error: (err) => {
+          console.error('Drag-and-drop sync failed:', err);
+          this.triggerToast('error', 'Erro', 'Falha ao sincronizar ordem.');
+          // Reload bypassing cache to revert UI to server state
+          this.loadJamsAndSongs(true);
+        }
       });
     }
   }
@@ -421,16 +563,9 @@ export class JamKanbanComponent implements OnInit, OnDestroy {
 
   handleDeleteTask(task: Task) {
     if (!task.song || !this.selectedEventIdCode || !this.selectedJam) return;
-
-    if (confirm(`Tem certeza que deseja remover "${task.title}"?`)) {
-      this.eventService.deleteSong(this.selectedEventIdCode, this.selectedJam.id, task.song.id).subscribe({
-        next: () => {
-          this.tasks = this.tasks.filter(t => t.id !== task.id);
-          this.triggerToast('success', 'Removido', 'Música removida.');
-        },
-        error: () => this.triggerToast('error', 'Erro', 'Falha ao remover música.')
-      });
-    }
+    this.taskToDelete = task;
+    this.suggestionToDelete = null;
+    this.isDeleteModalOpen = true;
   }
 
   handleReadyToggled(task: Task): void {
@@ -465,9 +600,11 @@ export class JamKanbanComponent implements OnInit, OnDestroy {
   // Delete Modal
   isDeleteModalOpen = false;
   suggestionToDelete: MusicSuggestion | null = null;
+  taskToDelete: Task | null = null;
 
   openDeleteModal(suggestion: MusicSuggestion) {
     this.suggestionToDelete = suggestion;
+    this.taskToDelete = null;
     this.isDeleteModalOpen = true;
   }
 
@@ -487,11 +624,19 @@ export class JamKanbanComponent implements OnInit, OnDestroy {
   closeDeleteModal() {
     this.isDeleteModalOpen = false;
     this.suggestionToDelete = null;
+    this.taskToDelete = null;
   }
 
   confirmDelete() {
-    if (!this.suggestionToDelete) return;
+    if (this.suggestionToDelete) {
+      this.confirmDeleteSuggestion();
+    } else if (this.taskToDelete) {
+      this.confirmDeleteTask();
+    }
+  }
 
+  private confirmDeleteSuggestion() {
+    if (!this.suggestionToDelete) return;
     const id = this.suggestionToDelete.id_code;
     if (!id) {
       this.triggerToast('error', 'Erro', 'Sugestão sem id_code. Não foi possível remover.');
@@ -506,6 +651,22 @@ export class JamKanbanComponent implements OnInit, OnDestroy {
       },
       error: () => {
         this.triggerToast('error', 'Erro', 'Falha ao remover sugestão.');
+      }
+    });
+  }
+
+  private confirmDeleteTask() {
+    if (!this.taskToDelete || !this.taskToDelete.song || !this.selectedEventIdCode || !this.selectedJam) return;
+
+    const task = this.taskToDelete;
+    this.eventService.deleteSong(this.selectedEventIdCode, this.selectedJam.id, task.song.id).subscribe({
+      next: () => {
+        this.tasks = this.tasks.filter(t => t.id !== task.id);
+        this.triggerToast('success', 'Removido', `Música "${task.title}" removida.`);
+        this.closeDeleteModal();
+      },
+      error: () => {
+        this.triggerToast('error', 'Erro', 'Falha ao remover música.');
       }
     });
   }
