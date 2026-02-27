@@ -48,6 +48,7 @@ export interface CreateSuggestionPayload {
   song_name: string;
   artist_name: string;
   cover_image?: string;
+  catalog_id?: number | null;
   my_instrument: string;
   invites?: {
     user_id: string;

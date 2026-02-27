@@ -1,120 +1,48 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
+import { catchError } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 
 export interface DiscogsResult {
   id: number;
-  title: string;          // geralmente vem como "Artist - Title"
-  thumb: string;
+  discogs_id?: number;
+  title: string;
+  artist: string;
   cover_image: string;
+  thumb_image: string;
   year?: string;
+  genre?: string;
+  usage_count?: number;
 }
 
 @Injectable({
   providedIn: 'root'
 })
 export class DiscogsService {
-  // Em produção, a requisição DEVE passar pelo nosso backend (API) para evitar bloqueio de CORS,
-  // pois a API do Discogs não aceita chamadas diretas do navegador (browser).
-  // Em desenvolvimento, mantemos o proxy local (/discogs-api) para facilitar o debug sem depender do backend rodando.
-  private readonly API_URL = environment.production 
-    ? `${environment.apiUrl}/api/v1/discogs/search` 
-    : '/discogs-api/database/search';
-
-  // Valores vindos do environment
-  private readonly TOKEN = environment.discogs?.token || '';
+  // Now using internal API for both environments to ensure consistency and catalog feeding
+  private readonly API_URL = `${environment.apiUrl}/api/v1/music-catalog/search`;
 
   constructor(private http: HttpClient) {}
 
   /**
-   * Busca releases no Discogs usando o Personal Access Token
+   * Busca músicas no nosso catálogo interno (que alimenta-se do Discogs se necessário)
    * @param query Termo de busca (nome da música, artista, álbum, etc.)
-   * @returns Lista de resultados mapeados
+   * @returns Lista de músicas do catálogo
    */
   search(query: string): Observable<DiscogsResult[]> {
-    // Validação mínima da query
-    if (!query || query.trim().length < 2) {
+    if (!query || query.trim().length < 3) {
       return of([]);
     }
 
-    // Se não tiver token configurado, retorna mock
-    if (!this.TOKEN) {
-      console.warn('Discogs Token não encontrado no environment. Usando dados mock.');
-      return this.getMockData(query);
-    }
+    const params = new HttpParams().set('q', query);
 
-    // Parâmetros da requisição
-    const params = new HttpParams()
-      .set('q', query)
-      .set('type', 'release')
-      .set('per_page', '10')
-      .set('token', this.TOKEN);
-
-    // Headers obrigatórios
-    // Browsers block manual User-Agent setting ("Refused to set unsafe header").
-    // We rely on the browser's default User-Agent.
-    // const headers = {
-    //   'User-Agent': 'DiscogsAppDavis/1.0 (davisvasconcell@gmail.com)'
-    // };
-
-    return this.http.get<any>(this.API_URL, { params }).pipe(
-      map(response => {
-        // Extrai o array de resultados (ou array vazio se não existir)
-        const results = response.results || [];
-
-        // Mapeia para o formato que a aplicação espera
-        return results.map((item: any) => ({
-          id: item.id || 0,
-          title: item.title || 'Título não encontrado',
-          thumb: item.thumb || '',
-          cover_image: item.cover_image || item.cover || item.images?.[0]?.uri || '',
-          year: item.year ? String(item.year) : undefined
-        }));
-      }),
+    return this.http.get<DiscogsResult[]>(this.API_URL, { params }).pipe(
       catchError(err => {
-        console.error('Erro na API do Discogs:', {
-          status: err.status,
-          statusText: err.statusText,
-          message: err.message,
-          errorBody: err.error
-        });
-        // Em caso de erro, retorna dados mock para não quebrar a interface
+        console.error('Erro na API de Catálogo:', err);
         return this.getMockData(query);
       })
     );
-  }
-
-  /**
-   * Método de teste simples - apenas para verificar conexão com a API
-   */
-  testDiscogs(): void {
-    const token = this.TOKEN;
-
-    if (!token) {
-      console.log('Token não encontrado no environment');
-      return;
-    }
-
-    const url = `https://api.discogs.com/database/search?q=teste&token=${token}`;
-    const headers = {
-      'User-Agent': 'TesteSimples/1.0 (davisvasconcell@gmail.com)'
-    };
-
-    this.http.get(url, { headers }).subscribe({
-      next: (response) => {
-        console.log('✅ RESPOSTA DO DISCOGS (teste):');
-        console.log(response);
-      },
-      error: (err) => {
-        console.log('❌ ERRO NA REQUISIÇÃO (teste):');
-        console.log('Status:', err.status);
-        console.log('StatusText:', err.statusText);
-        console.log('Mensagem:', err.message);
-        if (err.error) console.log('Corpo do erro:', err.error);
-      }
-    });
   }
 
   /**
@@ -124,15 +52,17 @@ export class DiscogsService {
     return of([
       {
         id: 1,
-        title: `${query} (Mock) - Artista Exemplo`,
-        thumb: 'https://via.placeholder.com/150',
+        title: `${query} (Mock)`,
+        artist: 'Artista Exemplo',
+        thumb_image: 'https://via.placeholder.com/150',
         cover_image: 'https://via.placeholder.com/600',
         year: '2024'
       },
       {
         id: 2,
-        title: `Outro ${query} - Banda Fictícia`,
-        thumb: 'https://via.placeholder.com/150',
+        title: `Outro ${query}`,
+        artist: 'Banda Fictícia',
+        thumb_image: 'https://via.placeholder.com/150',
         cover_image: 'https://via.placeholder.com/600',
         year: '2023'
       }

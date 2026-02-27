@@ -221,18 +221,9 @@ export class MusicSuggestionModalComponent implements OnInit, OnChanges, OnDestr
     this.selectedMusic = music;
     this.musicResults = [];
 
-    let artist = 'Desconhecido';
-    let song = music.title;
-
-    if (music.title.includes(' - ')) {
-      const parts = music.title.split(' - ');
-      artist = parts[0];
-      song = parts.slice(1).join(' - ');
-    }
-
     this.form.patchValue({
-      song_name: song,
-      artist_name: artist
+      song_name: music.title,
+      artist_name: music.artist
     });
   }
 
@@ -426,7 +417,7 @@ export class MusicSuggestionModalComponent implements OnInit, OnChanges, OnDestr
       ...formValue,
       participants: this.participants,
       slots: finalSlots,
-      cover_image: this.selectedMusic?.cover_image || this.selectedMusic?.thumb || null,
+      cover_image: this.selectedMusic?.cover_image || this.selectedMusic?.thumb_image || null,
       catalog_id: this.selectedMusic?.id || null
     };
 

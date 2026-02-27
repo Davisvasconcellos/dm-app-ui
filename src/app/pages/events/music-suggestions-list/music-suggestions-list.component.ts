@@ -144,19 +144,9 @@ export class MusicSuggestionsListComponent implements OnInit, OnDestroy {
     this.selectedMusic = music;
     this.musicResults = [];
     
-    // Split title "Artist - Song" if possible, Discogs usually returns "Artist - Title"
-    let artist = 'Desconhecido';
-    let song = music.title;
-    
-    if (music.title.includes(' - ')) {
-      const parts = music.title.split(' - ');
-      artist = parts[0];
-      song = parts.slice(1).join(' - ');
-    }
-    
     this.createForm.patchValue({
-      song_name: song,
-      artist_name: artist
+      song_name: music.title,
+      artist_name: music.artist
     });
   }
 
@@ -244,7 +234,7 @@ export class MusicSuggestionsListComponent implements OnInit, OnDestroy {
     
     if (this.selectedMusic && this.selectedMusic.id !== 0) {
         // New selection from Discogs
-        coverImage = this.selectedMusic.cover_image || this.selectedMusic.thumb;
+        coverImage = this.selectedMusic.cover_image || this.selectedMusic.thumb_image;
     }
 
     if (this.editingSuggestion) {
@@ -271,6 +261,7 @@ export class MusicSuggestionsListComponent implements OnInit, OnDestroy {
         song_name: formVal.song_name,
         artist_name: formVal.artist_name,
         cover_image: coverImage,
+        catalog_id: this.selectedMusic?.id || null,
         my_instrument: formVal.my_instrument,
         invites: formVal.invites.map((inv: any) => ({
           user_id: inv.user_id,
