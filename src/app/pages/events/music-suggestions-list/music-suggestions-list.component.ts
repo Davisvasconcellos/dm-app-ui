@@ -1,4 +1,4 @@
-import { Component, OnInit, ElementRef, ViewChild, OnDestroy, Input } from '@angular/core';
+import { Component, OnInit, ElementRef, ViewChild, OnDestroy, Input, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormsModule, FormBuilder, FormGroup, Validators, FormArray, FormControl } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -26,12 +26,18 @@ interface Friend { id: string; name: string; avatar: string }
   `]
 })
 export class MusicSuggestionsListComponent implements OnInit, OnDestroy {
-  @Input() eventId: string = '';
+  private suggestionService = inject(MusicSuggestionService);
+  private discogsService = inject(DiscogsService);
+  private authService = inject(AuthService);
+  private fb = inject(FormBuilder);
+  private toastService = inject(ToastService);
+
+  @Input() eventId = '';
   mySuggestions: MusicSuggestion[] = [];
   invitesForMe: MusicSuggestion[] = [];
   acceptedSuggestions: MusicSuggestion[] = [];
   editingSuggestion: MusicSuggestion | null = null;
-  
+
   // Delete Modal
   isDeleteModalOpen = false;
   suggestionToDelete: MusicSuggestion | null = null;
@@ -42,7 +48,7 @@ export class MusicSuggestionsListComponent implements OnInit, OnDestroy {
   suggestionForParticipantRemoval: string | null = null;
 
   @ViewChild('scrollArea') scrollArea?: ElementRef<HTMLDivElement>;
-  
+
   // Inline Create Form
   isCreating = false;
   createForm: FormGroup;
@@ -56,23 +62,17 @@ export class MusicSuggestionsListComponent implements OnInit, OnDestroy {
   instrumentOptions = [
     'voz', 'guitarra', 'violao', 'baixo', 'teclado', 'bateria', 'percussao', 'metais', 'cordas', 'outro'
   ];
-  
+
   // Music Search Logic (Discogs)
   searchMusicControl = new FormControl('');
   musicResults: DiscogsResult[] = [];
   selectedMusic: DiscogsResult | null = null;
   isSearchingMusic = false;
-  
+
   private searchSubject = new Subject<string>();
   private destroy$ = new Subject<void>();
 
-  constructor(
-    private suggestionService: MusicSuggestionService,
-    private discogsService: DiscogsService,
-    private authService: AuthService,
-    private fb: FormBuilder,
-    private toastService: ToastService
-  ) {
+  constructor() {
     this.createForm = this.fb.group({
       song_name: ['', Validators.required],
       artist_name: ['', Validators.required],
@@ -131,10 +131,10 @@ export class MusicSuggestionsListComponent implements OnInit, OnDestroy {
         const currentUser = this.authService.getCurrentUser();
         if (!currentUser) return;
         const userId = currentUser.id.toString();
-        
+
         this.mySuggestions = suggestions.filter(s => String(s.created_by_user_id) === userId);
-        this.invitesForMe = suggestions.filter(s => 
-            String(s.created_by_user_id) !== userId && 
+        this.invitesForMe = suggestions.filter(s =>
+            String(s.created_by_user_id) !== userId &&
             s.participants.some(p => String(p.user_id) === userId && p.status === 'PENDING')
         );
       });
@@ -143,7 +143,7 @@ export class MusicSuggestionsListComponent implements OnInit, OnDestroy {
   selectMusic(music: DiscogsResult) {
     this.selectedMusic = music;
     this.musicResults = [];
-    
+
     this.createForm.patchValue({
       song_name: music.title,
       artist_name: music.artist
@@ -167,7 +167,7 @@ export class MusicSuggestionsListComponent implements OnInit, OnDestroy {
   get mockUserId() {
     return this.authService.getCurrentUser()?.id.toString() || '';
   }
-  
+
   get invites() {
     return this.createForm.get('invites') as FormArray;
   }
@@ -186,7 +186,7 @@ export class MusicSuggestionsListComponent implements OnInit, OnDestroy {
 
   addInvite() {
     if (!this.selectedFriendId || !this.selectedFriendInstrument) return;
-    
+
     // Check for duplicates
     const isDuplicate = this.invites.value.some((inv: any) => inv.user_id === this.selectedFriendId);
     if (isDuplicate) {
@@ -231,22 +231,24 @@ export class MusicSuggestionsListComponent implements OnInit, OnDestroy {
 
     // Determine cover image
     let coverImage = this.editingSuggestion?.cover_image; // Default to existing
-    
+
     if (this.selectedMusic && this.selectedMusic.id !== 0) {
         // New selection from Discogs
         coverImage = this.selectedMusic.cover_image || this.selectedMusic.thumb_image;
     }
 
-    if (this.editingSuggestion) {
+    const suggestionId = this.editingSuggestion ? this.editingSuggestion.id_code : null;
+
+    if (this.editingSuggestion && suggestionId) {
       const updated: Partial<MusicSuggestion> = {
         id: this.editingSuggestion.id,
-        id_code: this.editingSuggestion.id_code,
+        id_code: suggestionId,
         song_name: formVal.song_name,
         artist_name: formVal.artist_name,
         cover_image: coverImage
         // Backend handles participants update logic or we send minimal fields
       };
-      
+
       this.suggestionService.updateSuggestion(updated).subscribe({
         next: () => {
           this.toastService.triggerToast('success', 'Sugestão atualizada', 'Sua sugestão foi atualizada com sucesso.');
@@ -268,7 +270,7 @@ export class MusicSuggestionsListComponent implements OnInit, OnDestroy {
           instrument: inv.instrument
         }))
       };
-      
+
       this.suggestionService.addSuggestion(payload).subscribe({
         next: () => {
           this.toastService.triggerToast('success', 'Sugestão criada', 'Sua sugestão foi criada com sucesso.');
@@ -278,7 +280,7 @@ export class MusicSuggestionsListComponent implements OnInit, OnDestroy {
       });
     }
   }
-  
+
   onImageError(event: any) {
     event.target.src = '/images/user/default-avatar.jpg';
   }
@@ -291,7 +293,7 @@ export class MusicSuggestionsListComponent implements OnInit, OnDestroy {
     if (s.status === 'APPROVED') return { labelKey: 'events.guestV2.suggestions.status.approved', class: 'bg-green-500/20 text-green-500' };
     if (s.status === 'REJECTED') return { labelKey: 'events.guestV2.suggestions.status.rejected', class: 'bg-red-500/20 text-red-500' };
     if (s.status === 'SUBMITTED') return { labelKey: 'events.guestV2.suggestions.status.submitted', class: 'bg-blue-500/20 text-blue-500' };
-    
+
     // DRAFT
     const hasPending = s.participants.some(p => p.status === 'PENDING');
     if (hasPending) {
@@ -326,9 +328,11 @@ export class MusicSuggestionsListComponent implements OnInit, OnDestroy {
     // Create synthetic selection for display so the user sees the card
     this.selectedMusic = {
         id: 0,
-        title: `${suggestion.artist_name} - ${suggestion.song_name}`,
-        thumb: '', 
-        cover_image: '',
+        title: suggestion.song_name,
+        artist: suggestion.artist_name,
+        thumb: suggestion.cover_image,
+        thumb_image: suggestion.cover_image,
+        cover_image: suggestion.cover_image,
         year: ''
     };
 
@@ -364,7 +368,7 @@ export class MusicSuggestionsListComponent implements OnInit, OnDestroy {
 
   confirmDelete() {
     if (!this.suggestionToDelete) return;
-    
+
     const id = this.suggestionToDelete.id_code || this.suggestionToDelete.id;
     this.suggestionService.deleteSuggestion(id).subscribe({
       next: () => {
@@ -439,25 +443,25 @@ export class MusicSuggestionsListComponent implements OnInit, OnDestroy {
 
     // 1. Voz
     if (norm.includes('voz') || norm.includes('vocal') || norm.includes('cantor') || norm.includes('mic')) return 'voz';
-    
+
     // 2. Guitarra
     if (norm.includes('guitarra') || norm.includes('guitar') || norm.includes('violão') || norm.includes('violao') || norm.includes('acoustic')) return 'guitarra';
-    
+
     // 3. Baixo
     if (norm.includes('baixo') || norm.includes('bass')) return 'baixo';
-    
+
     // 4. Teclado
     if (norm.includes('teclado') || norm.includes('piano') || norm.includes('key') || norm.includes('synth') || norm.includes('orgão')) return 'teclado';
-    
+
     // 5. Bateria
     if (norm.includes('bateria') || norm.includes('drum') || norm.includes('batera')) return 'bateria';
-    
+
     // 6. Metais
     if (norm.includes('metais') || norm.includes('horn') || norm.includes('sax') || norm.includes('trompete') || norm.includes('trombone') || norm.includes('flauta') || norm.includes('wind')) return 'metais';
-    
+
     // 7. Percussão
     if (norm.includes('percussão') || norm.includes('percussao') || norm.includes('percussion') || norm.includes('conga') || norm.includes('cajon') || norm.includes('pandeiro')) return 'percussao';
-    
+
     // 8. Cordas
     if (norm.includes('cordas') || norm.includes('string') || norm.includes('violino') || norm.includes('cello') || norm.includes('viola')) return 'cordas';
 
@@ -508,12 +512,12 @@ export class MusicSuggestionsListComponent implements OnInit, OnDestroy {
     this.suggestionService.acceptInvite(suggestionId, userId).subscribe({
         next: () => {
             this.toastService.triggerToast('success', 'Convite aceito', 'Você aceitou o convite para tocar nesta música.');
-            
+
             // Update local state
             const inviteIndex = this.invitesForMe.findIndex(s => s.id === suggestionId);
             if (inviteIndex !== -1) {
                 const suggestion = this.invitesForMe[inviteIndex];
-                
+
                 // Update participant status
                 const participant = suggestion.participants.find(p => String(p.user_id) === userId);
                 if (participant) {
@@ -534,7 +538,7 @@ export class MusicSuggestionsListComponent implements OnInit, OnDestroy {
     this.suggestionService.rejectInvite(suggestionId, userId).subscribe({
         next: () => {
             this.toastService.triggerToast('success', 'Convite recusado', 'Você recusou o convite.');
-            
+
             // Remove from list immediately
             this.invitesForMe = this.invitesForMe.filter(s => s.id !== suggestionId);
         },
@@ -544,7 +548,7 @@ export class MusicSuggestionsListComponent implements OnInit, OnDestroy {
 
   getFilteredFriends(): any[] {
     // This is now handled by the search subscription and local `friends` state
-    return this.friends; 
+    return this.friends;
   }
 
   trackFriend(index: number, f: Friend) { return f?.id; }

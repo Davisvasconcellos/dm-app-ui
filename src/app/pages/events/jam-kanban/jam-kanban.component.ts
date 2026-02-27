@@ -22,14 +22,14 @@ interface Participant {
   [key: string]: any;
 }
 
-interface MusicModalData {
-  song_name: string;
-  artist_name: string;
-  cover_image?: string;
-  catalog_id?: number;
-  slots?: Record<string, number>;
-  participants?: Participant[];
-}
+// interface MusicModalData {
+//   song_name: string;
+//   artist_name: string;
+//   cover_image?: string;
+//   catalog_id?: number;
+//   slots?: Record<string, number>;
+//   participants?: Participant[];
+// }
 
 @Component({
   selector: 'app-jam-kanban',
@@ -62,7 +62,7 @@ export class JamKanbanComponent implements OnInit, OnDestroy {
   suggestionSearchText = '';
   suggestions: MusicSuggestion[] = []; // Raw data from API
   filteredSuggestions: MusicSuggestion[] = []; // Filtered data for UI
-  
+
   openSuggestionsCount = 0;
   closedSuggestionsCount = 0;
 
@@ -227,10 +227,10 @@ export class JamKanbanComponent implements OnInit, OnDestroy {
     });
   }
 
-  loadJamsAndSongs(forceRefresh: boolean = false) {
+  loadJamsAndSongs(forceRefresh = false) {
     if (!this.selectedEventIdCode) return;
     this.isLoading = true;
-    
+
     // 1. If force refresh, clear local persistence cache first
     const cacheKey = `jam_kanban_${this.selectedEventIdCode}_jams`;
     if (forceRefresh) {
@@ -239,7 +239,7 @@ export class JamKanbanComponent implements OnInit, OnDestroy {
 
     // 2. Prepare the observable.
     let jams$ = this.eventService.getEventJams(this.selectedEventIdCode);
-    
+
     // 3. Apply failover only if not forcing refresh
     if (!forceRefresh) {
       jams$ = jams$.pipe(
@@ -469,7 +469,7 @@ export class JamKanbanComponent implements OnInit, OnDestroy {
     const task = event.data as Task;
     const oldStatus = task.status;
     const newStatus = status as SongStatus;
-    
+
     // 1. Determine target index (default to end of column)
     let targetIndex = event.index;
 
@@ -477,7 +477,7 @@ export class JamKanbanComponent implements OnInit, OnDestroy {
     if (oldStatus === newStatus && targetIndex === undefined) return;
 
     // 3. Prepare column tasks for reindexing
-    let columnTasks = this.tasks
+    const columnTasks = this.tasks
       .filter(t => t.status === newStatus)
       .sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
 
@@ -494,33 +494,40 @@ export class JamKanbanComponent implements OnInit, OnDestroy {
     } else {
       // Cross-column: remove from global first to prevent duplicates
       const globalIdx = this.tasks.findIndex(t => t.id === task.id);
-      if (globalIdx > -1) this.tasks.splice(globalIdx, 1);
+      if (globalIdx > -1) {
+          // Instead of splice from global directly (which mutates 'tasks'),
+          // we should consider that 'columnTasks' is a derived array.
+          // BUT 'this.tasks' is the source of truth.
+          // The previous code was splicing this.tasks.
+          this.tasks.splice(globalIdx, 1);
+      }
       task.status = newStatus;
     }
 
-    // 5. Apply insertion
-    const finalIndex = targetIndex !== undefined ? targetIndex : columnTasks.length;
-    columnTasks.splice(finalIndex, 0, task);
+    // 5. Apply insertion to the derived array
+    if (targetIndex === undefined) targetIndex = columnTasks.length;
+    columnTasks.splice(targetIndex, 0, task);
 
     // 6. Local re-indexing (temporary until server reload)
     // Find min index in the target column to keep the sequence base
     const existingIndices = columnTasks
       .filter(t => t.id !== task.id && typeof t.orderIndex === 'number')
       .map(t => t.orderIndex as number);
-    
-    const baseOffset = existingIndices.length > 0 
-      ? Math.min(...existingIndices) 
-      : (task.orderIndex || 1);
+
+    const baseOffset = existingIndices.length > 0
+      ? Math.min(...existingIndices)
+      : 1;
 
     columnTasks.forEach((t, i) => {
-      t.orderIndex = (Number.isFinite(baseOffset) ? baseOffset : 1) + i;
+      t.orderIndex = baseOffset + i;
     });
 
     // 7. Ensure consistency of global tasks array and trigger change detection
     if (oldStatus !== newStatus) {
       this.tasks.push(task);
     }
-    this.tasks = [...this.tasks]; // Trigger Angular change detection
+    // Force refresh
+    this.tasks = [...this.tasks];
 
     // 8. Backend Sync & Forced Refresh (Sequential Execution)
     if (this.selectedEventIdCode && this.selectedJam && task.song) {
@@ -558,6 +565,7 @@ export class JamKanbanComponent implements OnInit, OnDestroy {
   }
 
   handleEditTask(_task: Task) {
+    console.debug('Edit task requested:', _task.id);
     this.triggerToast('info', 'Em breve', 'Edição de música será implementada em breve.');
   }
 
@@ -593,7 +601,11 @@ export class JamKanbanComponent implements OnInit, OnDestroy {
     const eventId = this.selectedEventIdCode;
     const orderedIds = this.tasks.filter(t => t.status === 'open_for_candidates' && t.ready).map(t => t.id);
     if (jam && eventId) {
-      this.eventService.updateSongOrder(eventId, jam.id, 'open_for_candidates', orderedIds).subscribe({ next: () => { }, error: () => { } });
+      this.eventService.updateSongOrder(eventId, jam.id, 'open_for_candidates', orderedIds).subscribe({ next: () => {
+        // Silent success
+      }, error: () => {
+        // Silent error
+      } });
     }
   }
 

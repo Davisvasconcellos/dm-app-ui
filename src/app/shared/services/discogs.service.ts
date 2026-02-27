@@ -11,6 +11,7 @@ export interface DiscogsResult {
   artist: string;
   cover_image: string;
   thumb_image: string;
+  thumb?: string; // Compatibilidade com código legado
   year?: string;
   genre?: string;
   usage_count?: number;

@@ -69,7 +69,7 @@
                                     type="button"
                                     (click)="selectMusic(result)"
                                     class="w-full flex items-center gap-4 p-3 hover:bg-white/5 transition-colors text-left border-b border-white/5 last:border-0">
-                                <img [src]="result.thumb || '/images/default-album.png'" (error)="onAlbumImageError($event)" class="w-12 h-12 rounded bg-[#0a0a0a] object-cover" alt="">
+                                <img [src]="result.thumb || result.thumb_image || '/images/default-album.png'" (error)="onAlbumImageError($event)" class="w-12 h-12 rounded bg-[#0a0a0a] object-cover" alt="">
                                 <div>
                                     <div class="text-white font-medium text-sm line-clamp-1">{{ result.title }}</div>
                                     <div class="text-gray-500 text-xs">{{ result.year || 'Unknown' }}</div>
@@ -81,7 +81,7 @@
                     <!-- Selected Music Card (When music selected) -->
                     <div *ngIf="selectedMusic" class="relative group animate-in fade-in zoom-in-95 duration-200">
                         <div class="bg-[#1a1a1a] border border-purple-500/30 rounded-xl p-4 flex items-center gap-5 shadow-[0_0_30px_rgba(147,51,234,0.1)]">
-                            <img [src]="selectedMusic.cover_image || selectedMusic.thumb || '/images/default-album.png'" 
+                            <img [src]="selectedMusic.cover_image || selectedMusic.thumb || selectedMusic.thumb_image || '/images/default-album.png'" 
                                  (error)="onAlbumImageError($event)"
                                  class="w-20 h-20 rounded-lg shadow-lg object-cover bg-black" 
                                  alt="Album Cover">

@@ -52,7 +52,7 @@ export class MusicSuggestionModalComponent implements OnInit, OnChanges, OnDestr
   isSearchingMusic = false;
 
   // Instrument slots logic
-  instrumentOptions = ['voz', 'violao', 'guitarra', 'baixo', 'bateria', 'teclado', 'percussao', 'sopro', 'outros'];
+  instrumentOptions = ['voz', 'violao', 'guitarra', 'baixo', 'bateria', 'teclado', 'percussao', 'metais', 'cordas', 'outros'];
   instrumentSlots: Record<string, number> = {};
 
   // Add Guest logic
@@ -208,8 +208,10 @@ export class MusicSuggestionModalComponent implements OnInit, OnChanges, OnDestr
     if (suggestion.cover_image) {
       this.selectedMusic = {
         id: 0,
-        title: `${suggestion.artist_name} - ${suggestion.song_name}`,
+        title: suggestion.song_name,
+        artist: suggestion.artist_name,
         thumb: suggestion.cover_image,
+        thumb_image: suggestion.cover_image,
         cover_image: suggestion.cover_image,
         year: ''
       };
@@ -220,6 +222,8 @@ export class MusicSuggestionModalComponent implements OnInit, OnChanges, OnDestr
   selectMusic(music: DiscogsResult) {
     this.selectedMusic = music;
     this.musicResults = [];
+    this.isSearchingMusic = false;
+    this.searchMusicControl.setValue(''); // Limpa a busca
 
     this.form.patchValue({
       song_name: music.title,

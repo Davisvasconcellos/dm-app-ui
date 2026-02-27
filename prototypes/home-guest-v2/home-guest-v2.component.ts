@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, OnDestroy, ApplicationRef, Injector, EnvironmentInjector, createComponent, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, ApplicationRef, Injector, EnvironmentInjector, createComponent } from '@angular/core';
 import { trigger, state, style, transition, animate, stagger, query } from '@angular/animations';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -11,12 +11,11 @@ import { MusicSuggestionService, MusicSuggestion, Participant } from '../music-s
 import { ToastService } from '../../../shared/services/toast.service';
 import { MusicSuggestionsListComponent } from '../music-suggestions-list/music-suggestions-list.component';
 import { ModalComponent } from '../../../shared/components/ui/modal/modal.component';
-import { PlaylistComponent } from '../playlist/playlist.component';
 
 @Component({
   selector: 'app-home-guest-v2',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule, MusicSuggestionsListComponent, ModalComponent, PlaylistComponent],
+  imports: [CommonModule, FormsModule, TranslateModule, MusicSuggestionsListComponent, ModalComponent],
   templateUrl: './home-guest-v2.component.html',
   styleUrl: './home-guest-v2.component.css',
   animations: [
@@ -45,7 +44,7 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
   onStageSongs: ApiSong[] = [];
   playingNowSongs: ApiSong[] = [];
   goToStageSongs: ApiSong[] = [];
-
+  
   // Invites
   invitesForMe: MusicSuggestion[] = [];
   isProcessingInvite: Record<string, boolean> = {};
@@ -85,8 +84,8 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
   enableWatchdog = false;
   useSse = false;
 
-  isLoadingOpen = false;
-  isLoadingStage = false;
+  isLoadingOpen: boolean = false;
+  isLoadingStage: boolean = false;
   showLog = false;
   readyMap: Record<number, boolean> = {};
   decisionsLog: Array<{ songId: number; tipo: string; acao: string; at: number }> = [];
@@ -103,7 +102,7 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
   isSidebarOpen = false;
   isProfileMenuOpen = false;
   currentLang = 'pt-br';
-  languages: { code: 'pt-br' | 'en' | string; label: string; flag: string }[] = [
+  languages: Array<{ code: 'pt-br' | 'en' | string; label: string; flag: string }> = [
     { code: 'pt-br', label: 'Português (Brasil)', flag: 'https://flagcdn.com/w40/br.png' },
     { code: 'en', label: 'English (US)', flag: 'https://flagcdn.com/w40/us.png' }
   ];
@@ -115,24 +114,24 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
   // Auto-advance for Standalone Mode
   autoAdvanceProgress = 0;
   autoAdvanceTimer: any;
-
+  
   // Auto-advance Configuration
   readonly FIRST_SLIDE_DURATION = 20000; // 20 seconds for the first slide
   readonly DEFAULT_SLIDE_DURATION = 10000; // 10 seconds for others
   readonly TIMER_INTERVAL = 100; // 100ms check
 
-  private translate = inject(TranslateService);
-  private eventService = inject(EventService);
-  private route = inject(ActivatedRoute);
-  private authService = inject(AuthService);
-  private router = inject(Router);
-  private appRef = inject(ApplicationRef);
-  private injector = inject(Injector);
-  private envInjector = inject(EnvironmentInjector);
-  private musicSuggestionService = inject(MusicSuggestionService);
-  private toast = inject(ToastService);
-
-  constructor() {
+  constructor(
+    private translate: TranslateService,
+    private eventService: EventService,
+    private route: ActivatedRoute,
+    private authService: AuthService,
+    private router: Router,
+    private appRef: ApplicationRef,
+    private injector: Injector,
+    private envInjector: EnvironmentInjector,
+    private musicSuggestionService: MusicSuggestionService,
+    private toast: ToastService
+  ) {
     this.useSse = false;
     this.currentLang = localStorage.getItem('lang') || 'pt-br';
     this.translate.use(this.currentLang);
@@ -203,6 +202,7 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
 
         this.loadJams();
         this.loadOnStageOnce();
+        this.loadPlaylist();
 
         // Load Suggestions/Invites
         this.musicSuggestionService.loadSuggestions(this.eventIdCode);
@@ -210,7 +210,7 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
           if (this.currentUser?.id_code) {
              this.invitesForMe = suggestions.filter(s => {
               // I am a participant
-              const me = s.participants.find(p =>
+              const me = s.participants.find(p => 
                 (p.user_id_code || String(p.user_id)) === String(this.currentUser?.id_code) ||
                 (p.user_id_code || String(p.user_id)) === String(this.currentUser?.id)
               );
@@ -235,9 +235,7 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
           if (document.hidden) return;
           this.scheduleRefresh();
         });
-      } catch (e) {
-        console.error('Visibility listener error', e);
-      }
+      } catch {}
     });
   }
 
@@ -410,7 +408,7 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
       });
       if (staleIds.length) {
         staleIds.forEach(jid => {
-          try { this.esMap[jid].close(); } catch (e) { console.error('SSE watchdog close error', e); }
+          try { this.esMap[jid].close(); } catch {}
           delete this.esMap[jid];
         });
         this.ensureStreams();
@@ -548,25 +546,25 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
 
     // 1. Voz
     if (norm.includes('voz') || norm.includes('vocal') || norm.includes('cantor') || norm.includes('mic')) return 'voz';
-
+    
     // 2. Guitarra
     if (norm.includes('guitarra') || norm.includes('guitar') || norm.includes('violão') || norm.includes('acoustic')) return 'guitarra';
-
+    
     // 3. Baixo
     if (norm.includes('baixo') || norm.includes('bass')) return 'baixo';
-
+    
     // 4. Teclado
     if (norm.includes('teclado') || norm.includes('piano') || norm.includes('key') || norm.includes('synth') || norm.includes('orgão')) return 'teclado';
-
+    
     // 5. Bateria
     if (norm.includes('bateria') || norm.includes('drum') || norm.includes('batera')) return 'bateria';
-
+    
     // 6. Metais
     if (norm.includes('metais') || norm.includes('horn') || norm.includes('sax') || norm.includes('trompete') || norm.includes('trombone') || norm.includes('flauta') || norm.includes('wind')) return 'metais';
-
+    
     // 7. Percussão
     if (norm.includes('percussão') || norm.includes('percussao') || norm.includes('percussion') || norm.includes('conga') || norm.includes('cajon') || norm.includes('pandeiro')) return 'percussao';
-
+    
     // 8. Cordas
     if (norm.includes('cordas') || norm.includes('string') || norm.includes('violino') || norm.includes('cello') || norm.includes('viola')) return 'cordas';
 
@@ -580,17 +578,14 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
 
   loadPlaylist() {
       // Mock or fetch playlist
-      // Implementation pending or handled by app-playlist component
   }
-
+  
   startAutoAdvance() {
       // Logic for standalone auto advance
-      // Implementation pending
   }
 
   stopAutoAdvance() {
       // Logic for standalone stop
-      // Implementation pending
   }
 
   get selectedSong() {
@@ -615,10 +610,10 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
 
   toggleFullscreen() {
     if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch((e) => { console.error('Request fullscreen error', e); });
+      document.documentElement.requestFullscreen().catch(() => {});
     } else {
       if (document.exitFullscreen) {
-        document.exitFullscreen().catch((e) => { console.error('Exit fullscreen error', e); });
+        document.exitFullscreen().catch(() => {});
       }
     }
   }
@@ -632,7 +627,7 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
 
   getMyInviteInstrument(suggestion: MusicSuggestion): string {
     if (!this.currentUser) return 'outro';
-    const me = suggestion.participants.find(p =>
+    const me = suggestion.participants.find(p => 
       (p.user_id_code || String(p.user_id)) === String(this.currentUser?.id_code) ||
       (p.user_id_code || String(p.user_id)) === String(this.currentUser?.id)
     );
@@ -642,7 +637,7 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
   isAccepted(invite: MusicSuggestion): boolean {
     if (this.recentlyAcceptedInvites.includes(invite.id)) return true;
     if (!this.currentUser) return false;
-    const me = invite.participants.find(p =>
+    const me = invite.participants.find(p => 
       (p.user_id_code || String(p.user_id)) === String(this.currentUser?.id_code) ||
       (p.user_id_code || String(p.user_id)) === String(this.currentUser?.id)
     );

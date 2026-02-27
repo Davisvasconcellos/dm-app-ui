@@ -1,254 +1,448 @@
-<div class="relative w-full h-screen overflow-hidden flex bg-[#050505] font-oswald text-white">
+<div class="relative w-full h-screen overflow-hidden flex flex-col bg-[#050505]">
 
-  <!-- Sidebar (Fila de Espera) -->
-  <aside class="fixed top-0 right-0 h-full bg-[#0a0a0a] border-l border-white/10 z-[60] transition-transform duration-300 w-80 shadow-2xl"
-         [class.translate-x-full]="!isSidebarOpen"
-         [class.translate-x-0]="isSidebarOpen">
-      <div class="flex items-center justify-between p-6 border-b border-white/10 bg-black/50 backdrop-blur-md">
-          <h2 class="text-xl font-black italic uppercase tracking-tighter text-blue-500 flex items-center gap-2">
-              FILA DE ESPERA
-          </h2>
-          <button (click)="isSidebarOpen = false" class="text-white/50 hover:text-white transition-colors">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-          </button>
-      </div>
+  <!-- Main Content Area -->
+  <div class="relative flex-grow flex flex-row overflow-hidden z-20">
+      <main class="relative flex-grow flex flex-col overflow-hidden">
 
-      <div class="h-full overflow-y-auto pb-32 p-4 space-y-4">
-          <!-- User's Queue / Jams -->
-          @if (userQueue.length > 0) {
-              <div class="mb-6">
-                  <h3 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">Minha Escalação</h3>
-                  @for (song of userQueue; track song.id; let i = $index) {
-                      <div class="bg-[#121212] border border-white/5 p-3 rounded-lg flex items-center gap-3">
-                          <div class="w-8 h-8 flex items-center justify-center bg-yellow-500/10 text-yellow-500 font-black italic rounded">
-                              #{{ getDisplayIndex(song, 'queue') }}
-                          </div>
-                          <div class="min-w-0">
-                              <div class="text-sm font-bold truncate">{{ song.title }}</div>
-                              <div class="text-[10px] text-gray-400 uppercase">{{ song.artist }}</div>
-                          </div>
-                      </div>
-                  }
-              </div>
-          }
-
-          <!-- General List -->
-          <div>
-              <h3 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">Próximas</h3>
-              @for (song of goToStageSongs; track song.id; let i = $index) {
-                  <div class="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg transition-colors cursor-pointer group">
-                      <span class="text-white/30 font-bold text-sm group-hover:text-white transition-colors">{{ i + 1 }}</span>
-                      <div class="min-w-0">
-                          <div class="text-sm font-bold truncate text-gray-300 group-hover:text-white">{{ song.title }}</div>
-                          <div class="text-[10px] text-gray-500 uppercase">{{ song.artist }}</div>
-                      </div>
-                  </div>
-              }
-          </div>
-      </div>
-  </aside>
-
-  <!-- Main Content -->
-  <main class="flex-grow flex flex-col relative z-10 transition-all duration-300 w-full h-full">
-
-      <!-- Header / Top Bar -->
-      <header class="absolute top-0 left-0 right-0 p-6 md:p-10 flex justify-between items-start z-20 pointer-events-none">
-          <!-- Top Left: No Palco & Number -->
-          <div class="flex flex-col gap-1 pointer-events-auto">
-              <div class="flex items-center gap-2">
-                  <span class="w-3 h-3 bg-red-600 rounded-full animate-pulse shadow-[0_0_10px_#dc2626]"></span>
-                  <span class="font-black italic uppercase tracking-widest text-red-600 text-lg md:text-xl border border-red-600/30 px-3 py-0.5 rounded-full bg-red-600/10 backdrop-blur-md">
-                      NO PALCO
-                  </span>
-              </div>
-              <div class="text-white/30 font-black text-sm tracking-[0.2em] ml-5">
-                  #{{ currentSong?.queue_position || '01' }}
-              </div>
-          </div>
-
-          <!-- Top Right: Hamburger & Profile -->
-          <div class="flex items-center gap-4 pointer-events-auto">
-              <!-- Profile -->
-              <button (click)="toggleProfileMenu()" class="flex items-center gap-3 group">
-                  <div class="text-right hidden md:block">
-                      <div class="text-xs font-bold uppercase text-white group-hover:text-blue-400 transition-colors">{{ getFirstName(currentUser?.name) || 'Convidado' }}</div>
-                  </div>
-                  <div class="w-10 h-10 rounded-full border-2 border-white/20 overflow-hidden group-hover:border-blue-500 transition-colors">
-                      <img [src]="selfieUrl || currentUser?.avatar_url || '/images/user/default-avatar.jpg'" (error)="onImageError($event)" class="w-full h-full object-cover" [alt]="getFirstName(currentUser?.name) || 'Foto de perfil'">
-                  </div>
-              </button>
-
-              <!-- Hamburger -->
-              <button (click)="isSidebarOpen = !isSidebarOpen" class="p-2 hover:bg-white/10 rounded-full transition-colors">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                  </svg>
-              </button>
-          </div>
-      </header>
-
-      <!-- Center Stage (Current Song) -->
-      <div class="flex-grow flex flex-col items-center justify-center text-center relative px-4 z-10">
-
-          <!-- Arrows -->
-          <button (click)="previous()" class="hidden md:block absolute left-10 top-1/2 -translate-y-1/2 p-4 text-white/20 hover:text-white transition-colors z-20 cursor-pointer" aria-label="Música anterior">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M15 19l-7-7 7-7" />
-              </svg>
-          </button>
-          <button (click)="next()" class="hidden md:block absolute right-10 top-1/2 -translate-y-1/2 p-4 text-white/20 hover:text-white transition-colors z-20 cursor-pointer" aria-label="Próxima música">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 5l7 7-7 7" />
-              </svg>
-          </button>
-
-          @if (currentSong) {
-              <div class="animate-fade-in">
-                  <h1 class="text-5xl md:text-7xl lg:text-9xl font-black italic uppercase tracking-tighter leading-none mb-4 drop-shadow-[0_0_30px_rgba(255,255,255,0.1)]">
-                      {{ currentSong.title }}
+          <!-- DASHBOARD VIEW -->
+          @if (viewMode === 'dashboard') {
+          <div @fadeIn class="w-full h-full flex flex-col bg-[#050505]">
+              <!-- Header -->
+              <header class="flex-none flex justify-between items-center px-4 py-6 md:px-10 md:py-8 border-b border-white/5 bg-[#050505] z-10">
+                <div>
+                  <h1 class="text-white font-oswald font-black italic text-xl md:text-3xl tracking-tighter uppercase leading-none">
+                    JAM <span class="text-blue-600">DASHBOARD</span>
                   </h1>
-                  <div class="flex items-center gap-4 justify-center mb-16">
-                      <div class="h-[2px] w-8 md:w-16 bg-red-600"></div>
-                      <h2 class="text-lg md:text-3xl font-bold uppercase tracking-[0.3em] text-gray-400">
-                          {{ currentSong.artist }}
-                      </h2>
-                      <div class="h-[2px] w-8 md:w-16 bg-red-600"></div>
-                  </div>
+                  <p class="text-gray-500 text-[10px] font-bold tracking-[0.2em] uppercase mt-1">
+                    {{ eventName || 'Carregando...' }}
+                  </p>
+                </div>
 
-                  <!-- Musicians / Avatars -->
-                  <div class="flex flex-wrap justify-center gap-6 md:gap-10">
-                      @for (musician of currentSong.musicians; track $index) {
-                          <div class="relative group">
-                              <!-- Avatar Container (Skewed Rect with White Border) -->
-                              <div class="w-24 h-24 md:w-32 md:h-32 relative transform -skew-x-12 border-[3px] border-white overflow-hidden bg-gray-800 shadow-[0_0_20px_rgba(0,0,0,0.5)] transition-transform group-hover:scale-105 group-hover:shadow-white/20">
-                                  <img [src]="musician.avatar_url || '/images/user/default-avatar.jpg'"
-                                       (error)="onImageError($event)"
-                                       class="w-full h-full object-cover transform skew-x-12 scale-125"
-                                       [alt]="musician.name || 'Músico'">
-                              </div>
+                <div class="relative border-l border-white/10 pl-6">
+                  <button (click)="toggleProfileMenu()" class="flex items-center gap-4 hover:opacity-80 transition-opacity focus:outline-none">
+                    <div class="text-right">
+                      <p class="text-white font-oswald font-bold text-xs uppercase italic">{{ getFirstName(currentUser?.name) || 'Convidado' }}</p>
+                      <p class="text-blue-500 font-black text-[8px] uppercase tracking-widest">{{ 'events.guestV2.dashboard.participant' | translate }}</p>
+                    </div>
+                    <div class="w-10 h-10 rounded-full border-2 border-blue-600 p-0.5 overflow-hidden shadow-[0_0_15px_rgba(37,99,235,0.3)]">
+                      <img [src]="selfieUrl || currentUser?.avatar_url || currentUser?.avatar || 'https://ui-avatars.com/api/?name=Guest&background=random'"
+                           (error)="onImageError($event)"
+                           class="w-full h-full rounded-full object-cover" alt="Profile" />
+                    </div>
+                  </button>
 
-                              <!-- Instrument Badge -->
-                              <div class="absolute -bottom-3 -right-3 bg-red-600 text-white text-[9px] md:text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-lg border border-white/20 z-10 transform -skew-x-12">
-                                  <span class="skew-x-12 inline-block">{{ musician.instrument }}</span>
-                              </div>
+                  <!-- Dropdown Menu -->
+                  @if (isProfileMenuOpen) {
+                  <div class="absolute top-full right-0 mt-4 w-56 bg-[#0a0a0a] border border-white/10 rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.8)] z-50 overflow-hidden backdrop-blur-xl ring-1 ring-white/5">
 
-                              <!-- Name -->
-                              <div class="absolute -bottom-8 left-1/2 -translate-x-1/2 w-full text-center">
-                                  <p class="text-[10px] md:text-xs font-bold uppercase tracking-wider text-white/80 truncate shadow-black drop-shadow-md">
-                                      {{ getFirstName(musician.name) }}
-                                  </p>
-                              </div>
+                    <!-- Language Section -->
+                    <div class="p-4">
+                      <p class="text-gray-500 text-[9px] uppercase tracking-[0.2em] font-bold mb-3 pl-1">Idioma / Language</p>
+                      <div class="space-y-1">
+                        @for (lang of languages; track lang.code) {
+                        <button (click)="changeLanguage(lang.code)"
+                                class="w-full flex items-center gap-3 p-2.5 rounded-xl transition-all group"
+                                [ngClass]="currentLang === lang.code ? 'bg-blue-600/10 border border-blue-500/20' : 'hover:bg-white/5 border border-transparent'">
+
+                          <div class="w-6 h-6 rounded-full overflow-hidden shadow-sm shrink-0 relative">
+                             <img [src]="lang.flag" class="w-full h-full object-cover" alt="">
+                             @if (currentLang === lang.code) {
+                             <div class="absolute inset-0 bg-blue-500/20 ring-1 ring-inset ring-blue-500/30 rounded-full"></div>
+                             }
                           </div>
-                      }
-                  </div>
-              </div>
-          } @else {
-              <div class="text-center opacity-50">
-                  <h2 class="text-4xl font-black italic uppercase text-gray-600">PALCO LIVRE</h2>
-                  <p class="mt-2 tracking-widest text-sm text-gray-500">AGUARDANDO PRÓXIMA MÚSICA</p>
-              </div>
-          }
-      </div>
 
-      <!-- Footer (Next Song) -->
-      <footer class="mt-auto w-full bg-gradient-to-t from-black via-black/90 to-transparent p-6 md:p-10 z-20">
-          @if (nextSong) {
-              <div class="flex items-end justify-between border-t border-white/10 pt-6 max-w-7xl mx-auto">
-                  <div class="flex flex-col">
-                      <p class="text-blue-500 font-bold text-[10px] uppercase tracking-[0.2em] mb-1 flex items-center gap-2">
-                          <span class="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
-                          PRÓXIMA MÚSICA
-                      </p>
-                      <div class="flex flex-col md:flex-row md:items-baseline gap-1 md:gap-3">
-                          <h3 class="text-2xl md:text-4xl font-black italic uppercase tracking-tighter text-white">
-                              {{ nextSong.title }}
-                          </h3>
-                          <span class="text-white/40 font-bold uppercase tracking-wider text-xs md:text-sm">
-                              {{ nextSong.artist }}
+                          <span class="font-oswald text-xs uppercase tracking-wider flex-grow text-left"
+                                [ngClass]="currentLang === lang.code ? 'text-blue-400 font-bold' : 'text-gray-300 group-hover:text-white'">
+                            {{ lang.label }}
                           </span>
+
+                          @if (currentLang === lang.code) {
+                          <div class="w-1.5 h-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_#3b82f6]"></div>
+                          }
+                        </button>
+                        }
                       </div>
+                    </div>
+                  </div>
+                  }
+
+                  <!-- Overlay to close on click outside -->
+                  @if (isProfileMenuOpen) {
+                  <button (click)="isProfileMenuOpen = false" class="fixed inset-0 z-40 bg-transparent cursor-default w-full h-full border-0 p-0" aria-label="Close menu"></button>
+                  }
+                </div>
+              </header>
+
+              <div class="flex-1 overflow-y-auto px-4 py-6 md:px-10 md:py-8 scrollbar-hide pb-32">
+              <div class="max-w-4xl mx-auto space-y-10">
+
+                <!-- 1 - NO PALCO AGORA -->
+                <section class="relative bg-emerald-900/20 rounded-3xl px-2 py-6 md:p-6 border border-emerald-500/30 shadow-[0_0_50px_rgba(16,185,129,0.05)] mb-10">
+                  <div class="flex justify-between items-end mb-6 border-b border-emerald-500/30 pb-2">
+                    <!-- Header Left (Visible only if song exists) -->
+                    <div class="flex items-center gap-3">
+                      @if (currentSong) {
+                      <span class="w-2 h-2 md:w-3 md:h-3 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_15px_#10b981]"></span>
+                      }
+                      @if (!currentSong) {
+                      <span class="w-2 h-2 md:w-3 md:h-3 bg-gray-500 rounded-full opacity-50"></span>
+                      }
+                      <h2 class="text-emerald-500 font-oswald font-black italic text-2xl md:text-3xl uppercase tracking-tighter leading-none">{{ 'events.guestV2.dashboard.onStage' | translate }}</h2>
+                    </div>
+
+                    <!-- Refresh Button (Always Visible) -->
+                    <button (click)="loadJams()"
+                            class="group flex items-center gap-2 px-3 py-1.5 bg-blue-600/10 hover:bg-blue-600/20 border border-blue-500/20 hover:border-blue-500/40 rounded-full transition-all active:scale-95 mb-1">
+                      <svg class="w-3 h-3 text-blue-500 group-hover:rotate-180 transition-transform duration-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                      <span class="text-blue-500 font-bold text-[9px] uppercase tracking-widest">{{ 'events.guestV2.dashboard.refresh' | translate }}</span>
+                    </button>
                   </div>
 
-                  <!-- Mini Avatars for Next -->
-                  <div class="hidden md:flex -space-x-3 opacity-60">
-                      @for (m of nextSong.musicians | slice:0:4; track $index) {
-                          <div class="w-10 h-10 rounded-full border-2 border-black bg-gray-800 overflow-hidden">
-                              <img [src]="m.avatar_url || '/images/user/default-avatar.jpg'" (error)="onImageError($event)" class="w-full h-full object-cover" [alt]="m.name || 'Músico'">
-                          </div>
-                      }
-                      @if ((nextSong.musicians?.length || 0) > 4) {
-                          <div class="w-10 h-10 rounded-full border-2 border-black bg-gray-800 flex items-center justify-center text-[10px] font-bold text-white">
-                              +{{ (nextSong.musicians?.length || 0) - 4 }}
-                          </div>
-                      }
+                  @if (currentSong) {
+                  <div class="bg-[#121212] rounded-xl px-2 py-6 md:p-6 border-l-[6px] border-emerald-500 shadow-2xl relative overflow-hidden">
+                    <div class="relative z-10">
+                      <h3 class="text-white font-oswald font-black italic text-3xl md:text-4xl uppercase tracking-tighter leading-tight">
+                        {{ currentSong.title }}
+                      </h3>
+                      <p class="text-gray-500 font-bold uppercase text-xs tracking-widest mt-1">{{ currentSong.artist }}</p>
+                    </div>
                   </div>
+                  } @else {
+                    <div class="bg-[#121212]/50 rounded-xl px-2 py-6 md:p-6 border-l-[6px] border-emerald-500/30 shadow-none relative overflow-hidden">
+                        <div class="relative z-10 flex flex-col items-center justify-center text-center py-4">
+                            <h3 class="text-emerald-500/50 font-oswald font-bold italic text-xl uppercase tracking-widest">
+                                {{ 'events.guestV2.playlist.stageFree' | translate }}
+                            </h3>
+                            <p class="text-gray-600 text-xs uppercase tracking-widest mt-2">{{ 'events.guestV2.playlist.noMusicPlaying' | translate }}</p>
+                        </div>
+                    </div>
+                  }
+                </section>
+
+                <!-- 2 - MINHA ESCALAÇÃO -->
+                <section class="relative bg-yellow-900/20 rounded-3xl px-2 py-6 md:p-6 border border-yellow-500/30 shadow-[0_0_50px_rgba(234,179,8,0.05)] mb-10">
+                  <h2 class="text-yellow-500 font-oswald font-black italic text-2xl md:text-3xl uppercase tracking-tighter mb-6 border-b border-yellow-500/30 pb-2 pl-5 md:pl-6">{{ 'events.guestV2.dashboard.myJams' | translate }}</h2>
+                  <div class="space-y-4" [@listAnimation]="userQueue.length">
+                    @if (userQueue.length > 0) {
+                      @for (song of userQueue; track song.id; let i = $index) {
+                      <div class="bg-[#121212] rounded-2xl p-3 flex items-center gap-4 border border-white/5 group hover:border-yellow-500/20 transition-all shadow-lg overflow-hidden">
+
+                        <div class="flex items-stretch shrink-0 gap-1.5">
+                          <div class="w-14 h-14 md:w-16 md:h-16 flex items-center justify-center bg-yellow-500 text-black rounded-xl shadow-[inset_0_0_10px_rgba(0,0,0,0.2)]">
+                            <span class="font-oswald font-black italic text-2xl md:text-3xl leading-none">#{{ getDisplayIndex(song, 'queue') }}</span>
+                          </div>
+                          <div class="w-14 h-14 md:w-16 md:h-16 flex items-center justify-center bg-yellow-500/10 border border-yellow-500/30 text-yellow-500 rounded-xl">
+                            <!-- Instrument Icon -->
+                            <ng-container [ngTemplateOutlet]="instrumentIcon" [ngTemplateOutletContext]="{ type: getInstrumentType(song.my_application?.instrument || '') }"></ng-container>
+                          </div>
+                        </div>
+
+                        <div class="flex-grow min-w-0 ml-1">
+                          <div class="flex flex-col">
+                            <h4 class="text-white font-oswald font-black italic text-lg md:text-3xl truncate uppercase leading-none tracking-tighter mb-1.5 group-hover:text-yellow-500 transition-colors">
+                              {{ song.title }}
+                            </h4>
+                            <p class="text-yellow-500 font-oswald font-bold text-[10px] md:text-sm uppercase tracking-[0.15em] italic">
+                              {{ song.artist }}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div class="hidden sm:flex gap-1.5 pr-4 shrink-0">
+                           @for (dot of [1,2,3]; track dot) {
+                           <div class="w-2 h-2 rounded-full" [ngClass]="dot <= 2 ? 'bg-yellow-500/60 shadow-[0_0_8px_rgba(234,179,8,0.3)]' : 'bg-white/5'"></div>
+                           }
+                        </div>
+                      </div>
+                      }
+                    } @else {
+                      <div class="border-2 border-dashed border-white/5 rounded-2xl p-10 text-center">
+                        <p class="text-gray-600 font-oswald uppercase italic tracking-widest text-sm">{{ 'events.guestV2.dashboard.emptyQueueMessage' | translate }}</p>
+                      </div>
+                    }
+                  </div>
+                </section>
+
+                <!-- CONVITES (INVITES) -->
+                @if (invitesForMe.length > 0) {
+                <section class="relative bg-purple-900/20 rounded-3xl px-2 py-6 md:p-6 border border-purple-500/30 shadow-[0_0_50px_rgba(168,85,247,0.05)] mb-10">
+                  <h2 class="text-purple-500 font-oswald font-black italic text-2xl md:text-3xl uppercase tracking-tighter mb-6 border-b border-purple-500/30 pb-2 pl-5 md:pl-6">
+                    {{ 'events.guestV2.invites.title' | translate }} ({{ invitesForMe.length }})
+                  </h2>
+                  <div class="space-y-4">
+                      @for (invite of invitesForMe; track invite.id) {
+                      <div class="bg-[#121212] rounded-2xl p-4 border border-white/5 shadow-lg relative overflow-hidden group">
+                         <!-- Glow effect -->
+                         <div class="absolute -right-10 -top-10 w-32 h-32 bg-purple-500/20 rounded-full blur-3xl group-hover:bg-purple-500/30 transition-all"></div>
+
+                         <div class="relative z-10">
+                             <!-- Header: Badge (aligned with container/icon start) -->
+                             <div class="mb-3 flex items-center gap-2">
+                                <div class="flex items-center gap-1.5 pr-2 py-0.5 rounded-md bg-purple-500/10 border border-purple-500/20">
+                                    <img [src]="getInviter(invite)?.avatar_url || getInviter(invite)?.avatar || '/images/user/default-avatar.jpg'" (error)="onImageError($event)" class="w-4 h-4 rounded-full object-cover border border-purple-500/30" [alt]="getInviter(invite)?.name || 'Avatar'">
+                                    <span class="text-purple-300 text-[10px] font-bold uppercase tracking-wider">
+                                        {{ getFirstName(getInviter(invite)?.name) | titlecase }}
+                                    </span>
+                                </div>
+                             </div>
+
+                             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                               <div class="flex items-start gap-4">
+                                   <!-- Instrument Icon -->
+                                   <div class="w-14 h-14 md:w-16 md:h-16 flex items-center justify-center bg-purple-500/10 border border-purple-500/30 text-purple-400 rounded-xl shrink-0 shadow-[inset_0_0_10px_rgba(168,85,247,0.2)]">
+                                         <ng-container [ngTemplateOutlet]="instrumentIcon" [ngTemplateOutletContext]="{ type: getInstrumentType(getMyInviteInstrument(invite)) }"></ng-container>
+                                    </div>
+
+                                    <!-- Info (No Badge) -->
+                                    <div>
+                                       <h3 class="text-white font-oswald font-black italic text-xl md:text-2xl uppercase tracking-tighter leading-none mb-1">
+                                          {{ invite.song_name }}
+                                       </h3>
+                                       <p class="text-gray-400 font-bold uppercase text-xs tracking-widest">{{ invite.artist_name }}</p>
+                                    </div>
+                                </div>
+
+                                <!-- Actions -->
+                                <div class="flex items-center gap-3 w-full md:w-auto mt-2 md:mt-0 pl-18 md:pl-0">
+                                   @if (!isAccepted(invite)) {
+                                      <button (click)="openRejectModal(invite)" [disabled]="isProcessingInvite[invite.id]" class="flex-1 md:flex-none px-4 py-2.5 rounded-xl border border-white/10 text-gray-400 hover:text-white hover:bg-white/5 text-xs font-bold uppercase tracking-wider transition-all">
+                                        {{ 'events.guestV2.invites.reject' | translate }}
+                                      </button>
+                                      <button (click)="acceptInvite(invite)" [disabled]="isProcessingInvite[invite.id]" class="flex-1 md:flex-none px-6 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold uppercase tracking-wider shadow-[0_0_15px_rgba(147,51,234,0.3)] transition-all flex items-center justify-center gap-2">
+                                         @if (isProcessingInvite[invite.id]) {
+                                         <span class="animate-spin w-3 h-3 border-2 border-white/30 border-t-white rounded-full"></span>
+                                         }
+                                         {{ 'events.guestV2.invites.accept' | translate }}
+                                      </button>
+                                   } @else {
+                                     <div class="flex-1 md:flex-none px-6 py-2.5 rounded-xl bg-green-500/20 border border-green-500/30 text-green-400 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2">
+                                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                                         ACEITO
+                                     </div>
+                                  }
+                                </div>
+                             </div>
+                         </div>
+                      </div>
+                      }
+                   </div>
+                </section>
+                }
+
+<!-- Suggestions moved to dedicated page -->
+
+                <!-- 3 - DISPONÍVEIS -->
+                <section class="relative bg-blue-900/20 rounded-3xl px-2 py-6 md:p-6 border border-blue-500/30 shadow-[0_0_50px_rgba(59,130,246,0.05)]">
+                  <div class="flex justify-between items-end mb-6 border-b border-blue-500/30 pb-2">
+                    <h2 class="text-blue-500 font-oswald font-black italic text-2xl md:text-3xl uppercase tracking-tighter leading-none pl-5 md:pl-6">{{ 'events.guestV2.dashboard.openToJam' | translate }}</h2>
+                  </div>
+                  <div class="grid grid-cols-1 gap-4" [@listAnimation]="plannedSongs.length">
+                    @for (song of plannedSongs; track song.id) {
+                    <div class="bg-[#121212] border border-white/5 rounded-xl overflow-hidden shadow-xl transition-all group relative"
+                         [ngClass]="myStatusMap[song.id] === 'pending' ? 'border-t-4 border-t-yellow-500' : 'border-t-4 border-t-blue-500'">
+
+                      <div class="px-4 py-5 md:p-6">
+                        <div class="flex justify-between items-start mb-4">
+                          <div class="flex-grow min-w-0 pr-4">
+                            <h3 class="text-white font-oswald font-black text-lg md:text-3xl uppercase tracking-tighter leading-none mb-1 group-hover:text-blue-400 transition-colors truncate">
+                              {{ song.title }}
+                            </h3>
+                            <p class="text-gray-400 text-[10px] md:text-xs font-bold uppercase tracking-widest">{{ song.artist }}</p>
+                          </div>
+                        </div>
+
+                        <div class="flex items-end justify-between flex-wrap gap-4">
+                          <div class="flex flex-wrap gap-2 md:gap-3">
+                            @for (bucket of getInstrumentBuckets(song); track bucket.instrument) {
+                            <ng-container>
+                              <button
+                                (click)="toggleRequest(song, bucket)"
+                                class="relative w-12 h-12 md:w-14 md:h-14 flex items-center justify-center border rounded-lg transition-all duration-300"
+                                [ngClass]="isRequested(song.id, bucket.instrument)
+                                  ? 'bg-blue-600/20 border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.3)]'
+                                  : 'bg-white/5 border-white/10 hover:border-white/30'">
+
+                                <div [ngClass]="isRequested(song.id, bucket.instrument) ? 'text-blue-400' : 'text-gray-400'">
+                                  <ng-container [ngTemplateOutlet]="instrumentIcon" [ngTemplateOutletContext]="{ type: getInstrumentType(bucket.instrument) }"></ng-container>
+                                </div>
+
+                                @if (bucket.slots > 0) {
+                                <div class="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full flex items-center justify-center border border-[#121212] transition-colors"
+                                     [ngClass]="isRequested(song.id, bucket.instrument) ? 'bg-blue-600 text-white' : 'bg-gray-600 text-white/90'">
+                                  <span class="text-[10px] font-black leading-none">{{ bucket.remaining }}</span>
+                                </div>
+                                }
+                              </button>
+                            </ng-container>
+                            }
+                          </div>
+
+                          <!-- Button / Status Area -->
+                          <div class="flex flex-col items-end gap-1">
+                            <button class="px-6 md:px-10 py-2.5 rounded-lg text-[11px] font-black uppercase italic tracking-tighter transition-all active:scale-95 shadow-lg"
+                                    (click)="submitSelection(song.id)"
+                                    [disabled]="!selections[song.id] || myStatusMap[song.id] === 'pending' || myStatusMap[song.id] === 'approved' || attempting[song.id]"
+                                    [ngClass]="myStatusMap[song.id] === 'approved' ? 'bg-emerald-600 text-white cursor-not-allowed' :
+                                               myStatusMap[song.id] === 'pending' ? 'bg-yellow-600 text-white cursor-not-allowed' :
+                                               selections[song.id] ? 'bg-blue-600 hover:bg-blue-500 text-white cursor-pointer shadow-blue-600/10' :
+                                               'bg-gray-700 text-gray-400 cursor-not-allowed'">
+
+                               @if (myStatusMap[song.id] === 'approved') {
+                               <span>APROVADO</span>
+                               }
+                               @if (myStatusMap[song.id] === 'pending') {
+                               <span>AGUARDANDO</span>
+                               }
+                               @if (!myStatusMap[song.id] && selections[song.id]) {
+                               <span>
+                                 @if (attempting[song.id]) {
+                                 <ng-container>ENVIANDO...</ng-container>
+                                 }
+                                 @if (!attempting[song.id]) {
+                                 <ng-container>CONFIRMAR</ng-container>
+                                 }
+                               </span>
+                               }
+                               @if (!myStatusMap[song.id] && !selections[song.id]) {
+                               <span>ABERTO</span>
+                               }
+                            </button>
+                          </div>
+                        </div>
+
+                        <div class="mt-5 w-full h-[1px] bg-white/5"></div>
+                      </div>
+                    </div>
+                    }
+                  </div>
+                </section>
               </div>
+              </div>
+          </div>
           }
-      </footer>
 
-  </main>
+          <!-- SUGGESTIONS VIEW -->
+          @if (viewMode === 'suggestions') {
+          <app-music-suggestions-list class="w-full h-full overflow-hidden" [eventId]="eventIdCode"></app-music-suggestions-list>
+          }
 
-  <!-- Overlay for Sidebar (Mobile) -->
-  @if (isSidebarOpen) {
-      <div (click)="isSidebarOpen = false" (keydown.enter)="isSidebarOpen = false" (keydown.space)="isSidebarOpen = false" tabindex="0" role="button" aria-label="Fechar menu" class="fixed inset-0 bg-black/80 z-50 md:hidden backdrop-blur-sm outline-none"></div>
-  }
+          <!-- PLAYLIST VIEW (Now Playing) -->
+          @if (viewMode === 'playlist') {
+          <div class="w-full h-full">
+            <app-playlist [eventIdCode]="eventIdCode" [isEmbedded]="true"></app-playlist>
+          </div>
+          }
 
-  <!-- View Mode Switcher (Bottom Nav for Mobile or Standalone) -->
+      </main>
+  </div>
+
+  <!-- Bottom Nav -->
   @if (!isStandalone) {
-      <nav class="absolute bottom-0 left-0 right-0 h-16 bg-black border-t border-white/10 flex md:hidden z-50">
-          <button (click)="viewMode = 'dashboard'" class="flex-1 flex flex-col items-center justify-center text-white/50 hover:text-white" [class.text-blue-500]="viewMode === 'dashboard'">
-              <span class="material-icons text-xl">home</span>
-              <span class="text-[8px] uppercase tracking-widest mt-1">Palco</span>
-          </button>
-          <button (click)="viewMode = 'suggestions'" class="flex-1 flex flex-col items-center justify-center text-white/50 hover:text-white" [class.text-purple-500]="viewMode === 'suggestions'">
-              <span class="material-icons text-xl">add</span>
-              <span class="text-[8px] uppercase tracking-widest mt-1">Pedir</span>
-          </button>
-          <button (click)="isSidebarOpen = !isSidebarOpen" class="flex-1 flex flex-col items-center justify-center text-white/50 hover:text-white">
-              <span class="material-icons text-xl">list</span>
-              <span class="text-[8px] uppercase tracking-widest mt-1">Fila</span>
-          </button>
-      </nav>
+  <nav class="relative z-[60] h-20 w-full bg-black border-t-2 border-white/10 flex items-stretch shrink-0">
+    <button
+      (click)="viewMode = 'dashboard'"
+      class="flex-1 flex items-center justify-center border-r border-white/5 hover:bg-white/5 transition-colors group"
+      [ngClass]="viewMode === 'dashboard' ? 'bg-blue-600/10' : ''">
+      <div class="flex flex-col items-center">
+        <span class="text-white font-oswald font-black italic text-2xl md:text-3xl leading-none">D</span>
+        <span class="text-blue-500 font-oswald font-bold text-[9px] uppercase tracking-[0.2em] mt-1 opacity-60 group-hover:opacity-100">{{ 'events.guestV2.nav.dashboard' | translate }}</span>
+      </div>
+    </button>
+    <button
+      (click)="viewMode = 'suggestions'"
+      class="flex-1 flex items-center justify-center border-r border-white/5 hover:bg-white/5 transition-colors group"
+      [ngClass]="viewMode === 'suggestions' ? 'bg-purple-600/10' : ''">
+      <div class="flex flex-col items-center">
+        <span class="text-white font-oswald font-black italic text-2xl md:text-3xl leading-none">+</span>
+        <span class="text-purple-500 font-oswald font-bold text-[9px] uppercase tracking-[0.2em] mt-1 opacity-60 group-hover:opacity-100">{{ 'events.guestV2.nav.suggestions' | translate }}</span>
+      </div>
+    </button>
+    <button
+      (click)="viewMode = 'playlist'"
+      class="flex-1 flex items-center justify-center hover:bg-white/5 transition-colors group"
+      [ngClass]="viewMode === 'playlist' ? 'bg-blue-600/10' : ''">
+      <div class="flex flex-col items-center">
+        <span class="text-white font-oswald font-black italic text-2xl md:text-3xl leading-none">P</span>
+        <span class="text-blue-500 font-oswald font-bold text-[9px] uppercase tracking-[0.2em] mt-1 opacity-60 group-hover:opacity-100">{{ 'events.guestV2.nav.playlist' | translate }}</span>
+      </div>
+    </button>
+  </nav>
   }
 
 </div>
 
-<!-- Modals and Templates -->
+<!-- Reject Modal -->
 <app-modal [isOpen]="rejectModalOpen" (close)="closeRejectModal()" className="max-w-md">
     <div class="p-6 text-center">
-        <h3 class="text-white font-oswald font-bold text-xl uppercase mb-2">Recusar Convite?</h3>
-        <div class="flex gap-3 justify-center mt-4">
-            <button (click)="closeRejectModal()" class="px-4 py-2 border border-white/20 rounded hover:bg-white/10 text-sm uppercase">Cancelar</button>
-            <button (click)="confirmReject()" class="px-4 py-2 bg-red-600 rounded hover:bg-red-500 text-white text-sm uppercase font-bold">Recusar</button>
+        <div class="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4 text-red-500">
+            <span class="material-icons text-3xl">warning</span>
+        </div>
+        <h3 class="text-white font-oswald font-bold text-xl uppercase mb-2">Tem certeza?</h3>
+        <p class="text-gray-400 mb-6">Deseja realmente recusar o convite para <strong>{{ inviteToReject?.song_name }}</strong>?</p>
+        <div class="flex gap-3 justify-center">
+            <button (click)="closeRejectModal()" class="px-6 py-2 rounded-xl border border-white/10 text-white hover:bg-white/5 font-bold uppercase text-sm">
+                Cancelar
+            </button>
+            <button (click)="confirmReject()" class="px-6 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold uppercase text-sm shadow-lg shadow-red-900/20">
+                Recusar
+            </button>
         </div>
     </div>
 </app-modal>
 
-<!-- Suggestions View (Overlay or Separate) -->
-@if (viewMode === 'suggestions') {
-    <div class="fixed inset-0 z-40 bg-[#050505] overflow-y-auto pb-20">
-        <div class="p-4">
-            <button (click)="viewMode = 'dashboard'" class="mb-4 flex items-center gap-2 text-white/50 hover:text-white">
-                <span class="material-icons">arrow_back</span> Voltar
-            </button>
-            <app-music-suggestions-list [eventId]="eventIdCode"></app-music-suggestions-list>
-        </div>
-    </div>
-}
-
-<!-- Instrument Icon Template (Reused) -->
+<!-- Instrument Icon Template -->
 <ng-template #instrumentIcon let-type="type">
-    @switch (type) {
-        @case ('voz') {
-             <svg xmlns="http://www.w3.org/2000/svg" class="w-full h-full" viewBox="0 0 24 24" fill="currentColor"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
-        }
-        @case ('guitarra') {
-             <svg xmlns="http://www.w3.org/2000/svg" class="w-full h-full" viewBox="0 0 24 24" fill="currentColor"><path d="M20 5l-8.5 15.5L4 12.5V3c0-1.1.9-2 2-2h1c1.1 0 2 .9 2 2v2.5l2 3.5 2-3.5V3c0-1.1.9-2 2-2h1c1.1 0 2 .9 2 2v2l2-3.5 2 3.5V5z"/></svg>
-        }
-        @default {
-             <svg xmlns="http://www.w3.org/2000/svg" class="w-full h-full" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
-        }
+  <div class="flex flex-col items-center justify-center">
+  @switch (type) {
+    <!-- 1. Voz -->
+    @case ('voz') {
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+      <path d="M19 10v1a7 7 0 0 1-14 0v-1"/>
+      <line x1="12" y1="19" x2="12" y2="22"/>
+    </svg>
     }
+    <!-- 2. Guitarra -->
+    @case ('guitarra') {
+    <svg width="24" height="24" viewBox="0 0 313.926 313.926" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+      <path d="M64.647,210.666c-2.733-2.732-7.166-2.733-9.899-0.001c-2.734,2.734-2.734,7.166-0.001,9.899l38.282,38.283 c1.367,1.367,3.158,2.051,4.95,2.051c1.791,0,3.583-0.684,4.949-2.05c2.734-2.734,2.734-7.166,0.001-9.899L64.647,210.666z"/>
+      <path d="M103.849,191.187c-2.732-2.733-7.165-2.733-9.899-0.001c-2.734,2.734-2.734,7.166-0.001,9.899l18.561,18.562 c1.367,1.367,3.158,2.051,4.95,2.051c1.791,0,3.583-0.684,4.949-2.05c2.734-2.734,2.734-7.166,0.001-9.899L103.849,191.187z"/>
+      <path d="M312.64,22.521c-1.567-6.819-3.348-11.263-5.288-13.201c-2.568-2.569-5.753-3.984-8.967-3.984 c-1.64,0-3.231,0.357-4.729,1.06c-1.563,0.732-3.252,1.555-5.027,2.442l-6.547-6.548c-2.732-2.732-7.165-2.733-9.899-0.001 c-2.734,2.733-2.734,7.166-0.001,9.899l3.441,3.441c-3.056,1.646-6.136,3.333-9.121,4.987l-3.877-3.878 c-2.734-2.733-7.166-2.733-9.9,0c-2.733,2.734-2.733,7.166,0,9.9l1.101,1.101c-5.987,3.407-10.185,5.854-10.656,6.13 c-0.52,0.304-0.997,0.672-1.423,1.098c-3.324,3.326-4.343,8.109-3.093,12.412l-85.52,85.52c-0.584-0.281-1.162-0.556-1.728-0.822 c-3.704-1.747-6.903-3.256-9.918-6.271c-2.689-2.689,4.236-13.904,7.957-19.93c6.492-10.513,13.205-21.384,5.478-29.111 c-1.462-1.462-4.078-3.205-8.237-3.205c-10.996,0-26.237,12.858-29.421,16.042c-12.234,12.234-17.166,21.781-21.937,31.014 c-4.199,8.128-8.166,15.806-17.563,25.203c-7.012,7.012-16.218,10.502-25.965,14.198c-11.222,4.255-22.825,8.654-32.828,18.656 c-43.276,43.277-1.157,85.398,14.698,101.255c15.718,15.717,36.824,33.759,60.724,33.758c14.246-0.001,27.883-6.414,40.531-19.063 c10.001-10.002,14.401-21.605,18.656-32.827c3.695-9.747,7.186-18.953,14.197-25.964c6.785-6.786,12.096-9.278,18.244-12.164 c6.388-2.998,13.628-6.396,22.087-14.854c20.867-20.868,19.424-31.071,14.538-35.957c-2.621-2.621-6.113-3.949-10.379-3.949 c-4.824,0-10.106,1.698-15.7,3.497c-5.554,1.785-11.298,3.633-16.074,3.633c-3.153-0.001-5.349-0.789-7.115-2.557 c-1.195-1.195-2.021-2.198-2.581-3.119l95.411-95.411c1.162,0.339,2.375,0.521,3.614,0.521c3.342,0,6.47-1.286,8.809-3.623 l32.636-32.637C314.314,36.163,314.7,31.483,312.64,22.521z M247.407,58.425l7.763,7.764l-84.21,84.21 c-0.879-2.973-2.678-6.174-6.015-9.51l-0.001-0.001L247.407,58.425z M180.493,190.039 C180.494,190.039,180.493,190.039,180.493,190.039c6.972,0,14.085-2.287,20.36-4.306c3.612-1.161,7.328-2.356,9.985-2.716 c-1.885,3.648-6.551,9.818-12.63,15.897c-6.726,6.726-12.014,9.207-18.136,12.08c-6.411,3.01-13.678,6.42-22.196,14.938 c-9.137,9.138-13.331,20.201-17.388,30.9c-3.903,10.293-7.589,20.016-11.492,29.352 c-4.787,11.45-8.841,22.843-12.894,33.564c-4.277,11.856-10.47,22.651-19.008,31.224c-7.297,7.315-16.493,12.935-27.102,15.373 c-15.544,3.533-32.816,5.056-49.121,8.999c-16.331,3.91-31.062,9.95-42.32,21.224c-1.488,1.488-2.917,3.062-4.303,4.764 c-7.647,9.384-13.131,19.137-16.219,29.428c-3.073,10.309-3.86,21.232-1.652,33.603c4.354,24.629,21.506,55.58,58.788,92.81 c27.906,27.923,52.337,44.655,73.151,53.005c20.883,8.332,37.837,8.692,53.27,4.14c10.283-3.097,20.035-8.571,29.42-16.219 c1.693-1.378,3.268-2.807,4.748-4.286c11.282-11.266,17.322-26.016,21.232-42.346c4.015-16.297,5.474-33.578,9.008-49.121 c2.429-10.6,8.058-19.796,15.382-27.093c8.563-8.546,19.376-14.749,31.215-19.017c10.822-3.807,23.337-9.847,30.139-16.801 c8.7-8.718,13.002-20.01,13.011-31.414c-0.009-11.403-4.303-22.696-13.011-31.404l-7.674-7.665L207.882,304.111z"/>
+    </svg>
+    }
+    <!-- 7. Percussão -->
+    @case ('percussao') {
+    <svg width="24" height="24" viewBox="0 0 512 512" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+      <path d="M213.187,137.288c-0.192-0.946-0.473-1.877-0.842-2.763c-0.369-0.901-0.828-1.759-1.36-2.557 c-0.532-0.813-1.153-1.566-1.832-2.246c-3.429-3.428-8.542-4.995-13.345-4.034c-0.946,0.192-1.862,0.473-2.763,0.842 c-0.887,0.369-1.744,0.828-2.542,1.36c-0.813,0.532-1.566,1.153-2.246,1.832c-2.763,2.749-4.33,6.561-4.33,10.448 c0,0.961,0.089,1.936,0.281,2.896c0.192,0.946,0.473,1.877,0.842,2.763c0.369,0.887,0.828,1.744,1.36,2.542 c0.547,0.813,1.153,1.566,1.847,2.246c0.68,0.695,1.433,1.3,2.246,1.847c0.798,0.532,1.655,0.99,2.542,1.36 c0.901,0.369,1.818,0.65,2.763,0.842c0.961,0.192,1.936,0.281,2.896,0.281c3.887,0,7.699-1.566,10.448-4.33 c0.68-0.68,1.3-1.433,1.832-2.246c0.532-0.798,0.99-1.655,1.36-2.542c0.369-0.887,0.65-1.818,0.842-2.763 c0.192-0.961,0.296-1.936,0.296-2.896S213.38,138.234,213.187,137.288z"></path> <path d="M510.12,89.069c0-0.001,0-0.004,0-0.006c-6.576-56.746-28.297-77.478-30.753-79.656c-2.703-2.397-6.19-3.721-9.805-3.721 H283.921c-3.613,0-7.102,1.324-9.805,3.721c-1.493,1.324-10.111,9.533-18.116,28.511c-8.005-18.978-16.624-27.187-18.116-28.511 c-2.703-2.397-6.19-3.721-9.805-3.721H42.438c-3.613,0-7.102,1.324-9.805,3.721C30.177,11.585,8.457,32.316,1.881,89.06 c0,0.001,0,0.001,0,0.003C0.633,99.83,0,111.382,0,123.397c0,68.654,35.64,140.808,36.001,141.505 c6.819,13.213,20.306,21.422,35.201,21.422H199.32c14.893,0,28.38-8.208,35.198-21.419c0.098-0.189,2.811-5.678,6.705-14.938 v95.101L129.5,482.202c-5.155,6.328-4.204,15.637,2.124,20.791c6.325,5.155,15.635,4.204,20.791-2.124l88.808-109.008v99.673 c0,8.162,6.616,14.778,14.778,14.778c8.16,0,14.778-6.616,14.778-14.778v-99.673l88.808,109.008 c2.922,3.585,7.175,5.444,11.466,5.444c3.282,0,6.584-1.088,9.326-3.322c6.326-5.155,7.278-14.465,2.124-20.791L270.78,345.067 v-95.11c3.894,9.263,6.607,14.753,6.705,14.943c6.819,13.213,20.306,21.422,35.2,21.422h128.118 c14.893,0,28.38-8.208,35.197-21.418C476.358,264.208,512,192.088,512,123.394C512,111.394,511.367,99.845,510.12,89.069z M49.359,35.242h171.799c4.023,5.797,11.03,18.428,15.549,18.428h242.417c4.52,0,11.526-12.632,15.55-18.428h13.567 c4.023,5.797,11.03,18.428,15.549,18.428h171.8c6.901,0,12.55-5.637,12.55-12.537c0-107.561-55.986-220.567-56.551-221.661 c-6.819-13.212-20.305-21.421-35.199-21.421h-21.57c-14.893,0-28.38,8.209-35.199,21.421c-0.564,1.094-2.815,5.632-6.708,14.839 V169.64l64.298,78.924c5.155,6.328,4.204,15.637-2.124,20.791c-6.327,5.156-15.635,4.204-20.791-2.124l-88.808-109.008V58.551 c0-8.162-6.616-14.778-14.778-14.778c-8.16,0-14.778,6.616-14.778,14.778v99.673l-88.808-109.008 c-2.922-3.586-7.175-5.444-11.466-5.444c-3.282,0-6.584,1.088-9.326,3.322c-6.326,5.155-7.278,14.465-2.124,20.791l64.298,78.924 v-65.731c-3.894-9.207-6.145-13.746-6.708-14.839c-6.819-13.212-20.306-21.421-35.199-21.421H204.62 c-14.893,0-28.38,8.209-35.199,21.421C168.855,167.034,112.87,280.04,112.87,387.601c0,6.9,5.649,12.537,12.55,12.537h171.799 c4.52,0,11.526-12.632,15.55-18.428H326.335z"></path>
+    </svg>
+    }
+    <!-- 8. Cordas -->
+    @case ('cordas') {
+    <svg width="24" height="24" viewBox="0 0 512 512" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+      <g>
+        <path d="M207.882,304.111c18.384,18.392,48.197,18.392,66.589,0c18.384-18.384,18.384-48.196,0-66.581 c-18.392-18.392-48.206-18.392-66.589,0C189.489,255.915,189.489,285.728,207.882,304.111z"></path>
+        <path d="M364.346,218.42l-18.136,19.034l7.674,7.665c8.708,8.708,13.002,20.001,13.011,31.404 c-0.009,11.404-4.312,22.696-13.011,31.414c-6.802,6.954-19.317,12.994-30.139,16.801c-11.839,4.268-22.652,10.471-31.215,19.017 c-7.324,7.297-12.953,16.493-15.382,27.093c-3.533,15.544-5.056,32.825-9.008,49.121c-3.91,16.331-9.95,31.08-21.232,42.346 c-1.48,1.48-3.055,2.908-4.748,4.286c-9.384,7.648-19.137,13.122-29.42,16.219c-15.433,4.552-32.388,4.192-53.27-4.14 c-20.814-8.35-45.245-25.082-73.151-53.005c-37.281-37.23-54.433-68.181-58.788-92.81c-2.207-12.371-1.42-23.294,1.652-33.603 c3.088-10.291,8.572-20.044,16.219-29.428c1.386-1.702,2.815-3.276,4.303-4.764c11.258-11.275,25.989-17.315,42.32-21.224 c16.305-3.943,33.577-5.466,49.121-8.999c10.6-2.438,19.805-8.058,27.102-15.373c8.538-8.572,14.731-19.368,19.008-31.224 c3.815-10.831,9.83-23.338,16.793-30.147c8.708-8.7,20.001-13.003,31.412-13.012c11.412,0.009,22.696,4.303,31.404,13.012 l7.682,7.682l19.026-18.136l-8.127-8.127c-27.615-27.615-72.364-27.615-99.978,0c-11.831,11.977-18.392,27.434-22.944,39.822 c-3.216,8.974-7.734,16.433-12.866,21.54c-4.414,4.406-9.119,7.118-14.432,8.359c-12.789,2.993-30.668,4.61-49.318,9.051 c-18.615,4.465-38.598,12.01-54.792,28.196c-2.105,2.104-4.141,4.346-6.091,6.75c-9.377,11.506-16.776,24.304-21.02,38.488 c-6.441,21.266-5.337,45.305,4.928,70.61c10.249,25.382,29.232,52.338,58.805,81.92c39.42,39.377,74.28,60.164,106.746,66.076 c16.185,2.926,31.635,1.916,45.793-2.344c14.175-4.243,26.973-11.635,38.496-21.027c2.387-1.933,4.62-3.969,6.715-6.066 c16.186-16.202,23.748-36.178,28.206-54.793c4.44-18.658,6.065-36.546,9.068-49.352c1.24-5.295,3.944-9.983,8.35-14.414 c5.115-5.132,12.575-9.649,21.532-12.874c12.413-4.543,27.845-11.121,39.822-22.944c27.614-27.623,27.614-72.363,0-99.978 L364.346,218.42z"></path>
+        <polygon points="268.021,208.308 303.694,243.972 426.547,115.071 396.923,85.437 "></polygon>
+        <polygon points="454.838,15.349 403.732,66.446 445.547,108.261 496.652,57.155 "></polygon>
+        <polygon points="446.959,10.199 436.753,0.002 420.114,16.64 430.312,26.838 "></polygon>
+        <polygon points="415.238,41.92 405.032,31.722 388.393,48.361 398.591,58.558 "></polygon>
+        <polygon points="501.794,65.043 485.155,81.682 495.352,91.879 512,75.24 "></polygon>
+        <rect x="459.642" y="98.416" transform="matrix(-0.7071 -0.7071 0.7071 -0.7071 719.0573 518.2056)" width="14.422" height="23.531"></rect>
+        <polygon points="115.5,343.84 168.154,396.493 182.089,382.558 129.444,329.904 "></polygon>
+      </g>
+    </svg>
+    }
+    <!-- 9. Outro (Default) -->
+    @default {
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
+    </svg>
+    }
+  }
+  <span class="text-[7px] uppercase font-bold tracking-wider mt-0.5">{{ type }}</span>
+  </div>
 </ng-template>
+
+<!-- Suggestion modal moved to app-music-suggestions-list -->

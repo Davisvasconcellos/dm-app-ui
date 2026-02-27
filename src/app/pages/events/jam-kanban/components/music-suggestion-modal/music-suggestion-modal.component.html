@@ -1,14 +1,17 @@
 <ng-template #instrumentIcon let-type="type" let-showLabel="showLabel">
   <div class="flex flex-col items-center justify-center">
-  <ng-container [ngSwitch]="type">
-    <!-- 1. Voz -->
-    <svg *ngSwitchCase="'voz'" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    @switch (type) {
+      @case ('voz') {
+        <!-- 1. Voz -->
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
       <path d="M19 10v1a7 7 0 0 1-14 0v-1"/>
       <line x1="12" y1="19" x2="12" y2="22"/>
-    </svg>
-    <!-- 2. Guitarra -->
-    <svg *ngSwitchCase="'guitarra'" width="24" height="24" viewBox="0 0 313.926 313.926" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        </svg>
+      }
+      @case ('guitarra') {
+        <!-- 2. Guitarra -->
+        <svg width="24" height="24" viewBox="0 0 313.926 313.926" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
       <path d="M64.647,210.666c-2.733-2.732-7.166-2.733-9.899-0.001c-2.734,2.734-2.734,7.166-0.001,9.899l38.282,38.283 c1.367,1.367,3.158,2.051,4.95,2.051c1.791,0,3.583-0.684,4.949-2.05c2.734-2.734,2.734-7.166-0.001-9.899L64.647,210.666z"/>
       <path d="M103.849,191.187c-2.732-2.733-7.165-2.733-9.899-0.001c-2.734,2.734-2.734,7.166-0.001,9.899l18.561,18.562 c1.367,1.367,3.158,2.051,4.95,2.051c1.791,0,3.583-0.684,4.949-2.05c2.734-2.734,2.734-7.166-0.001-9.899L103.849,191.187z"/>
       <path d="M312.64,22.521c-1.567-6.819-3.348-11.263-5.288-13.201c-2.568-2.569-5.753-3.984-8.967-3.984 c-1.64,0-3.231,0.357-4.729,1.06c-1.563,0.732-3.252,1.555-5.027,2.442l-6.547-6.548c-2.732-2.732-7.165-2.733-9.899-0.001 c-2.734,2.733-2.734,7.166-0.001,9.899l3.441,3.441c-3.056,1.646-6.136,3.333-9.121,4.987l-3.877-3.878 c-2.734-2.733-7.166-2.733-9.9,0c-2.733,2.734-2.733,7.166,0,9.9l1.101,1.101c-5.987,3.407-10.185,5.854-10.656,6.13 c-0.52,0.304-0.997,0.672-1.423,1.098c-3.324,3.326-4.343,8.109-3.093,12.412l-85.52,85.52c-0.584-0.281-1.162-0.556-1.728-0.822 c-3.704-1.747-6.903-3.256-9.918-6.271c-2.689-2.689,4.236-13.904,7.957-19.93c6.492-10.513,13.205-21.384,5.478-29.111 c-1.462-1.462-4.078-3.205-8.237-3.205c-10.996,0-26.237,12.858-29.421,16.042c-12.234,12.234-17.166,21.781-21.937,31.014 c-4.199,8.128-8.166,15.806-17.563,25.203c-7.012,7.012-16.218,10.502-25.965,14.198c-11.222,4.255-22.825,8.654-32.828,18.656 c-43.276,43.277-1.157,85.398,14.698,101.255c15.718,15.717,36.824,33.759,60.724,33.758c14.246-0.001,27.883-6.414,40.531-19.063 c10.001-10.002,14.401-21.605,18.656-32.827c3.695-9.747,7.186-18.953,14.197-25.964c6.785-6.786,12.096-9.278,18.244-12.164 c6.388-2.998,13.628-6.396,22.087-14.854c20.867-20.868,19.424-31.071,14.538-35.957c-2.621-2.621-6.113-3.949-10.379-3.949 c-4.824,0-10.106,1.698-15.7,3.497c-5.554,1.785-11.298,3.633-16.074,3.633c-3.153-0.001-5.349-0.789-7.115-2.557 c-1.195-1.195-2.021-2.198-2.581-3.119l95.411-95.411c1.162,0.339,2.375,0.521,3.614,0.521c3.342,0,6.47-1.286,8.809-3.623 l32.636-32.637C314.314,36.163,314.7,31.483,312.64,22.521z M247.407,58.425l7.763,7.764l-84.21,84.21 c-0.879-2.973-2.678-6.174-6.015-9.51l-0.001-0.001L247.407,58.425z M180.493,190.039 C180.494,190.039,180.493,190.039,180.493,190.039c6.972,0,14.085-2.287,20.36-4.306c3.612-1.161,7.328-2.356,9.985-2.716 c-1.885,3.648-6.551,9.818-12.63,15.897c-6.726,6.726-12.014,9.207-18.136,12.08c-6.411,3.01-13.678,6.42-22.196,14.938 c-9.137,9.138-13.331,20.201-17.388,30.9c-3.903,10.293-7.589,20.016-11.02,28.736l-9.137,23.219l23.218-9.137 c8.721-3.433,18.444-7.117,28.736-11.02c10.701-4.057,21.764-8.251,30.9-17.388c8.518-8.518,11.928-15.785,14.938-22.196 c2.873-6.122,5.354-11.41,12.08-18.136C200.221,196.59,206.391,191.924,180.493,190.039z"></path>
@@ -33,17 +36,23 @@
     <!-- 5. Bateria -->
     <svg *ngSwitchCase="'bateria'" width="28" height="28" viewBox="0 0 314.001 314.001" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
       <path d="M307.65,273.522c-0.025-0.025-0.052-0.051-0.077-0.076L186.966,156.559l92.99-95.953c8.021-0.828,16.095-4.843,22.55-11.297 c6.069-6.068,10.027-13.63,11.145-21.292c1.211-8.301-1.112-16.075-6.369-21.323C302.969,2.377,296.93,0,290.276,0 c-9,0-18.338,4.177-25.62,11.459c-6.506,6.507-10.518,14.618-11.308,22.684L157,127.519L60.653,34.144 c-0.79-8.066-4.802-16.178-11.308-22.685c-6.067-6.066-13.627-10.023-21.29-11.14c-8.307-1.207-16.08,1.113-21.33,6.368 C1.463,11.941-0.861,19.716,0.35,28.017c1.118,7.662,5.075,15.223,11.144,21.292c6.473,6.472,14.53,10.477,22.553,11.299 l92.989,95.951L6.428,273.445c-0.025,0.025-0.052,0.051-0.077,0.076c-4.36,4.359-6.596,10.268-6.294,16.636 c0.29,6.117,2.913,11.95,7.384,16.422C12.153,311.295,18.547,314,24.982,314c0.001,0,0.001,0,0.002,0 c5.935,0,11.45-2.243,15.524-6.317c0.026-0.026,0.052-0.052,0.077-0.079l116.416-120.125l116.414,120.125 c0.025,0.026,0.051,0.053,0.076,0.079c4.099,4.099,9.566,6.318,15.499,6.318c0.378,0,0.759-0.009,1.141-0.027 c6.12-0.291,11.954-2.917,16.426-7.392c4.474-4.475,7.098-10.308,7.387-16.425C314.246,283.789,312.01,277.881,307.65,273.522z M43.394,50.136c-1.257-2.073-3.518-3.372-5.986-3.372c-0.102,0.001-0.197,0.003-0.296,0.002c-5.24,0-11.101-2.739-15.719-7.357 c-3.895-3.894-6.515-8.782-7.191-13.412c-0.332-2.279-0.461-6.532,2.419-9.407c2.875-2.877,7.129-2.748,9.413-2.416 c4.631,0.675,9.519,3.294,13.409,7.186c4.678,4.677,7.426,10.629,7.352,15.922c-0.032,2.264,1.051,4.343,2.815,5.658l97.33,94.328 l-9.852,9.549L43.394,50.136z M30.577,297.815C28.75,299.62,26.529,300,24.983,300c-2.749,0-5.532-1.209-7.64-3.317 c-2.005-2.006-3.178-4.558-3.302-7.188c-0.112-2.363,0.66-4.507,2.177-6.041L264.177,43.144c1.901-1.309,3.061-3.497,3.028-5.863 c-0.074-5.292,2.673-11.245,7.351-15.922C279.163,16.751,285.04,14,290.276,14c2.06,0,4.965,0.449,7.108,2.595 c2.874,2.87,2.746,7.122,2.413,9.401c-0.675,4.63-3.296,9.518-7.189,13.412c-4.607,4.607-10.486,7.357-15.727,7.357l-0.194-0.001 c-0.031-0.001-0.063-0.001-0.095-0.001c-2.47,0-4.732,1.3-5.908,1.3s-3.439-1.3-5.908-1.3c-0.032,0-0.063,0-0.095,0.001l-0.195,0.001 c-5.241,0-11.12-2.75-15.727-7.357c-3.893-3.894-6.514-8.782-7.189-13.412C287.53,19.48,287.402,15.227,290.276,12.352z"/>
-    </svg>
-    <!-- 6. Metais -->
-    <svg *ngSwitchCase="'metais'" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        </svg>
+      }
+      @case ('metais') {
+        <!-- 6. Metais -->
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M4 8h4l8-4v16l-8-4H4V8z M16 8h2v8h-2z"/>
-    </svg>
-    <!-- 7. Percussão -->
-    <svg *ngSwitchCase="'percussao'" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        </svg>
+      }
+      @case ('percussao') {
+        <!-- 7. Percussão -->
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M4 4h6v16H4z M14 4h6v16h-6z"/>
-    </svg>
-    <!-- 8. Cordas -->
-    <svg *ngSwitchCase="'cordas'" width="28" height="28" viewBox="0 0 512 512" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        </svg>
+      }
+      @case ('cordas') {
+        <!-- 8. Cordas -->
+        <svg width="28" height="28" viewBox="0 0 512 512" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
       <g>
         <path d="M207.882,304.111c18.384,18.392,48.197,18.392,66.589,0c18.384-18.384,18.384-48.196,0-66.581 c-18.392-18.392-48.206-18.392-66.589,0C189.489,255.915,189.489,285.728,207.882,304.111z"></path>
         <path d="M364.346,218.42l-18.136,19.034l7.674,7.665c8.708,8.708,13.002,20.001,13.011,31.404 c-0.009,11.404-4.312,22.696-13.011,31.414c-6.802,6.954-19.317,12.994-30.139,16.801c-11.839,4.268-22.652,10.471-31.215,19.017 c-7.324,7.297-12.953,16.493-15.382,27.093c-3.533,15.544-5.056,32.825-9.008,49.121c-3.91,16.331-9.95,31.08-21.232,42.346 c-1.48,1.48-3.055,2.908-4.748,4.286c-9.384,7.648-19.137,13.122-29.42,16.219c-15.433,4.552-32.388,4.192-53.27-4.14 c-20.814-8.35-45.245-25.082-73.151-53.005c-37.281-37.23-54.433-68.181-58.788-92.81c-2.207-12.371-1.42-23.294,1.652-33.603 c3.088-10.291,8.572-20.044,16.219-29.428c1.386-1.702,2.815-3.276,4.303-4.764c11.258-11.275,25.989-17.315,42.32-21.224 c16.305-3.943,33.577-5.466,49.121-8.999c10.6-2.438,19.805-8.058,27.102-15.373c8.538-8.572,14.731-19.368,19.008-31.224 c3.815-10.831,9.83-23.338,16.793-30.147c8.708-8.7,20.001-13.003,31.412-13.012c11.412,0.009,22.696,4.303,31.404,13.012 l7.682,7.682l19.026-18.136l-8.127-8.127c-27.615-27.615-72.364-27.615-99.978,0c-11.831,11.977-18.392,27.434-22.944,39.822 c-3.216,8.974-7.734,16.433-12.866,21.54c-4.414,4.406-9.119,7.118-14.432,8.359c-12.789,2.993-30.668,4.61-49.318,9.051 c-18.615,4.465-38.598,12.01-54.792,28.196c-2.105,2.104-4.141,4.346-6.091,6.75c-9.377,11.506-16.776,24.304-21.02,38.488 c-6.441,21.266-5.337,45.305,4.928,70.61c10.249,25.382,29.232,52.338,58.805,81.92c39.42,39.377,74.28,60.164,106.746,66.076 c16.185,2.926,31.635,1.916,45.793-2.344c14.175-4.243,26.973-11.635,38.496-21.027c2.387-1.933,4.62-3.969,6.715-6.066 c16.186-16.202,23.748-36.178,28.206-54.793c4.44-18.658,6.065-36.546,9.068-49.352c1.24-5.295,3.944-9.983,8.35-14.414 c5.115-5.132,12.575-9.649,21.532-12.874c12.413-4.543,27.845-11.121,39.822-22.944c27.614-27.623,27.614-72.363,0-99.978 L364.346,218.42z"></path>
@@ -59,21 +68,24 @@
     <!-- 9. Outro (Default) -->
     <svg *ngSwitchDefault width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
-    </svg>
-  </ng-container>
-  <span *ngIf="showLabel" class="text-[10px] uppercase font-bold tracking-widest mt-1">{{ type }}</span>
+        </svg>
+      }
+    }
+    @if (showLabel) {
+      <span class="text-[10px] uppercase font-bold tracking-widest mt-1">{{ type }}</span>
+    }
   </div>
 </ng-template>
 
 <app-modal [isOpen]="isOpen" (close)="close.emit()" className="max-w-[500px] mx-auto !p-0 overflow-hidden">
-  
+
   <!-- Header Customizado -->
   <div class="px-6 py-5 border-b border-white/5 flex items-center justify-between bg-[#1a1a1a]">
       <h2 class="text-lg font-bold text-white tracking-wide">
           {{ suggestion ? 'Aprovar Sugestão' : 'Nova Música' }}
       </h2>
-      <!-- Close button is handled by app-modal usually, but if we want custom header we might need to handle it or let app-modal do it. 
-           app-modal has a close button top-right absolute. 
+      <!-- Close button is handled by app-modal usually, but if we want custom header we might need to handle it or let app-modal do it.
+           app-modal has a close button top-right absolute.
            If we add padding to app-modal via className, the close button might be inside or outside.
            Let's trust app-modal close button for now, but ensure title has space.
       -->
@@ -81,7 +93,7 @@
 
   <div class="p-6 space-y-6 max-h-[80vh] overflow-y-auto custom-scrollbar">
   <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-6">
-    
+
     <!-- Music Search Section -->
     <div class="space-y-4">
         <label class="text-gray-400 text-[10px] uppercase font-bold tracking-[0.2em] ml-1 block">
@@ -89,58 +101,70 @@
         </label>
 
         <!-- Search Input (When no music selected) -->
-        <div *ngIf="!selectedMusic && !suggestion" class="relative">
-            <input [formControl]="searchMusicControl" 
-                   type="text" 
-                   placeholder="Busque por música ou artista..." 
+        @if (!selectedMusic && !suggestion) {
+        <div class="relative">
+            <input [formControl]="searchMusicControl"
+                   type="text"
+                   placeholder="Busque por música ou artista..."
                    class="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-4 pl-12 text-white placeholder-gray-600 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all font-medium text-lg">
             <div class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">
                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
             </div>
-            
+
             <!-- Loading State -->
-            <div *ngIf="isSearchingMusic" class="absolute right-4 top-1/2 -translate-y-1/2">
+            @if (isSearchingMusic) {
+            <div class="absolute right-4 top-1/2 -translate-y-1/2">
                  <div class="w-5 h-5 border-2 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
             </div>
+            }
 
             <!-- Results Dropdown -->
-            <div *ngIf="musicResults.length > 0" 
-                 class="absolute top-full left-0 right-0 mt-2 bg-[#1a1a1a] border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden max-h-60 overflow-y-auto custom-scrollbar">
-                <button *ngFor="let result of musicResults"
-                        type="button"
+            @if (musicResults.length > 0) {
+            <div class="absolute top-full left-0 right-0 mt-2 bg-[#1a1a1a] border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden max-h-60 overflow-y-auto custom-scrollbar">
+                @for (result of musicResults; track result) {
+                <button type="button"
                         (click)="selectMusic(result)"
                         class="w-full flex items-center gap-4 p-3 hover:bg-white/5 transition-colors text-left border-b border-white/5 last:border-0">
-                    <img [src]="result.thumb || '/images/default-album.png'" (error)="onAlbumImageError($event)" class="w-12 h-12 rounded bg-[#0a0a0a] object-cover" alt="">
+                    <img [src]="result.thumb || result.thumb_image || '/images/default-album.png'" (error)="onAlbumImageError($event)" class="w-12 h-12 rounded bg-[#0a0a0a] object-cover" alt="">
                     <div>
                         <div class="text-white font-medium text-sm line-clamp-1">{{ result.title }}</div>
                         <div class="text-gray-500 text-xs">{{ result.year || 'Unknown' }}</div>
                     </div>
                 </button>
+                }
             </div>
+            }
         </div>
+        }
 
         <!-- Selected Music Card (When music selected) -->
-        <div *ngIf="selectedMusic" class="relative group animate-in fade-in zoom-in-95 duration-200">
+        @if (selectedMusic) {
+        <div class="relative group animate-in fade-in zoom-in-95 duration-200">
             <div class="bg-[#1a1a1a] border border-purple-500/30 rounded-xl p-4 flex items-center gap-5 shadow-[0_0_30px_rgba(147,51,234,0.1)]">
-                <img [src]="selectedMusic.cover_image || selectedMusic.thumb || '/images/default-album.png'" 
+                <img [src]="selectedMusic.cover_image || selectedMusic.thumb || selectedMusic.thumb_image || '/images/default-album.png'"
                      (error)="onAlbumImageError($event)"
-                     class="w-20 h-20 rounded-lg shadow-lg object-cover bg-black" 
+                     class="w-20 h-20 rounded-lg shadow-lg object-cover bg-black"
                      alt="Album Cover">
                 <div class="flex-1 min-w-0">
                     <h3 class="text-white font-bold text-lg leading-tight truncate">{{ form.get('song_name')?.value }}</h3>
                     <p class="text-purple-400 text-sm font-medium truncate">{{ form.get('artist_name')?.value }}</p>
                     <div class="flex gap-2 mt-2">
                          <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-white/10 text-gray-400 border border-white/5">DISCOGS</span>
-                         <span *ngIf="selectedMusic.year" class="px-2 py-0.5 rounded text-[10px] font-bold bg-white/10 text-gray-400 border border-white/5">{{ selectedMusic.year }}</span>
+                         @if (selectedMusic.year) {
+                         <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-white/10 text-gray-400 border border-white/5">{{ selectedMusic.year }}</span>
+                         }
                     </div>
                 </div>
-                <button *ngIf="!suggestion" type="button" 
+                @if (!suggestion) {
+                <button type="button"
                         (click)="clearSelectedMusic()"
                         class="p-2 rounded-full hover:bg-white/10 text-gray-400 hover:text-red-400 transition-colors">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                 </button>
+                }
             </div>
         </div>
+        }
     </div>
 
     <!-- Instrument Slots Section -->
@@ -149,24 +173,26 @@
         <div class="relative mt-2">
           <div class="overflow-x-auto scrollbar-hide -mx-1 px-1">
             <div class="flex gap-2 pb-1 snap-x snap-mandatory">
-              <button *ngFor="let inst of instrumentOptions"
-                      type="button"
+              @for (inst of instrumentOptions; track inst) {
+              <button type="button"
                       (click)="toggleInstrumentSlot(inst)"
                       class="relative flex-none w-20 md:w-24 flex flex-col items-center justify-center p-4 rounded-xl border transition-all aspect-square snap-start group"
                       [ngClass]="getSlotCount(inst) > 0
                         ? 'bg-purple-600/20 border-purple-500 text-purple-400 shadow-[0_0_20px_rgba(147,51,234,0.3)]'
                         : 'bg-[#121212] border-white/10 hover:bg-white/5 text-gray-500 hover:text-gray-300'">
-                
+
                 <!-- Badge Counter -->
-                <div *ngIf="getSlotCount(inst) > 0" 
-                     class="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-purple-500 text-white text-xs font-bold flex items-center justify-center border-2 border-[#121212] shadow-lg z-10 animate-in zoom-in duration-200">
+                @if (getSlotCount(inst) > 0) {
+                <div class="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-purple-500 text-white text-xs font-bold flex items-center justify-center border-2 border-[#121212] shadow-lg z-10 animate-in zoom-in duration-200">
                     {{ getSlotCount(inst) }}
                 </div>
+                }
 
                 <div class="w-12 h-12 mb-2 pointer-events-none">
                    <ng-container [ngTemplateOutlet]="instrumentIcon" [ngTemplateOutletContext]="{ type: getInstrumentType(inst), showLabel: true }"></ng-container>
                 </div>
               </button>
+              }
             </div>
           </div>
         </div>
@@ -179,8 +205,8 @@
         </div>
 
         <!-- Botão Toggle para abrir o formulário -->
-        <button *ngIf="!isInviteFormOpen" 
-                type="button" 
+        @if (!isInviteFormOpen) {
+        <button type="button"
                 (click)="isInviteFormOpen = true"
                 class="w-full flex items-center justify-center gap-2 py-3 border border-dashed border-white/20 rounded-xl text-gray-400 hover:text-white hover:border-white/40 hover:bg-white/5 transition-all group">
             <div class="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-purple-500/20 group-hover:text-purple-400 transition-colors">
@@ -188,8 +214,10 @@
             </div>
             <span class="text-xs font-bold uppercase tracking-wider">{{ 'events.guestV2.suggestions.form.openInviteFormButton' | translate }}</span>
         </button>
-        
-        <div *ngIf="isInviteFormOpen" class="bg-white/5 rounded-xl p-[15px] border border-white/10 mb-4 shadow-inner animate-fade-in-down">
+        }
+
+        @if (isInviteFormOpen) {
+        <div class="bg-white/5 rounded-xl p-[15px] border border-white/10 mb-4 shadow-inner animate-fade-in-down">
             <!-- Header do Subform com botão fechar -->
             <div class="flex justify-between items-center mb-3">
                 <span class="text-[10px] text-gray-500 uppercase font-bold tracking-wider">{{ 'events.guestV2.suggestions.form.friendLabel' | translate }}</span>
@@ -201,29 +229,34 @@
             <div class="space-y-4">
                 <!-- Linha 1: Input com sugestões -->
                 <div class="w-full space-y-2">
-                    
+
                     <!-- Modo Busca: Exibe Input -->
-                    <div class="relative" *ngIf="!selectedGuestId">
+                    @if (!selectedGuestId) {
+                    <div class="relative">
                         <input type="text"
                                [(ngModel)]="friendQuery"
                                (ngModelChange)="onFriendSearch($event)"
                                [ngModelOptions]="{standalone: true}"
                                placeholder="{{ 'events.guestV2.suggestions.form.friendPlaceholder' | translate }}"
                                class="w-full bg-[#121212] border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm focus:border-purple-500 focus:ring-0 transition-all" />
-                        <div *ngIf="friends.length > 0"
-                             class="absolute z-20 left-0 right-0 mt-1 bg-[#0a0a0a] border border-white/10 rounded-lg shadow-xl max-h-56 overflow-auto custom-scrollbar">
-                            <button *ngFor="let friend of friends"
-                                    type="button"
+                        @if (friends.length > 0) {
+                        <div class="absolute z-20 left-0 right-0 mt-1 bg-[#0a0a0a] border border-white/10 rounded-lg shadow-xl max-h-56 overflow-auto custom-scrollbar">
+                            @for (friend of friends; track friend.id) {
+                            <button type="button"
                                     (click)="selectFriend(friend)"
                                     class="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-white/5 focus:bg-white/5 transition-colors">
                                 <img [src]="friend.avatar" class="w-8 h-8 rounded-full object-cover border border-white/10">
                                 <span class="text-sm text-white truncate">{{ friend.name }}</span>
                             </button>
+                            }
                         </div>
+                        }
                     </div>
+                    }
 
                     <!-- Modo Selecionado: Exibe Card Full Width -->
-                    <div *ngIf="selectedGuestId" class="w-full bg-[#121212] border border-purple-500/30 rounded-lg px-3 py-2.5 flex items-center justify-between shadow-[0_0_15px_rgba(147,51,234,0.1)] transition-all animate-fade-in">
+                    @if (selectedGuestId) {
+                    <div class="w-full bg-[#121212] border border-purple-500/30 rounded-lg px-3 py-2.5 flex items-center justify-between shadow-[0_0_15px_rgba(147,51,234,0.1)] transition-all animate-fade-in">
                         <div class="flex items-center gap-3 overflow-hidden">
                             <img [src]="selectedGuestAvatar" class="w-7 h-7 rounded-full object-cover border border-white/10 shrink-0">
                             <span class="text-sm text-white font-medium truncate">{{ selectedGuestName }}</span>
@@ -232,6 +265,7 @@
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                         </button>
                     </div>
+                    }
                 </div>
                 <!-- Linha 2: Grid de instrumentos -->
                 <div class="w-full space-y-2">
@@ -239,8 +273,8 @@
                     <div class="relative mt-2">
                       <div class="overflow-x-auto scrollbar-hide -mx-1 px-1">
                         <div class="flex gap-2 pb-1 snap-x snap-mandatory">
-                          <button *ngFor="let inst of instrumentOptions"
-                            type="button"
+                          @for (inst of instrumentOptions; track inst) {
+                          <button type="button"
                             (click)="selectedGuestInstrument = inst"
                             class="flex-none w-20 md:w-24 flex flex-col items-center justify-center p-4 rounded-xl border transition-all aspect-square snap-start"
                             [ngClass]="selectedGuestInstrument === inst
@@ -250,6 +284,7 @@
                                 <ng-container [ngTemplateOutlet]="instrumentIcon" [ngTemplateOutletContext]="{ type: getInstrumentType(inst), showLabel: true }"></ng-container>
                               </div>
                           </button>
+                          }
                         </div>
                       </div>
                     </div>
@@ -263,12 +298,15 @@
                 </div>
             </div>
         </div>
+        }
 
         <!-- Added Invites List -->
-        <div *ngIf="participants.length > 0" class="mt-4">
+        @if (participants.length > 0) {
+        <div class="mt-4">
             <label class="text-gray-400 text-[10px] uppercase font-bold tracking-[0.2em] mb-3 block pl-1">{{ 'events.guestV2.suggestions.form.invitedListLabel' | translate }}</label>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div *ngFor="let participant of participants; let i = index" class="flex items-center gap-3 bg-[#0a0a0a] p-[15px] rounded-xl border border-white/5 shadow-md">
+                @for (participant of participants; track i; let i = $index) {
+                <div class="flex items-center gap-3 bg-[#0a0a0a] p-[15px] rounded-xl border border-white/5 shadow-md">
                     <img [src]="participant.avatar" class="w-10 h-10 rounded-full object-cover border border-white/10">
                     <div class="flex-grow min-w-0">
                         <p class="text-white font-bold text-sm truncate">{{ participant.name }}</p>
@@ -283,13 +321,15 @@
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                     </button>
                 </div>
+                }
             </div>
         </div>
+        }
     </div>
 
     <!-- Actions -->
     <div class="flex justify-end pt-4">
-        <button type="submit" 
+        <button type="submit"
                 [disabled]="!canSubmit()"
                 class="w-full md:w-auto px-8 py-3 bg-purple-600 hover:bg-purple-500 text-white rounded-xl font-oswald font-bold text-lg uppercase italic tracking-wider shadow-[0_0_30px_rgba(147,51,234,0.4)] transition-all active:scale-95 border border-purple-400/50 disabled:opacity-50 disabled:cursor-not-allowed">
             {{ suggestion ? 'APROVAR' : 'INSERIR' }}
