@@ -403,7 +403,8 @@ export class JamKanbanComponent implements OnInit, OnDestroy {
       }
 
       const preApproved = participants.map((p: any) => ({
-        user_id: p.user_id,
+        // Use id_code if available (from existing suggestion), otherwise fallback to user_id
+        user_id: p.user?.id_code || p.user_id,
         instrument: this.mapInstrumentKey(p.instrument)
       }));
 
@@ -449,7 +450,7 @@ export class JamKanbanComponent implements OnInit, OnDestroy {
         catalog_id: data.catalog_id,
         instrument_slots: instrumentSlots,
         pre_approved_candidates: participants.map((p: any) => ({
-          user_id: p.user_id,
+          user_id: p.user?.id_code || p.user_id,
           instrument: this.mapInstrumentKey(p.instrument)
         })),
         status: 'planned' as SongStatus
