@@ -76,16 +76,16 @@ export class AppHeaderComponent implements OnInit, AfterViewInit {
         default:
           this.roleHomeLink = '/';
       }
-      // Forçar atualização da view quando o usuário/role mudar
-      this.cdr.detectChanges();
+      // O ChangeDetectorRef.detectChanges() não é necessário aqui porque
+      // roleHomeLink é uma propriedade simples e não um signal/observable que requer CD manual.
+      // Se necessário, pode-se usar markForCheck() se a estratégia for OnPush.
+      // this.cdr.detectChanges(); 
     });
   }
 
   ngOnInit() {
-    // Inscrever-se nas mudanças de estado do sidebar para forçar atualização
-    this.sidebarService.isMobileOpen$.subscribe(() => {
-      this.cdr.detectChanges();
-    });
+    // A subscrição manual foi removida para evitar o erro "ASSERTION ERROR: Should be run in update mode"
+    // O pipe async no template já gerencia as atualizações necessárias.
   }
 
   handleToggle() {

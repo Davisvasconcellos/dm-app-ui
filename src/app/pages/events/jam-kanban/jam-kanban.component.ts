@@ -80,6 +80,45 @@ export class JamKanbanComponent implements OnInit, OnDestroy {
   private refreshTimerId: any = null;
   private readonly refreshIntervalMs = 60000;
 
+  // Helper para converter datas "27/02/2026, 22:08" para Date object
+  parseDate(dateString: any): Date | null {
+    if (!dateString) return null;
+
+    // Se já for um objeto Date
+    if (dateString instanceof Date) return dateString;
+
+    // Converter para string se não for
+    const dateStr = String(dateString);
+
+    // Se for string ISO padrão
+    if (!dateStr.includes('/')) return new Date(dateStr);
+
+    try {
+      // Tenta converter formato "dd/MM/yyyy, HH:mm"
+      const parts = dateStr.split(',');
+      if (parts.length === 2) {
+        const dateParts = parts[0].trim().split('/');
+        const timeParts = parts[1].trim().split(':');
+
+        if (dateParts.length === 3 && timeParts.length >= 2) {
+          const day = parseInt(dateParts[0], 10);
+          const month = parseInt(dateParts[1], 10) - 1; // Mês começa em 0
+          const year = parseInt(dateParts[2], 10);
+          const hour = parseInt(timeParts[0], 10);
+          const minute = parseInt(timeParts[1], 10);
+
+          return new Date(year, month, day, hour, minute);
+        }
+      }
+
+      // Fallback: tentar parsing padrão
+      return new Date(dateStr);
+    } catch (e) {
+      console.warn('Erro ao converter data:', dateStr);
+      return null;
+    }
+  }
+
   ngOnInit(): void {
     this.eventService.getEvents().subscribe({
       next: (items) => {
