@@ -254,33 +254,35 @@
                         </div>
 
                         <div class="flex items-end justify-between flex-wrap gap-4">
-                          <div class="flex flex-wrap gap-2 md:gap-3">
-                            @for (bucket of getInstrumentBuckets(song); track bucket.instrument) {
-                            <ng-container>
-                              <button
-                                (click)="toggleRequest(song, bucket)"
-                                class="relative w-12 h-12 md:w-14 md:h-14 flex items-center justify-center border rounded-lg transition-all duration-300"
-                                [ngClass]="isRequested(song.id, bucket.instrument)
-                                  ? 'bg-blue-600/20 border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.3)]'
-                                  : 'bg-white/5 border-white/10 hover:border-white/30'">
+                          <div class="flex-1 min-w-0 overflow-hidden">
+                            <div class="flex gap-2 md:gap-3 overflow-x-auto pb-2 custom-scrollbar-thin snap-x">
+                              @for (bucket of getInstrumentBuckets(song); track bucket.instrument) {
+                              <ng-container>
+                                <button
+                                  (click)="toggleRequest(song, bucket)"
+                                  class="relative shrink-0 w-12 h-12 md:w-14 md:h-14 flex items-center justify-center border rounded-lg transition-all duration-300 snap-start"
+                                  [ngClass]="isRequested(song.id, bucket.instrument)
+                                    ? 'bg-blue-600/20 border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.3)]'
+                                    : 'bg-white/5 border-white/10 hover:border-white/30'">
 
-                                <div [ngClass]="isRequested(song.id, bucket.instrument) ? 'text-blue-400' : 'text-gray-400'">
-                                  <ng-container [ngTemplateOutlet]="instrumentIcon" [ngTemplateOutletContext]="{ type: getInstrumentType(bucket.instrument) }"></ng-container>
-                                </div>
+                                  <div [ngClass]="isRequested(song.id, bucket.instrument) ? 'text-blue-400' : 'text-gray-400'">
+                                    <ng-container [ngTemplateOutlet]="instrumentIcon" [ngTemplateOutletContext]="{ type: getInstrumentType(bucket.instrument) }"></ng-container>
+                                  </div>
 
-                                @if (bucket.slots > 0) {
-                                <div class="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full flex items-center justify-center border border-[#121212] transition-colors"
-                                     [ngClass]="isRequested(song.id, bucket.instrument) ? 'bg-blue-600 text-white' : 'bg-gray-600 text-white/90'">
-                                  <span class="text-[10px] font-black leading-none">{{ bucket.remaining }}</span>
-                                </div>
-                                }
-                              </button>
-                            </ng-container>
-                            }
+                                  @if (bucket.slots > 0) {
+                                  <div class="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full flex items-center justify-center border border-[#121212] transition-colors"
+                                       [ngClass]="isRequested(song.id, bucket.instrument) ? 'bg-blue-600 text-white' : 'bg-gray-600 text-white/90'">
+                                    <span class="text-[10px] font-black leading-none">{{ bucket.remaining }}</span>
+                                  </div>
+                                  }
+                                </button>
+                              </ng-container>
+                              }
+                            </div>
                           </div>
 
                           <!-- Button / Status Area -->
-                          <div class="flex flex-col items-end gap-1">
+                          <div class="flex flex-col items-end gap-1 w-full sm:w-auto">
                             <button class="px-6 md:px-10 py-2.5 rounded-lg text-[11px] font-black uppercase italic tracking-tighter transition-all active:scale-95 shadow-lg"
                                     (click)="submitSelection(song.id)"
                                     [disabled]="!selections[song.id] || myStatusMap[song.id] === 'pending' || myStatusMap[song.id] === 'approved' || attempting[song.id]"
@@ -309,6 +311,24 @@
                                <span>ABERTO</span>
                                }
                             </button>
+                          </div>
+                        </div>
+
+                        <!-- DEBUG: Checkboxes requested by user -->
+                        <div class="mt-4 p-3 bg-gray-800/50 rounded-lg border border-gray-700/50">
+                          <p class="text-[10px] text-gray-500 font-bold uppercase mb-2 tracking-widest">Debug Selection ({{ selections[song.id] || 'None' }})</p>
+                          <div class="flex flex-wrap gap-4">
+                            @for (bucket of getInstrumentBuckets(song); track bucket.instrument) {
+                              <label class="flex items-center gap-2 cursor-pointer group select-none">
+                                <input type="checkbox"
+                                       [checked]="isRequested(song.id, bucket.instrument)"
+                                       (change)="toggleRequest(song, bucket)"
+                                       class="w-4 h-4 rounded border-gray-600 bg-gray-700 text-blue-600 focus:ring-blue-500 focus:ring-offset-gray-800">
+                                <span class="text-xs font-oswald uppercase tracking-wider text-gray-400 group-hover:text-white transition-colors">
+                                  {{ bucket.instrument }} ({{ bucket.remaining }})
+                                </span>
+                              </label>
+                            }
                           </div>
                         </div>
 

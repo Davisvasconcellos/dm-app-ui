@@ -55,16 +55,16 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
   recentlyRejectedInvites: string[] = [];
 
   // Maps and state tracking
-  selections: Record<number, string | null> = {};
-  lockDeadline: Record<number, number> = {};
-  submitted: Record<number, boolean> = {};
-  submitError: Record<number, boolean> = {};
-  approvedMap: Record<number, boolean> = {};
-  myStatusMap: Record<number, string> = {};
-  attempting: Record<number, boolean> = {};
+  selections: Record<string | number, string | null> = {};
+  lockDeadline: Record<string | number, number> = {};
+  submitted: Record<string | number, boolean> = {};
+  submitError: Record<string | number, boolean> = {};
+  approvedMap: Record<string | number, boolean> = {};
+  myStatusMap: Record<string | number, string> = {};
+  attempting: Record<string | number, boolean> = {};
   now: number = Date.now();
   tickHandle: any;
-  songJamMap: Record<number, number> = {};
+  songJamMap: Record<string | number, number> = {};
   eventName = '';
   eventBanner: string | null = null;
   esMap: Record<number, EventSource> = {};
@@ -88,7 +88,7 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
   isLoadingOpen = false;
   isLoadingStage = false;
   showLog = false;
-  readyMap: Record<number, boolean> = {};
+  readyMap: Record<string | number, boolean> = {};
   decisionsLog: Array<{ songId: number; tipo: string; acao: string; at: number }> = [];
   uiLog: Array<{ msg: string; at: number }> = [];
 
@@ -203,27 +203,7 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
 
         this.loadJams();
         this.loadOnStageOnce();
-
-        // Load Suggestions/Invites
-        this.musicSuggestionService.loadSuggestions(this.eventIdCode);
-        this.musicSuggestionService.suggestions$.subscribe(suggestions => {
-          if (this.currentUser?.id_code) {
-             this.invitesForMe = suggestions.filter(s => {
-              // I am a participant
-              const me = s.participants.find(p =>
-                (p.user_id_code || String(p.user_id)) === String(this.currentUser?.id_code) ||
-                (p.user_id_code || String(p.user_id)) === String(this.currentUser?.id)
-              );
-              // I am NOT the creator
-              const isCreator = s.created_by_user_id === String(this.currentUser?.id);
-              // Status is PENDING or ACCEPTED and suggestion is not REJECTED
-              const isPending = me && me.status === 'PENDING';
-              const isAccepted = me && me.status === 'ACCEPTED';
-              const isRejectedRecently = this.recentlyRejectedInvites.includes(s.id);
-              return (isPending || isAccepted) && !isCreator && s.status !== 'REJECTED' && s.status !== 'APPROVED' && !isRejectedRecently;
-             });
-          }
-        });
+        this.loadInvites();
       }
 
       this.startPolling();
@@ -238,6 +218,23 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
       } catch (e) {
         console.error('Visibility listener error', e);
       }
+    });
+  }
+
+  loadInvites() {
+    this.musicSuggestionService.loadSuggestions(this.eventIdCode).subscribe();
+    this.musicSuggestionService.suggestions$.subscribe(suggestions => {
+      const currentUser = this.authService.getCurrentUser();
+      if (!currentUser) return;
+      const userId = currentUser.id.toString();
+
+      // Filter invites where current user is a participant with PENDING status
+      // AND they are NOT the creator of the suggestion
+      // Double check to ensure creator never sees their own invite
+      this.invitesForMe = suggestions.filter(s =>
+          String(s.created_by_user_id) !== userId &&
+          s.participants.some(p => String(p.user_id) === userId && p.status === 'PENDING')
+      );
     });
   }
 
@@ -274,13 +271,13 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
       next: (songs: ApiSong[]) => {
         this.songJamMap = {};
         songs.forEach((s: any) => {
-          const sid = Number(s?.id);
+          const sid = s?.id;
           const jid = Number(s?.jam?.id ?? s?.jam_id);
-          if (!Number.isNaN(sid) && !Number.isNaN(jid)) this.songJamMap[sid] = jid;
-          if (!Number.isNaN(sid)) this.readyMap[sid] = (this.readyMap[sid] === true) || !!s?.ready;
+          if (sid && !Number.isNaN(jid)) this.songJamMap[sid] = jid;
+          if (sid) this.readyMap[sid] = (this.readyMap[sid] === true) || !!s?.ready;
 
           const my = s?.my_application;
-          if (my) {
+          if (my && sid) {
              const instr = String(my.instrument || '');
              const status = String(my.status || 'pending');
              this.selections[sid] = instr || null;
@@ -295,7 +292,7 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
         this.plannedSongs = songs.filter((s: any) => {
           const myStatus = String(s?.my_application?.status || '');
           const st = String(s?.status || '');
-          const sid = Number((s as any)?.id);
+          const sid = (s as any)?.id;
           const sseReady = this.readyMap[sid] === true;
           const readyField = !!s?.ready;
           const isReady = readyField || sseReady;
@@ -428,7 +425,16 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
 
     let buckets: any[] = [];
 
-    if (Array.isArray(s.instrument_slots)) {
+    // Check for new 'slots' structure
+    if (Array.isArray(s.slots) && s.slots.length > 0) {
+      buckets = s.slots.map((slot: any) => ({
+        instrument: String(slot.instrument),
+        slots: Number(slot.total || slot.slots || 0),
+        remaining: Number(slot.remaining ?? 0),
+        taken: Number(slot.taken ?? 0),
+        fallback_allowed: !!slot.fallback_allowed
+      }));
+    } else if (Array.isArray(s.instrument_slots)) {
       buckets = s.instrument_slots.map((slot: any) => ({
         instrument: String(slot.instrument),
         slots: Number(slot.slots || 0),
@@ -436,7 +442,8 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
           slot?.remaining_slots ?? (
             Number(slot.slots || 0) - Number(slot.approved_count || 0)
           )
-        )
+        ),
+        fallback_allowed: !!slot.fallback_allowed
       }));
     } else {
         const inst = Array.isArray(s.instrumentation) ? s.instrumentation : [];
@@ -447,53 +454,72 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
     return buckets;
   }
 
-  isRequested(songId: number, instrument: string): boolean {
+  isRequested(songId: number | string, instrument: string): boolean {
     return (this.selections[songId] || null) === instrument;
   }
 
   toggleRequest(song: ApiSong, bucket: any): void {
-    const songId = Number((song as any).id);
+    const songId = (song as any).id;
     const key = String(bucket.instrument);
 
+    // Logging para debug
+    console.log('[HomeGuestV2] toggleRequest', { songId, key, bucket });
+
+    // Se não tem vagas e não permite fallback, impedir seleção
+    // Mas se eu JÁ selecionei (desmarcar), devo permitir
     const current = this.selections[songId] || null;
-    this.selections[songId] = current === key ? null : key;
+    const isSelecting = current !== key;
+
+    /* REMOVIDO TEMPORARIAMENTE PARA DEBUG - Deixar o backend validar
+    if (isSelecting) {
+      if (bucket.remaining <= 0 && !bucket.fallback_allowed) {
+        console.warn('[HomeGuestV2] Seleção bloqueada: sem vagas e fallback não permitido');
+        return;
+      }
+    }
+    */
+
+    this.selections[songId] = isSelecting ? key : null;
     this.submitted[songId] = false;
   }
 
-  submitSelection(songId: number): void {
+  submitSelection(songId: number | string): void {
     const sel = this.selections[songId] || null;
     if (!sel) return;
     if (this.submitted[songId] || this.attempting[songId]) return;
 
     this.attempting[songId] = true;
     const jamId = this.songJamMap[songId];
-    if (!jamId) return;
+
+    console.log('[HomeGuestV2] submitSelection', { songId, sel, jamId });
+
+    if (!jamId) {
+      console.error('[HomeGuestV2] ERRO: Jam ID não encontrado para a música', songId);
+      this.toast.triggerToast('error', 'Erro interno', 'Jam ID não encontrado');
+      this.attempting[songId] = false;
+      return;
+    }
 
     this.eventService.applySongCandidate(this.eventIdCode, jamId, songId, sel).subscribe({
       next: (ok) => {
+        console.log('[HomeGuestV2] applySongCandidate success', ok);
         this.submitted[songId] = !!ok;
         this.submitError[songId] = !ok;
         this.attempting[songId] = false;
         if (ok) {
-          this.myStatusMap[songId] = 'pending';
-          this.triggerToast('warning', 'Candidatura enviada', 'Sua candidatura foi registrada e aguarda aprovação.');
+           this.myStatusMap[songId] = 'pending';
+           this.toast.triggerToast('success', 'Sucesso', 'Inscrição realizada com sucesso!');
+           // this.refreshLists(); // Optional
+        } else {
+           this.toast.triggerToast('error', 'Erro', 'Erro ao realizar inscrição.');
         }
-        else this.triggerToast('error', 'Falha ao enviar', 'Não foi possível enviar sua candidatura.');
       },
       error: (err) => {
-        const status = Number(err?.status || 0);
-        if (status === 409) {
-          this.submitted[songId] = true;
-          this.submitError[songId] = false;
-          this.myStatusMap[songId] = this.myStatusMap[songId] || 'pending';
-          this.triggerToast('error', 'Já candidatado', 'Você já possui candidatura para esta música.');
-        } else {
-          this.submitted[songId] = false;
-          this.submitError[songId] = true;
-          const msg = (err?.error?.message || err?.message || 'Erro ao enviar candidatura');
-          this.triggerToast('error', 'Erro', msg);
-        }
+        console.error('[HomeGuestV2] applySongCandidate error', err);
+        this.submitted[songId] = false;
+        this.submitError[songId] = true;
         this.attempting[songId] = false;
+        this.toast.triggerToast('error', 'Erro de Conexão', 'Erro ao se conectar com o servidor.');
       }
     });
   }

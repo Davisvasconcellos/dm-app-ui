@@ -81,13 +81,26 @@ export class JamKanbanComponent implements OnInit, OnDestroy {
   private readonly refreshIntervalMs = 60000;
 
   ngOnInit(): void {
-    this.eventService.getEvents().subscribe({ next: (items) => this.events = items, error: () => this.events = [] });
+    this.eventService.getEvents().subscribe({
+      next: (items) => {
+        // Filtrar apenas eventos 'published' ou 'draft' (exclui paused/canceled)
+        // Se status não vier (undefined), assume published/active
+        this.events = items.filter(e => !e.status || e.status === 'published' || e.status === 'draft');
+      },
+      error: () => this.events = []
+    });
 
     // Subscribe to suggestions updates
     this.musicSuggestionService.suggestions$.subscribe(suggestions => {
       this.suggestions = suggestions;
       this.applyClientFilters();
     });
+
+    // Initial load with status filter
+    if (this.selectedEventIdCode) {
+      // Carrega SUBMITTED e APPROVED (ou ACCEPTED) para o Kanban
+      this.musicSuggestionService.loadSuggestions(this.selectedEventIdCode, 'SUBMITTED,ACCEPTED').subscribe();
+    }
   }
 
   ngOnDestroy(): void {
@@ -104,14 +117,20 @@ export class JamKanbanComponent implements OnInit, OnDestroy {
     let result = this.suggestions;
 
     // 0. Calculate Counts (Independent of active search/filter)
-    this.openSuggestionsCount = this.suggestions.filter(s => s.status === 'SUBMITTED').length;
-    this.closedSuggestionsCount = this.suggestions.filter(s => s.status === 'APPROVED' || s.status === 'REJECTED').length;
+    // OPEN: 'SUBMITTED' (Aguardando Aprovação)
+    // CLOSED: 'ACCEPTED' (Aprovado)
+
+    const openStatuses = ['SUBMITTED'];
+    const closedStatuses = ['ACCEPTED'];
+
+    this.openSuggestionsCount = this.suggestions.filter(s => openStatuses.includes(s.status)).length;
+    this.closedSuggestionsCount = this.suggestions.filter(s => closedStatuses.includes(s.status)).length;
 
     // 1. Status Filter (Client-side)
     if (this.suggestionFilter === 'OPEN') {
-      result = result.filter(s => s.status === 'SUBMITTED');
+      result = result.filter(s => openStatuses.includes(s.status));
     } else if (this.suggestionFilter === 'CLOSED') {
-      result = result.filter(s => s.status === 'APPROVED' || s.status === 'REJECTED');
+      result = result.filter(s => closedStatuses.includes(s.status));
     }
 
     // 1. Text Search Filter
@@ -165,7 +184,8 @@ export class JamKanbanComponent implements OnInit, OnDestroy {
   }
 
   onRefreshClick() {
-    this.refreshSuggestions();
+    // Refresh suggestions with the filter
+    this.musicSuggestionService.loadSuggestions(this.selectedEventIdCode, 'SUBMITTED,ACCEPTED').subscribe();
     this.loadJamsAndSongs();
   }
 
@@ -327,44 +347,61 @@ export class JamKanbanComponent implements OnInit, OnDestroy {
         this.triggerToast('error', 'Erro', 'Jam não selecionada para aprovação.');
         return;
       }
-      const instrumentSlots = Object.entries(data.slots || {})
-        .filter(([, count]) => (count as number) > 0)
-        .map(([inst, count]) => ({
-          instrument: this.mapInstrumentKey(inst),
-          slots: count as number,
-          required: true,
-          fallback_allowed: true
-        }));
-      const preApproved = participants.map((p: Participant) => ({
+
+      // Map slots correctly
+      const instrumentSlots: { instrument: string, slots: number, required: boolean, fallback_allowed: boolean }[] = [];
+      if (data.slots) {
+          Object.entries(data.slots).forEach(([inst, count]) => {
+              if ((count as number) > 0) {
+                  instrumentSlots.push({
+                      instrument: this.mapInstrumentKey(inst),
+                      slots: count as number,
+                      required: true,
+                      fallback_allowed: true
+                  });
+              }
+          });
+      }
+
+      const preApproved = participants.map((p: any) => ({
         user_id: p.user_id,
         instrument: this.mapInstrumentKey(p.instrument)
       }));
+
       const approvePayload = {
         jam_id: jamId,
         instrument_slots: instrumentSlots,
         pre_approved_candidates: preApproved
       };
+
       this.musicSuggestionService.approveSuggestionOverride(suggestionId, approvePayload).subscribe({
         next: () => {
           this.triggerToast('success', 'Sugestão aprovada', `A sugestão foi aprovada e inserida no planned.`);
           this.closeMusicModal();
-          // Remove da lista e atualiza kanban
-          this.refreshSuggestions();
-          this.loadJamsAndSongs();
+          this.onRefreshClick(); // Refresh lists
         },
-        error: () => this.triggerToast('error', 'Erro', 'Falha ao aprovar sugestão.')
+        error: (err) => {
+            console.error(err);
+            this.triggerToast('error', 'Erro', 'Falha ao aprovar sugestão.');
+        }
       });
 
     } else {
       // Create via createSongAuto (Song + Slots)
-      const instrumentSlots = Object.entries(data.slots || {})
-        .filter(([, count]) => (count as number) > 0)
-        .map(([inst, count]) => ({
-          instrument: this.mapInstrumentKey(inst),
-          slots: count as number,
-          required: false,
-          fallback_allowed: true
-        }));
+      // Map slots correctly
+      const instrumentSlots: { instrument: string, slots: number, required: boolean, fallback_allowed: boolean }[] = [];
+      if (data.slots) {
+          Object.entries(data.slots).forEach(([inst, count]) => {
+              if ((count as number) > 0) {
+                  instrumentSlots.push({
+                      instrument: this.mapInstrumentKey(inst),
+                      slots: count as number,
+                      required: true,
+                      fallback_allowed: true
+                  });
+              }
+          });
+      }
 
       const payload: CreateSongAutoPayload = {
         title: data.song_name,
@@ -372,7 +409,7 @@ export class JamKanbanComponent implements OnInit, OnDestroy {
         cover_image: data.cover_image,
         catalog_id: data.catalog_id,
         instrument_slots: instrumentSlots,
-        pre_approved_candidates: participants.map((p: Participant) => ({
+        pre_approved_candidates: participants.map((p: any) => ({
           user_id: p.user_id,
           instrument: this.mapInstrumentKey(p.instrument)
         })),
@@ -397,11 +434,27 @@ export class JamKanbanComponent implements OnInit, OnDestroy {
               ready: false,
               orderIndex: (typeof (song as any).order_index === 'number' ? Number((song as any).order_index) : undefined)
             });
+            this.loadExpandedState();
+          } else {
+            this.loadJamsAndSongs();
           }
         },
-        error: () => this.triggerToast('error', 'Erro', 'Falha ao criar música.')
+        error: (err) => {
+            console.error(err);
+            this.triggerToast('error', 'Erro', 'Falha ao criar música.');
+        }
       });
     }
+  }
+
+  onMusicModalDelete(suggestion: MusicSuggestion) {
+    if (!suggestion || !suggestion.id) return;
+
+    // Close music modal first
+    this.closeMusicModal();
+
+    // Open confirmation delete modal
+    this.openDeleteModal(suggestion);
   }
 
   approveSuggestion(suggestion: MusicSuggestion) {

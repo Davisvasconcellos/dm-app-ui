@@ -31,6 +31,22 @@ import { ToastService } from '../../../../../shared/services/toast.service';
     .custom-scrollbar::-webkit-scrollbar-thumb:hover {
       background: #555;
     }
+
+    /* Thin Horizontal Scrollbar */
+    .custom-scrollbar-thin::-webkit-scrollbar {
+      height: 3px;
+    }
+    .custom-scrollbar-thin::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.02);
+      border-radius: 10px;
+    }
+    .custom-scrollbar-thin::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 10px;
+    }
+    .custom-scrollbar-thin::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
   `]
 })
 export class MusicSuggestionModalComponent implements OnInit, OnChanges, OnDestroy {
@@ -38,9 +54,11 @@ export class MusicSuggestionModalComponent implements OnInit, OnChanges, OnDestr
   @Input() suggestion: MusicSuggestion | null = null;
   @Input() users: any[] = []; // Available users to add as guests (pre-loaded or searchable)
   @Input() eventId: string = ''; // Required for friend search
+  @Input() isAdmin = false; // Flag to indicate if the modal is being used by an admin
 
   @Output() close = new EventEmitter<void>();
   @Output() save = new EventEmitter<any>();
+  @Output() delete = new EventEmitter<MusicSuggestion>();
 
   form: FormGroup;
   participants: any[] = [];
@@ -98,8 +116,22 @@ export class MusicSuggestionModalComponent implements OnInit, OnChanges, OnDestr
     return Object.values(this.instrumentSlots).some((v) => Number(v) > 0);
   }
 
+  // Validação simples
   canSubmit(): boolean {
-    return this.form.valid && (this.hasSelectedSlots() || this.hasParticipantInstruments());
+    if (this.isAdmin) return true; // Admin can always submit (approve/edit)
+
+    if (this.suggestion) {
+      const status = this.suggestion.status as string;
+      if (status === 'SUBMITTED' || status === 'PENDING') return false;
+    }
+    return this.form.valid;
+  }
+
+  // Deletes the suggestion
+  deleteSuggestion() {
+    if (this.suggestion) {
+      this.delete.emit(this.suggestion);
+    }
   }
 
   private hasParticipantInstruments(): boolean {
@@ -189,6 +221,15 @@ export class MusicSuggestionModalComponent implements OnInit, OnChanges, OnDestr
       song_name: suggestion.song_name,
       artist_name: suggestion.artist_name
     });
+
+    const status = suggestion.status as string;
+    if (status === 'SUBMITTED' || status === 'PENDING') {
+      this.form.disable();
+      this.searchMusicControl.disable();
+    } else {
+      this.form.enable();
+      this.searchMusicControl.enable();
+    }
 
     this.participants = suggestion.participants ? [...suggestion.participants] : [];
 

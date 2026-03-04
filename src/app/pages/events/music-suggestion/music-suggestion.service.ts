@@ -4,8 +4,10 @@ import { BehaviorSubject, Observable, tap, map } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { AuthService, User } from '../../../shared/services/auth.service';
 
-export type SuggestionStatus = 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'REJECTED';
+export type SuggestionStatus = 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'REJECTED' | 'PENDING' | 'ACCEPTED';
 export type ParticipantStatus = 'PENDING' | 'ACCEPTED' | 'REJECTED';
+
+// Updated types to include PENDING and ACCEPTED
 
 export interface Participant {
   user_id: string;
@@ -74,17 +76,17 @@ export class MusicSuggestionService {
     if (eventId) {
       params = params.set('event_id', eventId);
     }
-    if (status) {
-      params = params.set('status', status);
-    }
+    // Default to 'ALL' if status is not provided to ensure drafts are included
+    const statusParam = status || 'ALL';
+    params = params.set('status', statusParam);
     
-    this.http.get<{success: boolean, data: any[]}>(this.API_URL, { params }).subscribe({
-      next: (response) => {
-        const data = (response.data || []).map(s => this.mapSuggestion(s));
-        this.suggestionsSubject.next(data);
-      },
-      error: (err) => console.error('Error loading suggestions', err)
-    });
+    // Convert to observable to return it
+    return this.http.get<{success: boolean, data: any[]}>(`${environment.apiUrl}/api/v1/music-suggestions`, { params }).pipe(
+        tap(response => {
+            const data = (response.data || []).map((s: any) => this.mapSuggestion(s));
+            this.suggestionsSubject.next(data);
+        })
+    );
   }
 
   addSuggestion(payload: CreateSuggestionPayload): Observable<MusicSuggestion> {

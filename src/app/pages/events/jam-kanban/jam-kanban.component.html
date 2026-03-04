@@ -364,6 +364,7 @@
 
             <!-- Actions -->
             <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-100 dark:border-gray-700 mt-auto">
+              <!-- Delete Button -->
               <button (click)="openDeleteModal(s)"
                 class="group flex items-center justify-center p-2.5 rounded-lg bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 hover:border-red-300 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20 dark:hover:bg-red-500/20 dark:hover:border-red-500/30 transition-all duration-200 shadow-sm"
                 [title]="'events.admin.kanban.suggestions.actions.delete' | translate">
@@ -373,6 +374,8 @@
                     d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                 </svg>
               </button>
+              
+              <!-- Approve Button (Only for SUBMITTED) -->
               <button *ngIf="s.status === 'SUBMITTED'" (click)="approveSuggestion(s)"
                 class="group flex items-center justify-center p-2.5 rounded-lg bg-green-50 text-green-600 border border-green-200 hover:bg-green-100 hover:border-green-300 dark:bg-green-500/10 dark:text-green-400 dark:border-green-500/20 dark:hover:bg-green-500/20 dark:hover:border-green-500/30 transition-all duration-200 shadow-sm"
                 [title]="'events.admin.kanban.suggestions.actions.approve' | translate">
@@ -381,6 +384,15 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                 </svg>
               </button>
+
+              <!-- Approved Indicator (Only for ACCEPTED) -->
+              <div *ngIf="s.status === 'ACCEPTED'" 
+                   class="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-blue-50 text-blue-600 border border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20 cursor-default">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                <span class="text-xs font-bold uppercase">Aprovado</span>
+              </div>
             </div>
           </div>
         </div>
@@ -463,8 +475,9 @@
   </div>
 
   <app-music-suggestion-modal [isOpen]="isMusicModalOpen" [suggestion]="selectedSuggestionForModal"
-    [users]="availableUsers" [eventId]="selectedEventIdCode" (close)="closeMusicModal()"
-    (save)="onMusicModalSave($event)">
+    [users]="availableUsers" [eventId]="selectedEventIdCode"
+    [isAdmin]="true"
+    (close)="closeMusicModal()" (save)="onMusicModalSave($event)" (delete)="onMusicModalDelete($event)">
   </app-music-suggestion-modal>
 
   <app-modal [isOpen]="isDeleteModalOpen" (close)="closeDeleteModal()" [showCloseButton]="false"

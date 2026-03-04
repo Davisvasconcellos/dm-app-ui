@@ -25,9 +25,10 @@ export class EventCardComponent {
   @Input() description: string = '';
   @Input() startDate: string = '';
   @Input() endDate: string = '';
+  @Input() status: string | undefined = 'published';
   private _image: string = '/images/cards/card-01.png';
 
-  @Input() 
+  @Input()
   set image(value: string | undefined | null) {
     this._image = this.normalizeImageUrl(value);
   }
@@ -38,7 +39,7 @@ export class EventCardComponent {
 
   private normalizeImageUrl(url: string | undefined | null): string {
     if (!url) return '/images/cards/card-01.png';
-    
+
     let clean = url.trim().replace(/[`'\\\"]/g, '');
 
     // Se for URL completa (http/https), retorna direto
@@ -50,7 +51,7 @@ export class EventCardComponent {
     if (!clean.startsWith('/')) {
       clean = `/images/cards/${clean}`;
     }
-    
+
     return clean;
   }
   @Input() links: { text: string; url: string; variant: 'primary' | 'outline' | 'info' | 'warning' }[] = [];
@@ -59,6 +60,11 @@ export class EventCardComponent {
   @Output() viewLinks = new EventEmitter<void>();
   @Output() editEvent = new EventEmitter<void>();
   @Output() actionClick = new EventEmitter<void>();
+
+  @Output() pauseEvent = new EventEmitter<void>();
+  @Output() resumeEvent = new EventEmitter<void>();
+  @Output() cancelEvent = new EventEmitter<void>();
+  @Output() deleteEvent = new EventEmitter<void>();
 
   onViewLinksClick() {
     this.viewLinks.emit();
@@ -71,7 +77,27 @@ export class EventCardComponent {
       this.editEvent.emit();
     }
   }
-  
+
+  onPauseClick() {
+    if (this.status === 'paused') {
+      this.resumeEvent.emit();
+    } else {
+      this.pauseEvent.emit();
+    }
+  }
+
+  onCancelClick() {
+    if (this.status === 'canceled') {
+      this.resumeEvent.emit();
+    } else {
+      this.cancelEvent.emit();
+    }
+  }
+
+  onDeleteClick() {
+    this.deleteEvent.emit();
+  }
+
   onActionClick() {
     this.actionClick.emit();
   }

@@ -493,22 +493,31 @@ interface RespondentRowData {
       next: ({ event: ev, total_responses }) => {
         const name = ev.name || ev.title || '';
         const description = ev.description ?? ev.details ?? '';
-        const startIso = ev.start_datetime || ev.start_date || ev.startDate || '';
-        const endIso = ev.end_datetime || ev.end_date || ev.endDate || '';
+        let startIso = ev.start_datetime || ev.start_date || ev.startDate || '';
+        let endIso = ev.end_datetime || ev.end_date || ev.endDate || '';
+
+        // Fallback: construct from date + time fields if needed
+        if (!startIso && ev.date && ev.start_time) {
+          startIso = `${ev.date}T${ev.start_time}`;
+        }
+        if (!endIso && ev.date && ev.end_time) {
+          endIso = `${ev.date}T${ev.end_time}`;
+        }
+
         const banner = this.normalizeImageUrl(ev.banner_url || ev.image || undefined) || '/images/cards/event2.jpg';
-        const place = (ev as any).place || '';
-        const color1 = (ev as any).color_1 || '#3B82F6';
-        const color2 = (ev as any).color_2 || '#1E40AF';
-        const cardBgRaw = (ev as any).card_background || this.event.cardBackgroundImage || '/images/cards/event3.jpg';
+        const place = ev.place || '';
+        const color1 = ev.color_1 || '#3B82F6';
+        const color2 = ev.color_2 || '#1E40AF';
+        const cardBgRaw = ev.card_background || this.event.cardBackgroundImage || '/images/cards/event3.jpg';
         const cardBg = this.normalizeImageUrl(cardBgRaw) || cardBgRaw;
-        const bgTypeNum = (ev as any).card_background_type as number | null | undefined;
-        const slug = (ev as any).slug || '';
-        const respName = (ev as any).resp_name || '';
-        const respEmail = (ev as any).resp_email || '';
-        const respPhone = (ev as any).resp_phone || '';
-        const id_code = (ev as any).id_code || idCode;
-        const requiresAutoCheckin = this.toBool((ev as any).requires_auto_checkin);
-        const autoCheckinFlowQuest = this.toBool((ev as any).auto_checkin_flow_quest);
+        const bgTypeNum = ev.card_background_type as number | null | undefined;
+        const slug = ev.slug || '';
+        const respName = ev.resp_name || '';
+        const respEmail = ev.resp_email || '';
+        const respPhone = ev.resp_phone || '';
+        const id_code = ev.id_code || idCode;
+        const requiresAutoCheckin = this.toBool(ev.requires_auto_checkin);
+        const autoCheckinFlowQuest = this.toBool(ev.auto_checkin_flow_quest);
 
         // Determina o tipo com fallbacks recomendados
         const hasImage = !!cardBg;

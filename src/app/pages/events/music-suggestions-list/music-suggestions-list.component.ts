@@ -83,7 +83,7 @@ export class MusicSuggestionsListComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     if (this.eventId) {
-      this.suggestionService.loadSuggestions(this.eventId);
+      this.suggestionService.loadSuggestions(this.eventId).subscribe();
     }
 
     // Setup music search
@@ -433,7 +433,12 @@ export class MusicSuggestionsListComponent implements OnInit, OnDestroy {
     }
     const id = s.id_code || s.id;
     this.suggestionService.submitSuggestion(id).subscribe({
-      next: () => this.toastService.triggerToast('success', 'Sugestão enviada', 'Sugestão enviada! A banda irá analisar.'),
+      next: () => {
+        this.toastService.triggerToast('success', 'Sugestão enviada', 'Sugestão enviada! A banda irá analisar.');
+        if (s) {
+          s.status = 'SUBMITTED';
+        }
+      },
       error: (err) => this.toastService.triggerToast('error', 'Erro ao enviar', err.message || 'Não foi possível enviar a sugestão.')
     });
   }

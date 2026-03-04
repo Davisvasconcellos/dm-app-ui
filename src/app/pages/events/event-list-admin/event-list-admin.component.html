@@ -5,29 +5,98 @@
       {{ 'events.admin.list.addButton' | translate }}
     </button>
   </div>
-  <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-    <ng-container *ngIf="!isLoading && events.length > 0; else loadingOrEmpty">
+
+  <!-- Status Tabs -->
+  <div class="mb-6 bg-white dark:bg-gray-800 p-1.5 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm inline-flex flex-wrap gap-1">
+    <button
+      (click)="setFilter('active')"
+      [class.bg-white]="statusFilter === 'active'"
+      [class.dark:bg-gray-700]="statusFilter === 'active'"
+      [class.shadow-sm]="statusFilter === 'active'"
+      [class.text-blue-600]="statusFilter === 'active'"
+      [class.dark:text-blue-400]="statusFilter === 'active'"
+      [class.text-gray-500]="statusFilter !== 'active'"
+      class="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-all">
+      <span>Ativos</span>
+      <span class="px-2 py-0.5 rounded-full text-xs"
+        [class.bg-blue-100]="statusFilter === 'active'"
+        [class.text-blue-600]="statusFilter === 'active'"
+        [class.bg-gray-100]="statusFilter !== 'active'"
+        [class.text-gray-600]="statusFilter !== 'active'">
+        {{ activeCount }}
+      </span>
+    </button>
+
+    <button
+      (click)="setFilter('paused')"
+      [class.bg-white]="statusFilter === 'paused'"
+      [class.dark:bg-gray-700]="statusFilter === 'paused'"
+      [class.shadow-sm]="statusFilter === 'paused'"
+      [class.text-orange-600]="statusFilter === 'paused'"
+      [class.dark:text-orange-400]="statusFilter === 'paused'"
+      [class.text-gray-500]="statusFilter !== 'paused'"
+      class="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-all">
+      <span>Pausados</span>
+      <span class="px-2 py-0.5 rounded-full text-xs"
+        [class.bg-orange-100]="statusFilter === 'paused'"
+        [class.text-orange-600]="statusFilter === 'paused'"
+        [class.bg-gray-100]="statusFilter !== 'paused'"
+        [class.text-gray-600]="statusFilter !== 'paused'">
+        {{ pausedCount }}
+      </span>
+    </button>
+
+    <button
+      (click)="setFilter('canceled')"
+      [class.bg-white]="statusFilter === 'canceled'"
+      [class.dark:bg-gray-700]="statusFilter === 'canceled'"
+      [class.shadow-sm]="statusFilter === 'canceled'"
+      [class.text-red-600]="statusFilter === 'canceled'"
+      [class.dark:text-red-400]="statusFilter === 'canceled'"
+      [class.text-gray-500]="statusFilter !== 'canceled'"
+      class="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-all">
+      <span>Cancelados</span>
+      <span class="px-2 py-0.5 rounded-full text-xs"
+        [class.bg-red-100]="statusFilter === 'canceled'"
+        [class.text-red-600]="statusFilter === 'canceled'"
+        [class.bg-gray-100]="statusFilter !== 'canceled'"
+        [class.text-gray-600]="statusFilter !== 'canceled'">
+        {{ canceledCount }}
+      </span>
+    </button>
+  </div>
+
+  <!-- Event Cards Grid -->
+  <div *ngIf="filteredEvents.length > 0; else emptyState">
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
       <app-event-card
-        *ngFor="let event of events"
+        *ngFor="let event of filteredEvents"
         [eventName]="event.eventName"
         [description]="event.description"
         [startDate]="event.startDate"
         [endDate]="event.endDate"
         [image]="event.image || ''"
+        [status]="event.status"
         [links]="event.links"
         (viewLinks)="openLinksModal(event)"
         (editEvent)="onEditEvent(event)"
+        (pauseEvent)="onPauseEvent(event)"
+        (resumeEvent)="onResumeEvent(event)"
+        (cancelEvent)="onCancelEvent(event)"
+        (deleteEvent)="onDeleteEvent(event)"
       ></app-event-card>
-    </ng-container>
+    </div>
   </div>
 
-  <ng-template #loadingOrEmpty>
-    <div class="col-span-4 flex flex-col items-center justify-center py-10">
-      <div *ngIf="isLoading" class="text-gray-500 dark:text-white/70">Carregando eventos...</div>
-      <div *ngIf="!isLoading && loadError" class="text-red-600 dark:text-red-400">{{ loadError }}</div>
-      <div *ngIf="!isLoading && !loadError" class="text-gray-500 dark:text-white/70">Nenhum evento encontrado.</div>
+  <ng-template #emptyState>
+    <div *ngIf="!isLoading" class="text-center py-12 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+      <p class="text-gray-500 dark:text-gray-400">Nenhum evento encontrado com o status selecionado.</p>
     </div>
   </ng-template>
+
+  <div *ngIf="isLoading" class="flex justify-center p-12">
+    <span class="text-gray-500 dark:text-white/70">Carregando eventos...</span>
+  </div>
 
   <app-event-links-modal
     [isOpen]="isModalOpen"
@@ -35,5 +104,67 @@
     (close)="closeLinksModal()"
   ></app-event-links-modal>
 
-  
+  <!-- Action Confirmation Modal -->
+  <app-modal [isOpen]="isConfirmModalOpen" (close)="closeConfirmModal()" [showCloseButton]="false" className="max-w-[450px] mx-4">
+    <div class="p-6 text-center w-full mx-auto">
+      <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full"
+           [ngClass]="{
+             'bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-500': confirmModalType === 'pause',
+             'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-500': confirmModalType === 'resume',
+             'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400': confirmModalType === 'cancel',
+             'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-500': confirmModalType === 'delete'
+           }">
+        <span class="[&>svg]:h-6 [&>svg]:w-6">
+          <svg *ngIf="confirmModalType === 'pause'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="10" y1="15" x2="10" y2="9"></line><line x1="14" y1="15" x2="14" y2="9"></line></svg>
+          <svg *ngIf="confirmModalType === 'resume'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+          <svg *ngIf="confirmModalType === 'cancel'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></svg>
+          <svg *ngIf="confirmModalType === 'delete'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="currentColor">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M9.62684 11.7496C9.04105 11.1638 9.04105 10.2141 9.62684 9.6283C10.2126 9.04252 11.1624 9.04252 11.7482 9.6283L18.9985 16.8786L26.2485 9.62851C26.8343 9.04273 27.7841 9.04273 28.3699 9.62851C28.9556 10.2143 28.9556 11.164 28.3699 11.7498L21.1198 18.9999L28.3699 26.25C28.9556 26.8358 28.9556 27.7855 28.3699 28.3713C27.7841 28.9571 26.8343 28.9571 26.2485 28.3713L18.9985 21.1212L11.7482 28.3715C11.1624 28.9573 10.2126 28.9573 9.62684 28.3715C9.04105 27.7857 9.04105 26.836 9.62684 26.2502L16.8771 18.9999L9.62684 11.7496Z" fill=""/>
+          </svg>
+        </span>
+      </div>
+
+      <h4 class="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90 sm:text-title-sm">
+        <ng-container [ngSwitch]="confirmModalType">
+          <span *ngSwitchCase="'pause'">Pausar Evento?</span>
+          <span *ngSwitchCase="'resume'">Retomar Evento?</span>
+          <span *ngSwitchCase="'cancel'">Cancelar Evento?</span>
+          <span *ngSwitchCase="'delete'">Excluir Evento?</span>
+        </ng-container>
+      </h4>
+      <p class="text-sm leading-6 text-gray-500 dark:text-gray-400">
+        <ng-container [ngSwitch]="confirmModalType">
+          <span *ngSwitchCase="'pause'">O evento ficará indisponível temporariamente para os participantes.</span>
+          <span *ngSwitchCase="'resume'">O evento voltará a ficar visível e aceitará interações normalmente.</span>
+          <span *ngSwitchCase="'cancel'">O evento será cancelado e os participantes notificados.</span>
+          <span *ngSwitchCase="'delete'">Esta ação não pode ser desfeita. Todos os dados serão perdidos.</span>
+        </ng-container>
+        <span class="font-bold text-gray-700 dark:text-gray-300 block mt-1">{{ selectedEventForAction?.eventName }}</span>
+      </p>
+
+      <div class="flex items-center justify-center w-full gap-3 mt-7">
+        <button
+          type="button"
+          class="flex justify-center w-full px-4 py-3 text-sm font-medium text-gray-700 rounded-lg bg-white ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:ring-gray-700 dark:hover:bg-white/[0.03] sm:w-auto"
+          (click)="closeConfirmModal()"
+        >
+          Cancelar
+        </button>
+        <button
+          type="button"
+          class="flex justify-center w-full px-4 py-3 text-sm font-medium text-white rounded-lg sm:w-auto transition-colors"
+          [ngClass]="{
+             'bg-orange-600 hover:bg-orange-500': confirmModalType === 'pause',
+             'bg-green-600 hover:bg-green-500': confirmModalType === 'resume',
+             'bg-gray-600 hover:bg-gray-500': confirmModalType === 'cancel',
+             'bg-red-600 hover:bg-red-500': confirmModalType === 'delete'
+          }"
+          (click)="confirmAction()"
+        >
+          Confirmar
+        </button>
+      </div>
+    </div>
+  </app-modal>
+
 </div>

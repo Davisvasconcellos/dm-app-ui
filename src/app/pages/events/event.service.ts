@@ -30,6 +30,16 @@ export interface ApiEvent {
   color_2?: string | null;
   card_background?: string | null;
   card_background_type?: number | null; // 0 = colors (gradient), 1 = image
+  // Legacy/Alternative date fields
+  date?: string;
+  start_time?: string;
+  end_time?: string;
+  // Additional fields for event details
+  place?: string;
+  resp_name?: string;
+  resp_email?: string;
+  resp_phone?: string;
+  status?: 'draft' | 'published' | 'paused' | 'canceled' | 'finished';
   // add any other fields from API as needed
 }
 
@@ -95,6 +105,7 @@ export interface EventListItem {
   endDate: string;
   image?: string;
   id_code?: string;
+  status?: string;
   links: Array<{ text: string; url: string; variant: 'primary' | 'outline' | 'info' | 'warning' }>;
 }
 
@@ -152,6 +163,7 @@ export interface ApiSong {
   status?: 'planned' | 'open_for_candidates' | 'on_stage' | 'played' | 'canceled';
   ready?: boolean | null;
   order_index?: number | null;
+  slots?: any[]; // New structure
   instrument_buckets?: InstrumentBucket[];
   instrument_slots?: ApiInstrumentSlot[];
   release_batch?: number;
@@ -853,8 +865,32 @@ export class EventService {
   updateEvent(idOrCode: number | string, changes: Partial<ApiEvent>): Observable<ApiEvent> {
     const token = this.authService.getAuthToken();
     const headers: HttpHeaders = new HttpHeaders(token ? { Authorization: `Bearer ${token}` } : {});
+    const url = `${this.API_BASE_URL}/events/${idOrCode}`;
     // Backend espera PATCH para atualizações parciais
-    return this.http.patch<ApiEvent>(`${this.API_BASE_URL}/events/${idOrCode}`, changes, { headers });
+    return this.http.patch<any>(url, changes, { headers }).pipe(
+      map(resp => resp?.data?.event || resp?.event || resp)
+    );
+  }
+
+  updateEventStatus(eventId: string | number, status: 'paused' | 'canceled' | 'published' | 'draft'): Observable<boolean> {
+    const token = this.authService.getAuthToken();
+    const headers: HttpHeaders = new HttpHeaders(token ? { Authorization: `Bearer ${token}` } : {});
+    const url = `${this.API_BASE_URL}/events/${eventId}`;
+    const payload = { status };
+    return this.http.patch<{ success: boolean; message?: string }>(url, payload, { headers }).pipe(
+      map((resp) => !!resp?.success),
+      catchError(() => of(false))
+    );
+  }
+
+  deleteEvent(eventId: string | number): Observable<boolean> {
+    const token = this.authService.getAuthToken();
+    const headers: HttpHeaders = new HttpHeaders(token ? { Authorization: `Bearer ${token}` } : {});
+    const url = `${this.API_BASE_URL}/events/${eventId}`;
+    return this.http.delete<{ success: boolean; message?: string }>(url, { headers }).pipe(
+      map((resp) => !!resp?.success),
+      catchError(() => of(false))
+    );
   }
 
   // Busca detalhes de um evento por id_code (rota pública)
@@ -903,7 +939,7 @@ export class EventService {
     // Links podem ser enriquecidos posteriormente quando a API disponibilizar URLs
     const links: Array<{ text: string; url: string; variant: 'primary' | 'outline' | 'info' | 'warning' }> = [];
 
-    return { eventName, description, startDate, endDate, image: image || undefined, id_code: ev.id_code, links };
+    return { eventName, description, startDate, endDate, image: image || undefined, id_code: ev.id_code, status: ev.status, links };
   }
 
   private formatDateTime(iso: string | undefined): string {
