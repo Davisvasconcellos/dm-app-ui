@@ -49,7 +49,7 @@ export class HomeGuestComponent implements OnInit, OnDestroy {
   pollingHandle: any;
   backoffUntilMs = 0;
   enablePolling = true;
-  jamId: number | null = null;
+  jamId: string | number | null = null;
   sseWatchdogHandle: any;
   enableWatchdog = false;
   useSse = false;
@@ -66,7 +66,7 @@ export class HomeGuestComponent implements OnInit, OnDestroy {
     if (this.uiLog.length > 200) this.uiLog = this.uiLog.slice(0, 200);
   }
 
-  constructor(private eventService: EventService, private route: ActivatedRoute, private appRef: ApplicationRef, private injector: Injector, private envInjector: EnvironmentInjector, private authService: AuthService, private router: Router) {}
+  constructor(private eventService: EventService, private route: ActivatedRoute, private appRef: ApplicationRef, private injector: Injector, private envInjector: EnvironmentInjector, private authService: AuthService, private router: Router) { }
 
   ngOnInit(): void {
     this.tickHandle = setInterval(() => {
@@ -78,14 +78,14 @@ export class HomeGuestComponent implements OnInit, OnDestroy {
       if (!this.eventIdCode) {
         this.eventIdCode = this.route.snapshot.queryParamMap.get('id_code') || '';
       }
-      try { console.log('[HomeGuest] init', { eventIdCode: this.eventIdCode }); } catch {}
+      try { console.log('[HomeGuest] init', { eventIdCode: this.eventIdCode }); } catch { }
       if (this.eventIdCode) {
         this.eventService.getPublicEventByIdCodeDetail(this.eventIdCode).subscribe({
-          next: (res) => { this.eventName = res?.event?.title || res?.event?.name || ''; try { console.log('[HomeGuest] event detail loaded', { eventIdCode: this.eventIdCode, eventName: this.eventName }); } catch {} },
+          next: (res) => { this.eventName = res?.event?.title || res?.event?.name || ''; try { console.log('[HomeGuest] event detail loaded', { eventIdCode: this.eventIdCode, eventName: this.eventName }); } catch { } },
           error: () => { this.eventName = ''; }
         });
         this.eventService.getEventJamId(this.eventIdCode).subscribe({
-          next: (jid) => { this.jamId = jid; try { console.log('[HomeGuest] jam id resolved', { eventIdCode: this.eventIdCode, jamId: this.jamId }); } catch {} this.ensureStreams(); },
+          next: (jid) => { this.jamId = jid; try { console.log('[HomeGuest] jam id resolved', { eventIdCode: this.eventIdCode, jamId: this.jamId }); } catch { } this.ensureStreams(); },
           error: (err) => {
             const status = Number(err?.status || 0);
             if (status === 403 && this.eventIdCode) this.router.navigate([`/events/checkin/${this.eventIdCode}`], { queryParams: { returnUrl: `/events/home-guest/${this.eventIdCode}` } });
@@ -104,19 +104,19 @@ export class HomeGuestComponent implements OnInit, OnDestroy {
         const fallbackParam = sp.get('fallback');
         if (pollParam === '1' || fallbackParam === '1') this.enablePolling = true;
         else if (pollParam === '0') this.enablePolling = false;
-      } catch {}
+      } catch { }
       if (this.enablePolling) this.startPolling();
       try {
         const sp2 = new URLSearchParams(String((window as any)?.location?.search || ''));
         this.enableWatchdog = sp2.get('watchdog') === '1';
-      } catch {}
+      } catch { }
       if (this.enableWatchdog) this.startSseWatchdog();
       try {
         document.addEventListener('visibilitychange', () => {
           if (document.hidden) return;
           this.scheduleRefresh();
         });
-      } catch {}
+      } catch { }
       this.pushLog(`[init] event ${this.eventIdCode}`);
     });
   }
@@ -125,7 +125,7 @@ export class HomeGuestComponent implements OnInit, OnDestroy {
     if (this.tickHandle) clearInterval(this.tickHandle);
     const ids = Object.keys(this.esMap);
     ids.forEach(id => {
-      try { this.esMap[Number(id)].close(); } catch {}
+      try { this.esMap[Number(id)].close(); } catch { }
       delete this.esMap[Number(id)];
     });
     if (this.sseRefreshTimer) clearTimeout(this.sseRefreshTimer);
@@ -135,7 +135,7 @@ export class HomeGuestComponent implements OnInit, OnDestroy {
 
   private loadJams(): void {
     if (!this.eventIdCode) { this.jams = []; this.plannedSongs = []; return; }
-    try { console.log('[HomeGuest] fetching open songs', { eventIdCode: this.eventIdCode }); } catch {}
+    try { console.log('[HomeGuest] fetching open songs', { eventIdCode: this.eventIdCode }); } catch { }
     this.pushLog('[fetch] open songs');
     this.isLoadingOpen = true;
     this.eventService.getEventOpenJamsSongs(this.eventIdCode).subscribe({
@@ -166,24 +166,24 @@ export class HomeGuestComponent implements OnInit, OnDestroy {
           const readyField = !!s?.ready;
           const isReady = readyField || sseReady;
           if (myStatus === 'rejected') {
-            try { console.log('MUSICA', sid, 'TIPO', 'rejected', 'ACAO:ocultar'); } catch {}
+            try { console.log('MUSICA', sid, 'TIPO', 'rejected', 'ACAO:ocultar'); } catch { }
             this.decisionsLog.unshift({ songId: sid, tipo: 'rejected', acao: 'ocultar', at: Date.now() });
             this.decisionsLog = this.decisionsLog.slice(0, 10);
             return false;
           }
           if (isReady) {
             const tipo = sseReady ? 'sse_ready' : (readyField ? 'ready_field' : 'none');
-            if (myStatus === 'approved') { try { console.log('MUSICA', sid, 'TIPO', tipo, 'ACAO:exibir'); } catch {} return true; }
-            try { console.log('MUSICA', sid, 'TIPO', tipo, 'ACAO:ocultar'); } catch {}
+            if (myStatus === 'approved') { try { console.log('MUSICA', sid, 'TIPO', tipo, 'ACAO:exibir'); } catch { } return true; }
+            try { console.log('MUSICA', sid, 'TIPO', tipo, 'ACAO:ocultar'); } catch { }
             this.decisionsLog.unshift({ songId: sid, tipo, acao: 'ocultar', at: Date.now() });
             this.decisionsLog = this.decisionsLog.slice(0, 10);
             return false;
           }
           const showOpen = st === 'open_for_candidates';
-          if (showOpen) { try { console.log('MUSICA', sid, 'TIPO', 'open_candidates', 'ACAO:exibir'); } catch {} }
+          if (showOpen) { try { console.log('MUSICA', sid, 'TIPO', 'open_candidates', 'ACAO:exibir'); } catch { } }
           return showOpen;
         });
-        try { console.log('[HomeGuest] open songs loaded', { count: this.plannedSongs.length, songIds: this.plannedSongs.map((x: any) => x?.id) }); } catch {}
+        try { console.log('[HomeGuest] open songs loaded', { count: this.plannedSongs.length, songIds: this.plannedSongs.map((x: any) => x?.id) }); } catch { }
         this.pushLog(`[loaded] open count ${this.plannedSongs.length}`);
         this.isLoadingOpen = false;
         this.ensureStreams();
@@ -204,7 +204,7 @@ export class HomeGuestComponent implements OnInit, OnDestroy {
 
   private loadOnStageOnce(): void {
     if (!this.eventIdCode) { this.onStageSongs = []; return; }
-    try { console.log('[HomeGuest] fetching my on-stage songs', { eventIdCode: this.eventIdCode }); } catch {}
+    try { console.log('[HomeGuest] fetching my on-stage songs', { eventIdCode: this.eventIdCode }); } catch { }
     this.pushLog('[fetch] on-stage songs');
     this.isLoadingStage = true;
     this.eventService.getEventMyOnStage(this.eventIdCode).subscribe({
@@ -216,7 +216,7 @@ export class HomeGuestComponent implements OnInit, OnDestroy {
         this.goToStageSongs = upcoming;
         this.onStageSongs = [...nowPlaying, ...upcoming];
 
-        try { console.log('[HomeGuest] on-stage songs loaded', { count: this.onStageSongs.length, songIds: this.onStageSongs.map((x: any) => x?.id) }); } catch {}
+        try { console.log('[HomeGuest] on-stage songs loaded', { count: this.onStageSongs.length, songIds: this.onStageSongs.map((x: any) => x?.id) }); } catch { }
         this.pushLog(`[loaded] on-stage count ${this.onStageSongs.length}`);
         this.isLoadingStage = false;
         this.ensureStreams();
@@ -241,8 +241,8 @@ export class HomeGuestComponent implements OnInit, OnDestroy {
     if (!this.useSse) return;
     const idsFromOpen = Array.from(new Set(Object.values(this.songJamMap)));
     const idsFromStage = Array.from(new Set((this.onStageSongs || []).map(s => Number((s as any)?.jam?.id ?? (s as any)?.jam_id)).filter(n => !Number.isNaN(n))));
-    const jamIds = Array.from(new Set([ ...idsFromOpen, ...idsFromStage, ...(this.jamId ? [this.jamId] : []) ]));
-    try { console.log('[HomeGuest] ensureStreams', { eventIdCode: this.eventIdCode, jamIds, songJamMap: this.songJamMap }); } catch {}
+    const jamIds = Array.from(new Set([...idsFromOpen, ...idsFromStage, ...(this.jamId ? [this.jamId] : [])]));
+    try { console.log('[HomeGuest] ensureStreams', { eventIdCode: this.eventIdCode, jamIds, songJamMap: this.songJamMap }); } catch { }
     this.pushLog(`[sse] ensure ${jamIds.join(',') || '-'}`);
     for (const jid of jamIds) {
       if (!jid || this.esMap[jid]) continue;
@@ -274,7 +274,7 @@ export class HomeGuestComponent implements OnInit, OnDestroy {
             if (existing) {
               const myStatus = String(existing?.my_application?.status || '');
               if (this.readyMap[sid] && myStatus !== 'approved') {
-                try { console.log('MUSICA', sid, 'TIPO', 'sse_ready', 'ACAO:ocultar'); } catch {}
+                try { console.log('MUSICA', sid, 'TIPO', 'sse_ready', 'ACAO:ocultar'); } catch { }
                 this.decisionsLog.unshift({ songId: sid, tipo: 'sse_ready', acao: 'ocultar', at: Date.now() });
                 this.decisionsLog = this.decisionsLog.slice(0, 10);
                 this.pushLog(`[card] ocultar song ${sid} via sse_ready`);
@@ -291,7 +291,7 @@ export class HomeGuestComponent implements OnInit, OnDestroy {
         }
       };
       es.onmessage = handleMessage;
-      try { (es as any).addEventListener && (es as any).addEventListener('message', handleMessage as any); } catch {}
+      try { (es as any).addEventListener && (es as any).addEventListener('message', handleMessage as any); } catch { }
       es.onerror = () => {
         if (this.debugSse) console.log('SSE error', { jamId: jid });
         this.updateSseStatus();
@@ -340,22 +340,22 @@ export class HomeGuestComponent implements OnInit, OnDestroy {
           const readyField = !!s?.ready;
           const isReady = readyField || sseReady;
           if (myStatus === 'rejected') {
-            try { console.log('MUSICA', sid, 'TIPO', 'rejected', 'ACAO:ocultar'); } catch {}
+            try { console.log('MUSICA', sid, 'TIPO', 'rejected', 'ACAO:ocultar'); } catch { }
             this.decisionsLog.unshift({ songId: sid, tipo: 'rejected', acao: 'ocultar', at: Date.now() });
             this.decisionsLog = this.decisionsLog.slice(0, 10);
             return false;
           }
           if (isReady) {
             const tipo = sseReady ? 'sse_ready' : (readyField ? 'ready_field' : 'none');
-            if (myStatus === 'approved') { try { console.log('MUSICA', sid, 'TIPO', tipo, 'ACAO:exibir'); } catch {} this.pushLog(`[card] exibir song ${sid} via ${tipo}`); return true; }
-            try { console.log('MUSICA', sid, 'TIPO', tipo, 'ACAO:ocultar'); } catch {}
+            if (myStatus === 'approved') { try { console.log('MUSICA', sid, 'TIPO', tipo, 'ACAO:exibir'); } catch { } this.pushLog(`[card] exibir song ${sid} via ${tipo}`); return true; }
+            try { console.log('MUSICA', sid, 'TIPO', tipo, 'ACAO:ocultar'); } catch { }
             this.decisionsLog.unshift({ songId: sid, tipo, acao: 'ocultar', at: Date.now() });
             this.decisionsLog = this.decisionsLog.slice(0, 10);
             this.pushLog(`[card] ocultar song ${sid} via ${tipo}`);
             return false;
           }
           const showOpen = st === 'open_for_candidates';
-          if (showOpen) { try { console.log('MUSICA', sid, 'TIPO', 'open_candidates', 'ACAO:exibir'); } catch {} this.pushLog(`[card] exibir song ${sid} via open_candidates`); }
+          if (showOpen) { try { console.log('MUSICA', sid, 'TIPO', 'open_candidates', 'ACAO:exibir'); } catch { } this.pushLog(`[card] exibir song ${sid} via open_candidates`); }
           return showOpen;
         });
         if (this.debugSse) console.log('Refetch open', { count: this.plannedSongs.length, ids: this.plannedSongs.map((x: any) => x?.id) });
@@ -430,7 +430,7 @@ export class HomeGuestComponent implements OnInit, OnDestroy {
       });
       if (staleIds.length) {
         staleIds.forEach(jid => {
-          try { this.esMap[jid].close(); } catch {}
+          try { this.esMap[jid].close(); } catch { }
           delete this.esMap[jid];
           if (this.debugSse) console.log('SSE watchdog reconnect', { jamId: jid });
         });
@@ -472,7 +472,7 @@ export class HomeGuestComponent implements OnInit, OnDestroy {
     const s: any = song as any;
     // Se já tiver buckets cacheados ou vindos da API, retorna eles
     if (Array.isArray(s.instrument_buckets) && s.instrument_buckets.length > 0) {
-        return s.instrument_buckets;
+      return s.instrument_buckets;
     }
 
     // Se não tiver, calcula e salva no próprio objeto para estabilizar a referência (cache)
@@ -489,8 +489,8 @@ export class HomeGuestComponent implements OnInit, OnDestroy {
         )
       }));
     } else {
-        const inst = Array.isArray(s.instrumentation) ? s.instrumentation : [];
-        buckets = inst.map((k: any) => ({ instrument: String(k), slots: 0, remaining: 0 }));
+      const inst = Array.isArray(s.instrumentation) ? s.instrumentation : [];
+      buckets = inst.map((k: any) => ({ instrument: String(k), slots: 0, remaining: 0 }));
     }
 
     // Salva no objeto para não recalcular na próxima (estabiliza o DOM)

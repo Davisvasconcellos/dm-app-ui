@@ -64,10 +64,10 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
   attempting: Record<string | number, boolean> = {};
   now: number = Date.now();
   tickHandle: any;
-  songJamMap: Record<string | number, number> = {};
+  songJamMap: Record<string | number, string | number> = {};
   eventName = '';
   eventBanner: string | null = null;
-  esMap: Record<number, EventSource> = {};
+  esMap: Record<string | number, EventSource> = {};
   sseRefreshTimer: any;
 
   // SSE & Polling configuration
@@ -75,12 +75,12 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
   sseOpenCount = 0;
   lastEventType = '';
   lastEventAt = 0;
-  lastEventAtMap: Record<number, number> = {};
+  lastEventAtMap: Record<string | number, number> = {};
   sseStatusText = 'SSE 0 • - • -';
   pollingHandle: any;
   backoffUntilMs = 0;
   enablePolling = true;
-  jamId: number | null = null;
+  jamId: string | number | null = null;
   sseWatchdogHandle: any;
   enableWatchdog = false;
   useSse = false;
@@ -130,7 +130,6 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
   private injector = inject(Injector);
   private envInjector = inject(EnvironmentInjector);
   private musicSuggestionService = inject(MusicSuggestionService);
-  private toast = inject(ToastService);
 
   constructor() {
     this.useSse = false;
@@ -166,7 +165,7 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
         document.addEventListener('fullscreenchange', () => {
           this.isFullscreen = !!document.fullscreenElement;
         });
-      } catch {}
+      } catch { }
 
       if (this.eventIdCode) {
         this.eventService.getPublicEventByIdCodeDetail(this.eventIdCode).subscribe({
@@ -188,7 +187,7 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
           error: (err) => {
             const status = Number(err?.status || 0);
             if (status === 403 && this.eventIdCode) {
-               this.router.navigate([`/events/checkin/${this.eventIdCode}`], { queryParams: { returnUrl: `/events/home-guest-v2/${this.eventIdCode}` } });
+              this.router.navigate([`/events/checkin/${this.eventIdCode}`], { queryParams: { returnUrl: `/events/home-guest-v2/${this.eventIdCode}` } });
             }
           }
         });
@@ -232,8 +231,8 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
       // AND they are NOT the creator of the suggestion
       // Double check to ensure creator never sees their own invite
       this.invitesForMe = suggestions.filter(s =>
-          String(s.created_by_user_id) !== userId &&
-          s.participants.some(p => String(p.user_id) === userId && p.status === 'PENDING')
+        String(s.created_by_user_id) !== userId &&
+        s.participants.some(p => String(p.user_id) === userId && p.status === 'PENDING')
       );
     });
   }
@@ -243,8 +242,8 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
     if (this.tickHandle) clearInterval(this.tickHandle);
     const ids = Object.keys(this.esMap);
     ids.forEach(id => {
-      try { this.esMap[Number(id)].close(); } catch {}
-      delete this.esMap[Number(id)];
+      try { this.esMap[id as string | number].close(); } catch { }
+      delete this.esMap[id as string | number];
     });
     if (this.sseRefreshTimer) clearTimeout(this.sseRefreshTimer);
     if (this.pollingHandle) clearInterval(this.pollingHandle);
@@ -270,22 +269,28 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
     this.eventService.getEventOpenJamsSongs(this.eventIdCode).subscribe({
       next: (songs: ApiSong[]) => {
         this.songJamMap = {};
+        console.log('[HomeGuestV2] LoadJams -> Songs recebidas:', songs.length, songs);
+
         songs.forEach((s: any) => {
           const sid = s?.id;
-          const jid = Number(s?.jam?.id ?? s?.jam_id);
-          if (sid && !Number.isNaN(jid)) this.songJamMap[sid] = jid;
+          // Fallback carefully to global jamId if individual is missing
+          const jid = s?.jam?.id ?? s?.jam_id ?? this.jamId;
+
+          console.log(`[HomeGuestV2] parsing song: ${sid}`, { musicData: s, jamIdEncontrado: jid });
+
+          if (sid && jid) this.songJamMap[sid] = jid;
           if (sid) this.readyMap[sid] = (this.readyMap[sid] === true) || !!s?.ready;
 
           const my = s?.my_application;
           if (my && sid) {
-             const instr = String(my.instrument || '');
-             const status = String(my.status || 'pending');
-             this.selections[sid] = instr || null;
-             this.lockDeadline[sid] = this.now;
-             this.submitted[sid] = true;
-             this.submitError[sid] = status === 'rejected';
-             this.approvedMap[sid] = status === 'approved';
-             this.myStatusMap[sid] = status;
+            const instr = String(my.instrument || '');
+            const status = String(my.status || 'pending');
+            this.selections[sid] = instr || null;
+            this.lockDeadline[sid] = this.now;
+            this.submitted[sid] = true;
+            this.submitError[sid] = status === 'rejected';
+            this.approvedMap[sid] = status === 'approved';
+            this.myStatusMap[sid] = status;
           }
         });
 
@@ -312,7 +317,7 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
         this.isLoadingOpen = false;
         const status = Number(err?.status || 0);
         if (status === 403 && this.eventIdCode) {
-           this.router.navigate([`/events/checkin/${this.eventIdCode}`], { queryParams: { returnUrl: `/events/home-guest-v2/${this.eventIdCode}` } });
+          this.router.navigate([`/events/checkin/${this.eventIdCode}`], { queryParams: { returnUrl: `/events/home-guest-v2/${this.eventIdCode}` } });
         }
       }
     });
@@ -343,8 +348,8 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
     if (!this.eventIdCode || !this.useSse) return;
 
     const idsFromOpen = Array.from(new Set(Object.values(this.songJamMap)));
-    const idsFromStage = Array.from(new Set((this.onStageSongs || []).map(s => Number((s as any)?.jam?.id ?? (s as any)?.jam_id)).filter(n => !Number.isNaN(n))));
-    const jamIds = Array.from(new Set([ ...idsFromOpen, ...idsFromStage, ...(this.jamId ? [this.jamId] : []) ]));
+    const idsFromStage = Array.from(new Set((this.onStageSongs || []).map(s => (s as any)?.jam?.id ?? (s as any)?.jam_id).filter(id => !!id)));
+    const jamIds = Array.from(new Set([...idsFromOpen, ...idsFromStage, ...(this.jamId ? [this.jamId] : [])]));
 
     for (const jid of jamIds) {
       if (!jid || this.esMap[jid]) continue;
@@ -369,7 +374,7 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
             // Simplified logic: refresh will filter correctly
           }
           this.scheduleRefresh();
-        } catch {}
+        } catch { }
       };
 
       this.esMap[jid] = es;
@@ -401,14 +406,14 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
     if (this.sseWatchdogHandle) return;
     this.sseWatchdogHandle = setInterval(() => {
       const now = Date.now();
-      const staleIds = Object.keys(this.esMap).map(Number).filter(jid => {
-        const last = this.lastEventAtMap[jid] || 0;
+      const staleIds = Object.keys(this.esMap).filter(jid => {
+        const last = this.lastEventAtMap[jid as string | number] || 0;
         return !last || (now - last) > 30000;
       });
       if (staleIds.length) {
         staleIds.forEach(jid => {
-          try { this.esMap[jid].close(); } catch (e) { console.error('SSE watchdog close error', e); }
-          delete this.esMap[jid];
+          try { this.esMap[jid as string | number].close(); } catch (e) { console.error('SSE watchdog close error', e); }
+          delete this.esMap[jid as string | number];
         });
         this.ensureStreams();
       }
@@ -420,7 +425,7 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
   getInstrumentBuckets(song: ApiSong): any[] {
     const s: any = song as any;
     if (Array.isArray(s.instrument_buckets) && s.instrument_buckets.length > 0) {
-        return s.instrument_buckets;
+      return s.instrument_buckets;
     }
 
     let buckets: any[] = [];
@@ -446,8 +451,8 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
         fallback_allowed: !!slot.fallback_allowed
       }));
     } else {
-        const inst = Array.isArray(s.instrumentation) ? s.instrumentation : [];
-        buckets = inst.map((k: any) => ({ instrument: String(k), slots: 0, remaining: 0 }));
+      const inst = Array.isArray(s.instrumentation) ? s.instrumentation : [];
+      buckets = inst.map((k: any) => ({ instrument: String(k), slots: 0, remaining: 0 }));
     }
 
     s.instrument_buckets = buckets;
@@ -491,11 +496,11 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
     this.attempting[songId] = true;
     const jamId = this.songJamMap[songId];
 
-    console.log('[HomeGuestV2] submitSelection', { songId, sel, jamId });
+    console.log('[HomeGuestV2] submitSelection', { songId, sel, jamIdEncontradoNoMap: jamId, mySongJamMap: this.songJamMap });
 
     if (!jamId) {
       console.error('[HomeGuestV2] ERRO: Jam ID não encontrado para a música', songId);
-      this.toast.triggerToast('error', 'Erro interno', 'Jam ID não encontrado');
+      this.triggerToast('error', 'Erro interno', 'Jam ID não encontrado');
       this.attempting[songId] = false;
       return;
     }
@@ -507,11 +512,11 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
         this.submitError[songId] = !ok;
         this.attempting[songId] = false;
         if (ok) {
-           this.myStatusMap[songId] = 'pending';
-           this.toast.triggerToast('success', 'Sucesso', 'Inscrição realizada com sucesso!');
-           // this.refreshLists(); // Optional
+          this.myStatusMap[songId] = 'pending';
+          this.triggerToast('success', 'Sucesso', 'Inscrição realizada com sucesso!');
+          // this.refreshLists(); // Optional
         } else {
-           this.toast.triggerToast('error', 'Erro', 'Erro ao realizar inscrição.');
+          this.triggerToast('error', 'Erro', 'Erro ao realizar inscrição.');
         }
       },
       error: (err) => {
@@ -519,7 +524,7 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
         this.submitted[songId] = false;
         this.submitError[songId] = true;
         this.attempting[songId] = false;
-        this.toast.triggerToast('error', 'Erro de Conexão', 'Erro ao se conectar com o servidor.');
+        this.triggerToast('error', 'Erro de Conexão', 'Erro ao se conectar com o servidor.');
       }
     });
   }
@@ -605,18 +610,18 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
   }
 
   loadPlaylist() {
-      // Mock or fetch playlist
-      // Implementation pending or handled by app-playlist component
+    // Mock or fetch playlist
+    // Implementation pending or handled by app-playlist component
   }
 
   startAutoAdvance() {
-      // Logic for standalone auto advance
-      // Implementation pending
+    // Logic for standalone auto advance
+    // Implementation pending
   }
 
   stopAutoAdvance() {
-      // Logic for standalone stop
-      // Implementation pending
+    // Logic for standalone stop
+    // Implementation pending
   }
 
   get selectedSong() {
@@ -682,12 +687,12 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
     this.musicSuggestionService.acceptInvite(suggestion.id, String(this.currentUser.id)).subscribe({
       next: () => {
         this.recentlyAcceptedInvites.push(suggestion.id);
-        this.toast.triggerToast('success', 'Convite aceito!', 'Você agora está participando desta sugestão.');
+        this.triggerToast('success', 'Convite aceito!', 'Você agora está participando desta sugestão.');
         delete this.isProcessingInvite[suggestion.id];
       },
       error: (err) => {
         console.error(err);
-        this.toast.triggerToast('error', 'Erro ao aceitar convite', 'Tente novamente.');
+        this.triggerToast('error', 'Erro ao aceitar convite', 'Tente novamente.');
         delete this.isProcessingInvite[suggestion.id];
       }
     });
@@ -718,12 +723,12 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
       next: () => {
         this.recentlyRejectedInvites.push(suggestion.id);
         this.invitesForMe = this.invitesForMe.filter(i => i.id !== suggestion.id);
-        this.toast.triggerToast('info', 'Convite recusado', 'Você recusou participar desta sugestão.');
+        this.triggerToast('info', 'Convite recusado', 'Você recusou participar desta sugestão.');
         delete this.isProcessingInvite[suggestion.id];
       },
       error: (err) => {
         console.error(err);
-        this.toast.triggerToast('error', 'Erro ao recusar convite', 'Tente novamente.');
+        this.triggerToast('error', 'Erro ao recusar convite', 'Tente novamente.');
         delete this.isProcessingInvite[suggestion.id];
       }
     });

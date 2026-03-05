@@ -31,7 +31,7 @@ export class KanbanTaskItemComponent {
 
   isMenuOpen = false;
 
-  constructor(private eventService: EventService) {}
+  constructor(private eventService: EventService) { }
 
   getBorderClass(): string {
     // Se estiver em on_stage
@@ -84,7 +84,7 @@ export class KanbanTaskItemComponent {
   }
 
   toggleReady(event?: MouseEvent) {
-    if (event) { try { event.stopPropagation(); } catch {} }
+    if (event) { try { event.stopPropagation(); } catch { } }
     if (this.task.status !== 'open_for_candidates') return;
     const jamId = this.jamId ?? (this.task?.song?.jam?.id ?? this.task?.song?.jam_id);
     const eventId = this.eventIdCode;
@@ -92,7 +92,7 @@ export class KanbanTaskItemComponent {
     if (!eventId || !jamId || !songId) return;
 
     const nextReady = !this.task.ready;
-    try { console.log('[Kanban] Toggle ready da música', { eventId, jamId, songId, ready: nextReady }); } catch {}
+    try { console.log('[Kanban] Toggle ready da música', { eventId, jamId, songId, ready: nextReady }); } catch { }
     this.eventService.updateSongReady(eventId, jamId, songId, nextReady).subscribe({
       next: (ok) => {
         if (ok) {
@@ -102,7 +102,7 @@ export class KanbanTaskItemComponent {
         }
       },
       error: (err) => {
-        try { console.log('[Kanban] Falha ao atualizar ready', err?.message || err); } catch {}
+        try { console.log('[Kanban] Falha ao atualizar ready', err?.message || err); } catch { }
       }
     });
   }
@@ -112,18 +112,18 @@ export class KanbanTaskItemComponent {
   }
 
   toggleMenu(event?: MouseEvent) {
-    if (event) { try { event.stopPropagation(); } catch {} }
+    if (event) { try { event.stopPropagation(); } catch { } }
     this.isMenuOpen = !this.isMenuOpen;
   }
 
   onEditClick(event?: MouseEvent) {
-    if (event) { try { event.stopPropagation(); } catch {} }
+    if (event) { try { event.stopPropagation(); } catch { } }
     this.isMenuOpen = false;
     this.edit.emit(this.task);
   }
 
   onDeleteClick(event?: MouseEvent) {
-    if (event) { try { event.stopPropagation(); } catch {} }
+    if (event) { try { event.stopPropagation(); } catch { } }
     this.isMenuOpen = false;
     this.delete.emit(this.task);
   }
@@ -179,7 +179,7 @@ export class KanbanTaskItemComponent {
     const jamId = this.jamId ?? (this.task?.song?.jam?.id ?? this.task?.song?.jam_id);
     const eventId = this.eventIdCode;
     const instrument = String(bucket?.instrument || '');
-    const candidateId = user?.candidate_id ?? user?.application_id ?? user?.id ?? user?.user_id;
+    const candidateId = user?.candidate_id ?? user?.id_code ?? user?.application_id ?? user?.id ?? user?.user_id;
     console.log('[Kanban] Approve candidate payload', {
       eventId,
       jamId,
@@ -189,7 +189,7 @@ export class KanbanTaskItemComponent {
       status: 'approved'
     });
     if (eventId && jamId && songId && candidateId) {
-      this.eventService.setSongApplicationStatus(eventId, jamId, songId, instrument, { id: candidateId }, 'approved').subscribe({
+      this.eventService.approveSongCandidate(eventId, jamId, songId, candidateId).subscribe({
         error: () => {
           bucket.approved = prevApproved;
           bucket.pending = prevPending;
@@ -212,7 +212,7 @@ export class KanbanTaskItemComponent {
     const jamId = this.jamId ?? (this.task?.song?.jam?.id ?? this.task?.song?.jam_id);
     const eventId = this.eventIdCode;
     const instrument = String(bucket?.instrument || '');
-    const candidateId = user?.candidate_id ?? user?.application_id ?? user?.id ?? user?.user_id;
+    const candidateId = user?.candidate_id ?? user?.id_code ?? user?.application_id ?? user?.id ?? user?.user_id;
     console.log('[Kanban] Revert candidate to pending payload', {
       eventId,
       jamId,

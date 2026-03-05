@@ -170,7 +170,7 @@ export interface ApiSong {
   jam?: { id: number; name?: string; status?: string } | null;
   jam_id?: number; // compat
   instrumentation?: string[]; // compat
-  rating_summary?: { average?: number; count?: number; [key: string]: any };
+  rating_summary?: { average?: number; count?: number;[key: string]: any };
   queue_position?: number;
   my_application?: { instrument?: string; status?: 'pending' | 'approved' | 'rejected' } | null;
   musicians?: Array<{
@@ -480,7 +480,7 @@ export class EventService {
   private readonly PUBLIC_API_BASE_URL = `${environment.apiUrl}/api/public/v1`;
   private readonly NON_VERSIONED_API_BASE_URL = `${environment.apiUrl}/api`;
 
-  constructor(private http: HttpClient, private authService: AuthService) {}
+  constructor(private http: HttpClient, private authService: AuthService) { }
 
   getEvents(): Observable<EventListItem[]> {
     const token = this.authService.getAuthToken();
@@ -553,29 +553,6 @@ export class EventService {
     );
   }
 
-  setSongApplicationStatus(
-    eventId: string | number,
-    jamId: string | number,
-    songId: string | number,
-    instrument: string,
-    candidate: { id?: number | string; id_code?: string; email?: string },
-    status: 'pending' | 'approved' | 'rejected'
-  ): Observable<boolean> {
-    const token = this.authService.getAuthToken();
-    const headers: HttpHeaders = new HttpHeaders(token ? { Authorization: `Bearer ${token}` } : {});
-    const url = `${this.API_BASE_URL}/events/${eventId}/jams/${jamId}/songs/${songId}/applications/status`;
-    const body: any = {
-      instrument,
-      status,
-      user_id: candidate?.id,
-      user_id_code: candidate?.id_code,
-      user_email: candidate?.email
-    };
-    return this.http.post<{ success: boolean; data?: any; message?: string }>(url, body, { headers }).pipe(
-      map((resp) => !!resp?.success)
-    );
-  }
-
   getOpenSongsWithMyApplication(eventId: string | number, jamId: string | number): Observable<any[]> {
     const token = this.authService.getAuthToken();
     const headers: HttpHeaders = new HttpHeaders(token ? { Authorization: `Bearer ${token}` } : {});
@@ -592,7 +569,7 @@ export class EventService {
     const token = this.authService.getAuthToken();
     const headers: HttpHeaders = new HttpHeaders(token ? { Authorization: `Bearer ${token}` } : {});
     const url = `${this.NON_VERSIONED_API_BASE_URL}/events/${eventId}/jams/open`;
-    try { console.log('[HTTP][EventService] GET open jams songs', { url, eventId, auth: !!token }); } catch {}
+    try { console.log('[HTTP][EventService] GET open jams songs', { url, eventId, auth: !!token }); } catch { }
     return this.http.get<{ success?: boolean; data?: any }>(url, { headers }).pipe(
       map((resp) => {
         const songs = resp?.data?.songs || resp?.data || [];
@@ -605,7 +582,7 @@ export class EventService {
     const token = this.authService.getAuthToken();
     const headers: HttpHeaders = new HttpHeaders(token ? { Authorization: `Bearer ${token}` } : {});
     const url = `${this.NON_VERSIONED_API_BASE_URL}/events/${eventId}/jams/my/on-stage`;
-    try { console.log('[HTTP][EventService] GET my on-stage songs', { url, eventId, auth: !!token }); } catch {}
+    try { console.log('[HTTP][EventService] GET my on-stage songs', { url, eventId, auth: !!token }); } catch { }
     return this.http.get<{ success?: boolean; data?: any }>(url, { headers }).pipe(
       map((resp) => {
         const data = resp?.data;
@@ -621,7 +598,7 @@ export class EventService {
     const token = this.authService.getAuthToken();
     const headers: HttpHeaders = new HttpHeaders(token ? { Authorization: `Bearer ${token}` } : {});
     const url = `${this.NON_VERSIONED_API_BASE_URL}/events/${eventId}/jams`;
-    try { console.log('[HTTP][EventService] GET public jams', { url, eventId, auth: !!token }); } catch {}
+    try { console.log('[HTTP][EventService] GET public jams', { url, eventId, auth: !!token }); } catch { }
     return this.http.get<{ success?: boolean; data?: any }>(url, { headers }).pipe(
       map((resp) => {
         const jams = resp?.data?.jams || resp?.data || [];
@@ -662,26 +639,24 @@ export class EventService {
       onopen: null,
       onmessage: null,
       onerror: null,
-      close: () => {},
-      addEventListener: () => {},
-      removeEventListener: () => {}
+      close: () => { },
+      addEventListener: () => { },
+      removeEventListener: () => { }
     };
     return stub as EventSource;
   }
 
 
 
-  getEventJamId(eventId: string | number): Observable<number | null> {
+  getEventJamId(eventId: string | number): Observable<number | string | null> {
     const token = this.authService.getAuthToken();
     const headers: HttpHeaders = new HttpHeaders(token ? { Authorization: `Bearer ${token}` } : {});
     const url = `${this.NON_VERSIONED_API_BASE_URL}/events/${eventId}/jam`;
-    try { console.log('[HTTP][EventService] GET jam id', { url, eventId, auth: !!token }); } catch {}
+    try { console.log('[HTTP][EventService] GET jam id', { url, eventId, auth: !!token }); } catch { }
     return this.http.get<any>(url, { headers }).pipe(
       map((resp) => {
-        const jamId = resp?.data?.jam_id ?? resp?.jam_id ?? null;
-        if (jamId === null || jamId === undefined) return null;
-        const n = Number(jamId);
-        return Number.isNaN(n) ? null : n;
+        const jamId = resp?.data?.id ?? resp?.data?.jam_id ?? resp?.jam_id ?? resp?.id ?? null;
+        return jamId;
       })
     );
   }
@@ -904,7 +879,7 @@ export class EventService {
   // Versão pública que retorna também total_responses (para KPIs)
   getEventByIdCodeDetail(idCode: string): Observable<{ event: ApiEvent; total_responses?: number }> {
     const url = `${this.PUBLIC_API_BASE_URL}/events/${idCode}`;
-    try { console.log('[HTTP][EventService] GET event by id_code (detail)', { url, idCode }); } catch {}
+    try { console.log('[HTTP][EventService] GET event by id_code (detail)', { url, idCode }); } catch { }
     return this.http.get<any>(url).pipe(
       map((resp) => ({
         event: (resp?.data?.event || resp?.data || resp?.event) as ApiEvent,
@@ -916,7 +891,7 @@ export class EventService {
   // Endpoint público para detalhe do evento por id_code (sem necessidade de token)
   getPublicEventByIdCodeDetail(idCode: string): Observable<{ event: ApiEvent; total_responses?: number }> {
     const url = `${this.PUBLIC_API_BASE_URL}/events/${idCode}`;
-    try { console.log('[HTTP][EventService] GET public event by id_code (detail)', { url, idCode }); } catch {}
+    try { console.log('[HTTP][EventService] GET public event by id_code (detail)', { url, idCode }); } catch { }
     return this.http.get<any>(url).pipe(
       map((resp) => ({
         event: (resp?.data || resp?.event) as ApiEvent,
@@ -1121,7 +1096,7 @@ export class EventService {
     );
   }
 
-  deleteEventQuestion(idOrCode: string | number, questionId: number): Observable<{ success: boolean; message?: string }>{
+  deleteEventQuestion(idOrCode: string | number, questionId: number): Observable<{ success: boolean; message?: string }> {
     const token = this.authService.getAuthToken();
     const headers: HttpHeaders = new HttpHeaders(token ? { Authorization: `Bearer ${token}` } : {});
     const url = `${this.API_BASE_URL}/events/${idOrCode}/questions/${questionId}`;
