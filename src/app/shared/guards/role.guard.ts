@@ -69,7 +69,7 @@ export class RoleGuard implements CanActivate {
 
   private redirectToUserHome(role: string): void {
     const roleRoutes: { [key: string]: string } = {
-      admin: '/pub/admin',
+      admin: '/admin/home',
       master: '/pub/master',
       manager: '/events/home-default',
       waiter: '/pub/waiter',

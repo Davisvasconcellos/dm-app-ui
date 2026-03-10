@@ -105,9 +105,12 @@ export class SigninFormComponent implements OnInit {
         const user = this.authService.getCurrentUser();
         if (user) {
           switch (user.role) {
-            case 'admin':
-              this.router.navigate(['/pub/admin']);
+            case 'admin': {
+              const owned = (user as any)?.ownedOrganizations;
+              const hasOwned = Array.isArray(owned) && owned.length > 0;
+              this.router.navigate([hasOwned ? '/admin/home' : '/admin/organizations'], { queryParams: hasOwned ? {} : { onboarding: '1', returnUrl: '/admin/home' } });
               break;
+            }
             case 'master':
               this.router.navigate(['/pub/master']);
               break;
@@ -175,9 +178,12 @@ export class SigninFormComponent implements OnInit {
           const user = this.authService.getCurrentUser();
           if (user) {
             switch (user.role) {
-              case 'admin':
-                this.router.navigate(['/pub/admin']);
+              case 'admin': {
+                const owned = (user as any)?.ownedOrganizations;
+                const hasOwned = Array.isArray(owned) && owned.length > 0;
+                this.router.navigate([hasOwned ? '/admin/home' : '/admin/organizations'], { queryParams: hasOwned ? {} : { onboarding: '1', returnUrl: '/admin/home' } });
                 break;
+              }
               case 'master':
                 this.router.navigate(['/pub/master']);
                 break;

@@ -61,7 +61,7 @@ export class AppHeaderComponent implements OnInit, AfterViewInit {
       const normalized = role === 'customer' ? 'user' : role;
       switch (normalized) {
         case 'admin':
-          this.roleHomeLink = '/pub/admin';
+          this.roleHomeLink = '/admin/home';
           break;
         case 'master':
           this.roleHomeLink = '/pub/master';

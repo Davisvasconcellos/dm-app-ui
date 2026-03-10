@@ -1,0 +1,216 @@
+<div class="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+  <div class="relative h-35 md:h-45 rounded-t-2xl bg-gray-200 dark:bg-gray-800">
+    <img [src]="banner_url || '/images/stores/default-store-banner.jpg'" alt="Banner" class="w-full h-full object-cover rounded-t-2xl">
+    <div class="absolute bottom-0 left-6 transform translate-y-1/2">
+      <div class="relative h-20 w-20 rounded-full border-4 border-white dark:border-gray-900 md:h-25 md:w-25">
+        <img [src]="logo_url || '/images/stores/default-store-logo.png'" alt="Logo" class="w-full h-full object-cover rounded-full">
+        <button (click)="triggerLogoInput()" class="absolute bottom-0 right-0 flex h-7 w-7 items-center justify-center rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 6H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+        </button>
+        <input type="file" class="hidden" #logoFileInput (change)="onLogoSelected($event)" accept="image/png, image/jpeg, image/gif">
+      </div>
+    </div>
+    <button (click)="triggerBannerInput()" class="absolute top-3 right-3 rounded-lg bg-gray-200 px-3 py-1 text-xs text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600">
+      Alterar Banner
+    </button>
+    <input type="file" id="bannerFileInput" class="hidden" (change)="onBannerSelected($event)" accept="image/png, image/jpeg">
+  </div>
+
+  <div class="border-b border-gray-200 px-6 pt-12 pb-4 dark:border-gray-800">
+    <nav class="flex space-x-8">
+      <button (click)="setActiveTab('establishment')" [class]="activeTab === 'establishment' ? 'border-primary text-primary dark:text-primary' : 'border-transparent text-gray-600 hover:text-primary dark:text-gray-400 dark:hover:text-primary'" class="whitespace-nowrap border-b-2 py-2 px-1 text-sm font-medium transition-colors">
+        Estabelecimento
+      </button>
+      <button (click)="setActiveTab('company')" [class]="activeTab === 'company' ? 'border-primary text-primary dark:text-primary' : 'border-transparent text-gray-600 hover:text-primary dark:text-gray-400 dark:hover:text-primary'" class="whitespace-nowrap border-b-2 py-2 px-1 text-sm font-medium transition-colors">
+        Dados da Empresa
+      </button>
+      <button (click)="setActiveTab('hours')" [class]="activeTab === 'hours' ? 'border-primary text-primary dark:text-primary' : 'border-transparent text-gray-600 hover:text-primary dark:text-gray-400 dark:hover:text-primary'" class="whitespace-nowrap border-b-2 py-2 px-1 text-sm font-medium transition-colors">
+        Horários
+      </button>
+      <button (click)="setActiveTab('payments')" [class]="activeTab === 'payments' ? 'border-primary text-primary dark:text-primary' : 'border-transparent text-gray-600 hover:text-primary dark:text-gray-400 dark:hover:text-primary'" class="whitespace-nowrap border-b-2 py-2 px-1 text-sm font-medium transition-colors">
+        Pagamentos
+      </button>
+      <button (click)="setActiveTab('delivery')" [class]="activeTab === 'delivery' ? 'border-primary text-primary dark:text-primary' : 'border-transparent text-gray-600 hover:text-primary dark:text-gray-400 dark:hover:text-primary'" class="whitespace-nowrap border-b-2 py-2 px-1 text-sm font-medium transition-colors">
+        Delivery
+      </button>
+    </nav>
+  </div>
+
+  <div class="p-4 sm:p-6">
+    @if (activeTab === 'establishment') {
+      <h3 class="mb-6 text-lg font-medium text-gray-800 dark:text-white">Configurações do Estabelecimento</h3>
+      <div class="mb-4.5">
+        <app-label>Nome do Estabelecimento <span class="text-error-500">*</span></app-label>
+        <input type="text" [(ngModel)]="establishmentName" name="establishmentName" placeholder="Digite o nome do estabelecimento" class="w-full rounded-lg border-[1.5px] border-gray-300 bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-gray-200 dark:border-gray-800 dark:bg-gray-800 dark:text-white dark:focus:border-primary">
+      </div>
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 mb-4.5">
+        <div>
+          <app-label>Capacidade <span class="text-error-500">*</span></app-label>
+          <input type="number" [(ngModel)]="capacity" name="capacity" placeholder="Ex: 50 pessoas" class="w-full rounded-lg border-[1.5px] border-gray-300 bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-gray-200 dark:border-gray-800 dark:bg-gray-800 dark:text-white dark:focus:border-primary">
+        </div>
+        <div>
+          <app-label>Tipo de Estabelecimento <span class="text-error-500">*</span></app-label>
+          <select [(ngModel)]="establishmentType" name="establishmentType" class="w-full rounded-lg border-[1.5px] border-gray-300 bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-gray-200 dark:border-gray-800 dark:bg-gray-800 dark:text-white dark:focus:border-primary appearance-none">
+            <optgroup label="Alimentação e Bebidas">
+              <option value="restaurante">Restaurante (geral, self-service, à la carte)</option>
+              <option value="lanchonete_hamburgueria">Lanchonete / Hamburgueria</option>
+              <option value="pizzaria">Pizzaria</option>
+              <option value="bar_boteco">Bar / Boteco</option>
+              <option value="pub_barzinho">Pub / Barzinho</option>
+              <option value="cafeteria">Cafeteria / Casa de café</option>
+              <option value="sorveteria">Sorveteria</option>
+              <option value="padaria_confeitaria">Padaria / Confeitaria</option>
+              <option value="churrascaria">Churrascaria</option>
+              <option value="pastelaria_creperia">Pastelaria / Creperia</option>
+            </optgroup>
+            <optgroup label="Varejo de Rua / Comércio Geral">
+              <option value="loja_roupas_acessorios">Loja de roupas e acessórios</option>
+              <option value="loja_calcados">Loja de calçados</option>
+              <option value="loja_variedades">Loja de variedades / Loja de 1,99 / Loja de diversos</option>
+              <option value="minimercado_mercearia">Minimercado / Mercearia / Mercado de bairro</option>
+              <option value="farmacia_drogaria">Farmácia / Drogaria</option>
+              <option value="pet_shop">Pet shop</option>
+              <option value="papelaria_banca">Papelaria / Banca de jornal</option>
+              <option value="materiais_construcao_ferragem">Loja de materiais de construção / Ferragem</option>
+              <option value="moveis_decoracao">Loja de móveis e decoração</option>
+            </optgroup>
+            <optgroup label="Saúde e Beleza">
+              <option value="salao_cabeleireiro">Salão de beleza / Cabeleireiro</option>
+              <option value="manicure_estetica">Manicure / Estética</option>
+              <option value="dentista_odonto">Dentista / Clínica odontológica</option>
+              <option value="clinica_medica">Clínica médica / Consultório médico</option>
+              <option value="academia_pilates_crossfit">Academia / Studio de pilates / Crossfit</option>
+            </optgroup>
+            <optgroup label="Serviços Profissionais e Escritórios">
+              <option value="contabilidade">Escritório de contabilidade</option>
+              <option value="advocacia">Escritório de advocacia</option>
+              <option value="consultoria">Escritório / Consultoria (geral, marketing, TI)</option>
+              <option value="agencia_viagens">Agência de viagens</option>
+              <option value="coworking">Coworking / Sala comercial compartilhada</option>
+            </optgroup>
+            <optgroup label="Outros Ramos Comuns e Populares">
+              <option value="posto_conveniencia">Posto de gasolina / Conveniência</option>
+              <option value="lavanderia">Lavanderia (self-service ou tradicional)</option>
+              <option value="mecanica_oficina">Mecânica automotiva / Oficina</option>
+              <option value="padaria_industrial">Padaria industrial / Distribuidora de pães</option>
+              <option value="eletronicos_assistencia">Loja de eletrônicos / Assistência técnica de celular</option>
+            </optgroup>
+            <option value="outros">OUTROS</option>
+          </select>
+        </div>
+      </div>
+      <div class="mb-6">
+        <app-label>Descrição</app-label>
+        <textarea rows="4" [(ngModel)]="establishmentDescription" name="establishmentDescription" placeholder="Descreva seu estabelecimento" class="w-full rounded-lg border-[1.5px] border-gray-300 bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-gray-200 dark:border-gray-800 dark:bg-gray-800 dark:text-white dark:focus:border-primary"></textarea>
+      </div>
+      <h4 class="text-lg font-medium text-gray-800 dark:text-white mb-4">Redes Sociais</h4>
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-3 mb-6">
+        <div>
+          <app-label>Facebook</app-label>
+          <input type="text" [(ngModel)]="facebook_handle" name="facebook_handle" placeholder="Ex: bardofranca" class="w-full rounded-lg border-[1.5px] border-gray-300 bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-gray-200 dark:border-gray-800 dark:bg-gray-800 dark:text-white dark:focus:border-primary">
+        </div>
+        <div>
+          <app-label>Instagram</app-label>
+          <input type="text" [(ngModel)]="instagram_handle" name="instagram_handle" placeholder="Ex: @francabar" class="w-full rounded-lg border-[1.5px] border-gray-300 bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-gray-200 dark:border-gray-800 dark:bg-gray-800 dark:text-white dark:focus:border-primary">
+        </div>
+        <div>
+          <app-label>Site</app-label>
+          <input type="text" [(ngModel)]="website" name="website" placeholder="Ex: https://bardofranca.com.br" class="w-full rounded-lg border-[1.5px] border-gray-300 bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-gray-200 dark:border-gray-800 dark:bg-gray-800 dark:text-white dark:focus:border-primary">
+        </div>
+      </div>
+    }
+
+    @if (activeTab === 'company') {
+      <h3 class="mb-6 text-lg font-medium text-gray-800 dark:text-white">Dados da Empresa</h3>
+      <div class="mb-4.5">
+        <app-label>Razão Social <span class="text-error-500">*</span></app-label>
+        <input type="text" [(ngModel)]="companyName" name="companyName" placeholder="Digite a razão social" class="w-full rounded-lg border-[1.5px] border-gray-300 bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-gray-200 dark:border-gray-800 dark:bg-gray-800 dark:text-white dark:focus:border-primary">
+      </div>
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-3 mb-4.5">
+        <div>
+          <app-label>CNPJ <span class="text-error-500">*</span></app-label>
+          <input
+            type="text"
+            [(ngModel)]="cnpj"
+            name="cnpj"
+            placeholder="00.000.000/0000-00"
+            (input)="onCnpjInput($event)"
+            maxlength="18"
+            inputmode="numeric"
+            autocomplete="off"
+            [readonly]="cnpjReadonly"
+            [class.cursor-not-allowed]="cnpjReadonly"
+            [class.bg-gray-100]="cnpjReadonly"
+            [ngClass]="{ 'border-error-500': !cnpjReadonly && cnpjComplete && !cnpjValid }"
+            [attr.aria-invalid]="(!cnpjReadonly && cnpjComplete && !cnpjValid) ? 'true' : null"
+            class="w-full rounded-lg border-[1.5px] border-gray-300 bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-gray-200 dark:border-gray-800 dark:bg-gray-800 dark:text-white dark:focus:border-primary"
+          >
+          @if (!cnpjReadonly && cnpjComplete && !cnpjValid) {
+            <div class="mt-1 text-xs text-error-500">CNPJ inválido</div>
+          }
+        </div>
+        <div>
+          <app-label>Telefone <span class="text-error-500">*</span></app-label>
+          <input type="text" [(ngModel)]="phone" name="phone" placeholder="(00) 00000-0000" class="w-full rounded-lg border-[1.5px] border-gray-300 bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-gray-200 dark:border-gray-800 dark:bg-gray-800 dark:text-white dark:focus:border-primary">
+        </div>
+        <div>
+          <app-label>E-mail <span class="text-error-500">*</span></app-label>
+          <input type="email" [(ngModel)]="email" name="email" placeholder="contato@empresa.com" class="w-full rounded-lg border-[1.5px] border-gray-300 bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-gray-200 dark:border-gray-800 dark:bg-gray-800 dark:text-white dark:focus:border-primary">
+        </div>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-6 gap-4 mb-4.5">
+        <div class="sm:col-span-2">
+          <app-label>CEP <span class="text-error-500">*</span></app-label>
+          <input type="text" [(ngModel)]="zip_code" name="zip_code" (blur)="onCepBlur()" placeholder="00000-000" class="w-full rounded-lg border-[1.5px] border-gray-300 bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-gray-200 dark:border-gray-800 dark:bg-gray-800 dark:text-white dark:focus:border-primary">
+        </div>
+        <div class="sm:col-span-4">
+          <app-label>Logradouro <span class="text-error-500">*</span></app-label>
+          <input type="text" [(ngModel)]="address_street" name="address_street" placeholder="Rua, Avenida, etc." [disabled]="true" class="w-full rounded-lg border-[1.5px] border-gray-300 bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-gray-200 dark:border-gray-800 dark:bg-gray-800 dark:text-white dark:focus:border-primary">
+        </div>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-6 gap-4 mb-4.5">
+        <div class="sm:col-span-2">
+          <app-label>Número <span class="text-error-500">*</span></app-label>
+          <input type="text" [(ngModel)]="address_number" name="address_number" (ngModelChange)="onAddressNumberChange()" placeholder="Ex: 123" class="w-full rounded-lg border-[1.5px] border-gray-300 bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active-border-primary disabled:cursor-default disabled:bg-gray-200 dark:border-gray-800 dark:bg-gray-800 dark:text-white dark:focus:border-primary">
+        </div>
+        <div class="sm:col-span-4">
+          <app-label>Complemento</app-label>
+          <input type="text" [(ngModel)]="address_complement" name="address_complement" placeholder="Apto, Bloco, etc." class="w-full rounded-lg border-[1.5px] border-gray-300 bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active-border-primary disabled:cursor-default disabled:bg-gray-200 dark:border-gray-800 dark:bg-gray-800 dark:text-white dark:focus:border-primary">
+        </div>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        <div>
+          <app-label>Bairro <span class="text-error-500">*</span></app-label>
+          <input type="text" [(ngModel)]="address_neighborhood" name="address_neighborhood" placeholder="Bairro" [disabled]="true" class="w-full rounded-lg border-[1.5px] border-gray-300 bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active-border-primary disabled:cursor-default disabled:bg-gray-200 dark:border-gray-800 dark:bg-gray-800 dark:text-white dark:focus:border-primary">
+        </div>
+        <div>
+          <app-label>Cidade <span class="text-error-500">*</span></app-label>
+          <input type="text" [(ngModel)]="address_city" name="address_city" placeholder="Cidade" [disabled]="true" class="w-full rounded-lg border-[1.5px] border-gray-300 bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active-border-primary disabled:cursor-default disabled:bg-gray-200 dark:border-gray-800 dark:bg-gray-800 dark:text-white dark:focus:border-primary">
+        </div>
+        <div>
+          <app-label>Estado <span class="text-error-500">*</span></app-label>
+          <input type="text" [(ngModel)]="address_state" name="address_state" placeholder="UF" [disabled]="true" class="w-full rounded-lg border-[1.5px] border-gray-300 bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active-border-primary disabled:cursor-default disabled:bg-gray-200 dark:border-gray-800 dark:bg-gray-800 dark:text-white dark:focus:border-primary">
+        </div>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+        <div>
+          <app-label>Latitude</app-label>
+          <input type="text" [(ngModel)]="latitude" name="latitude" placeholder="-23.550520" [disabled]="true" class="w-full rounded-lg border-[1.5px] border-gray-300 bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active-border-primary disabled:cursor-default disabled:bg-gray-200 dark:border-gray-800 dark:bg-gray-800 dark:text-white dark:focus:border-primary">
+        </div>
+        <div>
+          <app-label>Longitude</app-label>
+          <input type="text" [(ngModel)]="longitude" name="longitude" placeholder="-46.633308" [disabled]="true" class="w-full rounded-lg border-[1.5px] border-gray-300 bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active-border-primary disabled:cursor-default disabled:bg-gray-200 dark:border-gray-800 dark:bg-gray-800 dark:text-white dark:focus:border-primary">
+        </div>
+      </div>
+      <div id="map" class="h-64 w-full rounded-lg mt-4"></div>
+    }
+  </div>
+</div>
+<div class="flex justify-end gap-4.5 pt-6 border-t border-gray-200 dark:border-gray-800 mt-6">
+  <button type="button" (click)="onCancel()" class="rounded-lg border border-gray-300 bg-white px-6 py-2 text-sm font-medium text-gray-800 hover:bg-gray-100 dark:bg-gray-800 dark:text-white dark:border-gray-700 dark:hover:bg-gray-700">
+    Cancelar
+  </button>
+  <button type="button" (click)="onSave()" [disabled]="(!cnpjReadonly && cnpjComplete && !cnpjValid) || isSubmitting" class="rounded-lg bg-brand-500 px-6 py-2 text-sm font-medium text-white hover:bg-brand-600 disabled:opacity-60 disabled:cursor-not-allowed">
+    Salvar
+  </button>
+</div>

@@ -96,7 +96,6 @@ import { MenuComponent } from './pages/pub/waiter/menu/menu.component';
 import { TablesComponent } from './pages/pub/waiter/tables/tables.component';
 import { PaymentsComponent } from './pages/pub/waiter/payments/payments.component';
 import { AdminDashboardComponent } from './pages/pub/admin/admin-dashboard/admin-dashboard.component';
-import { ConfigComponent } from './pages/pub/admin/config/config.component';
 import { ClientsComponent } from './pages/pub/admin/clients/clients.component';
 import { WaitersComponent } from './pages/pub/admin/waiters/waiters.component';
 import { TablesComponent as AdminTablesComponent } from './pages/pub/admin/tables/tables.component';
@@ -112,6 +111,7 @@ import { AuthGuard } from './shared/guards/auth.guard';
 import { RoleGuard } from './shared/guards/role.guard';
 import { GuestGuard } from './shared/guards/guest.guard';
 import { AutoCheckinGuard } from './shared/guards/auto-checkin.guard';
+import { AdminOrgGuard } from './shared/guards/admin-org.guard';
 
 export const routes: Routes = [
   // Force check-in to render without any layout wrappers
@@ -137,6 +137,7 @@ export const routes: Routes = [
     path:'',
     component:AppLayoutComponent,
     canActivate: [AuthGuard],
+    canActivateChild: [AdminOrgGuard],
     children:[
       {
         path: '',
@@ -325,15 +326,43 @@ export const routes: Routes = [
         canActivate: [AuthGuard, RoleGuard],
         data: { expectedRoles: ['master'] },
         children: [
-          { 
-            path: 'home', 
+          {
+            path: 'home',
             loadComponent: () => import('./pages/master/home-master/home-master.component').then(m => m.HomeMasterComponent),
             title: 'Master Admin - Home'
           },
-          { 
-            path: 'modules', 
+          {
+            path: 'modules',
             loadComponent: () => import('./pages/master/modules-manager/modules-manager.component').then(m => m.ModulesManagerComponent),
             title: 'Gerenciamento de Módulos'
+          },
+          { path: '', redirectTo: 'home', pathMatch: 'full' }
+        ]
+      },
+      {
+        path: 'admin',
+        canActivate: [AuthGuard, RoleGuard],
+        data: { expectedRoles: ['admin'] },
+        children: [
+          {
+            path: 'home',
+            loadComponent: () => import('./pages/admin/home-admin/home-admin.component').then(m => m.HomeAdminComponent),
+            title: 'Admin - Home'
+          },
+          {
+            path: 'organizations',
+            loadComponent: () => import('./pages/admin/organizations/organizations.component').then(m => m.OrganizationsComponent),
+            title: 'Admin - Organizations'
+          },
+          {
+            path: 'stores/:id_code/config',
+            loadComponent: () => import('./pages/admin/stores/config/config.component').then(m => m.ConfigComponent),
+            title: 'Admin - Store Config'
+          },
+          {
+            path: 'stores/create',
+            loadComponent: () => import('./pages/admin/stores/config/config.component').then(m => m.ConfigComponent),
+            title: 'Admin - Store Create'
           },
           { path: '', redirectTo: 'home', pathMatch: 'full' }
         ]
@@ -424,10 +453,8 @@ export const routes: Routes = [
       },
       {
         path:'pub/admin/config',
-        component:ConfigComponent,
-        canActivate: [AuthGuard, RoleGuard],
-        data: { expectedRoles: ['admin'] },
-        title:'DM-APP Configurações | DM-APP'
+        redirectTo: 'admin/home',
+        pathMatch: 'full'
       },
       {
         path:'pub/admin/clients',

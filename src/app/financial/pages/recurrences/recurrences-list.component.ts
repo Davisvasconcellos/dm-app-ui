@@ -5,7 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { FinancialService } from '../../financial.service';
 import { Recurrence } from '../../models/recurrence';
 import { LocalStorageService } from '../../../shared/services/local-storage.service';
-import { Store } from '../../../pages/pub/admin/home-admin/store.service';
+import { Store } from '../../../pages/admin/stores/store.service';
 import { ModalComponent } from '../../../shared/components/ui/modal/modal.component';
 import { RecurrencesFormComponent } from './recurrences-form.component';
 import { TranslateModule } from '@ngx-translate/core';

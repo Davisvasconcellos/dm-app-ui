@@ -41,11 +41,9 @@ export class ConfigService {
   getStoreById(storeId: string): Observable<StoreDetails> {
     const token = this.authService.getAuthToken();
     const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
-
     return this.http.get<{ data: StoreDetails }>(`${this.API_BASE_URL}/stores/${storeId}`, { headers }).pipe(
       map(response => response.data),
       catchError(error => {
-        console.error('Erro ao buscar detalhes da loja:', error);
         return throwError(() => new Error('Não foi possível carregar os dados da loja.'));
       })
     );
@@ -54,10 +52,8 @@ export class ConfigService {
   updateStore(storeId: string, storeData: Partial<StoreDetails>): Observable<any> {
     const token = this.authService.getAuthToken();
     const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
-
     return this.http.put(`${this.API_BASE_URL}/stores/${storeId}`, storeData, { headers }).pipe(
       catchError(error => {
-        console.error('Erro ao atualizar dados da loja:', error);
         return throwError(() => new Error('Não foi possível atualizar os dados da loja.'));
       })
     );

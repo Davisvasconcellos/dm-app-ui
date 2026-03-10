@@ -15,6 +15,37 @@
     <app-header/>
     <!-- app header end -->
     <div class="p-4 mx-auto max-w-(--breakpoint-2xl) md:p-6">
+      <app-modal
+        [isOpen]="showOrgOnboarding"
+        (close)="dismissOrgOnboarding()"
+        className="max-w-[640px] p-6 lg:p-8"
+      >
+        <div class="space-y-4">
+          <h4 class="font-semibold text-gray-800 text-lg dark:text-white/90">
+            Configuração Inicial: Crie sua Organização
+          </h4>
+          <p class="text-sm leading-6 text-gray-600 dark:text-gray-300">
+            Você é um usuário com privilégios (admin/master), mas ainda não possui nenhuma organização cadastrada.
+            Crie sua organização para habilitar os recursos administrativos.
+          </p>
+          <div class="flex items-center justify-end gap-3 mt-2">
+            <a
+              [routerLink]="'/admin/organizations'"
+              class="inline-flex items-center rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-white hover:bg-brand-600"
+              (click)="dismissOrgOnboarding()"
+            >
+              Ir para Organizations
+            </a>
+            <button
+              type="button"
+              class="inline-flex items-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-800 hover:bg-gray-100 dark:bg-gray-800 dark:text-white dark:border-gray-700 dark:hover:bg-gray-700"
+              (click)="dismissOrgOnboarding()"
+            >
+              Entendi
+            </button>
+          </div>
+        </div>
+      </app-modal>
       <router-outlet></router-outlet>
     </div>
   </div>

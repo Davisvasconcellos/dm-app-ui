@@ -4,7 +4,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } 
 import { FinancialService } from '../../financial.service';
 import { Recurrence } from '../../models/recurrence';
 import { LocalStorageService } from '../../../shared/services/local-storage.service';
-import { Store } from '../../../pages/pub/admin/home-admin/store.service';
+import { Store } from '../../../pages/admin/stores/store.service';
 import { FinancialToastService } from '../../financial-toast.service';
 import { TranslateModule } from '@ngx-translate/core';
 import { MatDatepickerModule } from '@angular/material/datepicker';

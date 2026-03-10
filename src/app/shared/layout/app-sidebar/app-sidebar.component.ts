@@ -1,21 +1,29 @@
 import { CommonModule } from '@angular/common';
-import { Component, ElementRef, QueryList, ViewChildren, ChangeDetectorRef } from '@angular/core';
+import { Component, ElementRef, QueryList, ViewChildren, ChangeDetectorRef, OnInit, OnDestroy, inject } from '@angular/core';
 import { SidebarService } from '../../services/sidebar.service';
 import { AuthService } from '../../services/auth.service';
 import { NavigationEnd, Router, RouterModule } from '@angular/router';
 import { SafeHtmlPipe } from '../../pipe/safe-html.pipe';
-import { SidebarWidgetComponent } from './app-sidebar-widget.component';
 import { combineLatest, Subscription } from 'rxjs';
 
-type NavItem = {
+interface NavItem {
   name: string;
   icon: string;
   path?: string;
   new?: boolean;
   roles?: string[];
   moduleSlug?: string;
-  subItems?: { name: string; path: string; pro?: boolean; new?: boolean; roles?: string[] }[];
-};
+  subItems?: SubNavItem[];
+}
+
+interface SubNavItem {
+  name: string;
+  path?: string;
+  pro?: boolean;
+  new?: boolean;
+  roles?: string[];
+  subItems?: SubNavItem[];
+}
 
 @Component({
   selector: 'app-sidebar',
@@ -26,19 +34,28 @@ type NavItem = {
   ],
   templateUrl: './app-sidebar.component.html',
 })
-export class AppSidebarComponent {
+export class AppSidebarComponent implements OnInit, OnDestroy {
   private userRole: string | null = null;
   filteredMainItems: NavItem[] = [];
 
   // Main nav items
   mainItems: NavItem[] = [
     {
-      name: 'Master Admin',
+      name: 'Master Área',
       icon: '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>',
       roles: ['master'],
       subItems: [
         { name: 'Home Master', path: '/master/home' },
         { name: 'Gerenciar Módulos', path: '/master/modules' },
+      ]
+    },
+    {
+      name: 'Admin Área',
+      icon: '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>',
+      roles: ['admin','master'],
+      subItems: [
+        { name: 'Home Admin', path: '/admin/home' },
+        { name: 'Organizations', path: '/admin/organizations' },
       ]
     },
     /*
@@ -120,7 +137,13 @@ export class AppSidebarComponent {
         { name: 'Comissões', path: '/financial/comissoes' },
         { name: 'Relatórios', path: '/financial/relatorios' },
         { name: 'Saldos bancários', path: '/financial/saldos-bancarios' },
-        { name: 'Configurações financeiras', path: '/financial/configuracoes' },
+        {
+          name: 'Configurações',
+          subItems: [
+            { name: 'Organização', path: '/financial/configuracoes' },
+            { name: 'Users', path: '/financial/parceiros' }
+          ]
+        },
       ],
     },
     /*
@@ -215,7 +238,6 @@ export class AppSidebarComponent {
   ];
   // Others nav items
   othersItems: NavItem[] = [
-    /*
     {
       icon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C11.5858 2 11.25 2.33579 11.25 2.75V12C11.25 12.4142 11.5858 12.75 12 12.75H21.25C21.6642 12.75 22 12.4142 22 12C22 6.47715 17.5228 2 12 2ZM12.75 11.25V3.53263C13.2645 3.57761 13.7659 3.66843 14.25 3.80098V3.80099C15.6929 4.19606 16.9827 4.96184 18.0104 5.98959C19.0382 7.01734 19.8039 8.30707 20.199 9.75C20.3316 10.2341 20.4224 10.7355 20.4674 11.25H12.75ZM2 12C2 7.25083 5.31065 3.27489 9.75 2.25415V3.80099C6.14748 4.78734 3.5 8.0845 3.5 12C3.5 16.6944 7.30558 20.5 12 20.5C15.9155 20.5 19.2127 17.8525 20.199 14.25H21.7459C20.7251 18.6894 16.7492 22 12 22C6.47715 22 2 17.5229 2 12Z" fill="currentColor"></path></svg>`,
       name: "Charts",
@@ -267,7 +289,7 @@ export class AppSidebarComponent {
         },
       ],
     },
-    */
+
   ];
   // Support nav items
   supportItems: NavItem[] = [
@@ -303,31 +325,29 @@ export class AppSidebarComponent {
   ];
 
   openSubmenu: string | null | number = null;
-  subMenuHeights: { [key: string]: number } = {};
+  subMenuHeights: Record<string, number> = {};
+  openNested: string | null | number = null;
+  nestedMenuHeights: Record<string, number> = {};
   @ViewChildren('subMenu') subMenuRefs!: QueryList<ElementRef>;
 
-  readonly isExpanded$;
-  readonly isMobileOpen$;
-  readonly isHovered$;
+  public sidebarService = inject(SidebarService);
+  public router = inject(Router);
+  private cdr = inject(ChangeDetectorRef);
+  private authService = inject(AuthService);
+
+  readonly isExpanded$ = this.sidebarService.isExpanded$;
+  readonly isMobileOpen$ = this.sidebarService.isMobileOpen$;
+  readonly isHovered$ = this.sidebarService.isHovered$;
 
   private subscription: Subscription = new Subscription();
-
-  constructor(
-    public sidebarService: SidebarService,
-    private router: Router,
-    private cdr: ChangeDetectorRef,
-    private authService: AuthService,
-  ) {
-    this.isExpanded$ = this.sidebarService.isExpanded$;
-    this.isMobileOpen$ = this.sidebarService.isMobileOpen$;
-    this.isHovered$ = this.sidebarService.isHovered$;
-  }
 
   ngOnInit() {
     // Subscribe to router events
     this.subscription.add(
       this.router.events.subscribe(event => {
-        if (event instanceof NavigationEnd) { }
+        if (event instanceof NavigationEnd) {
+          this.setActiveMenuFromRoute(event.urlAfterRedirects || this.router.url);
+        }
       })
     );
 
@@ -338,7 +358,7 @@ export class AppSidebarComponent {
           const isExpanded = values[0];
           const isMobileOpen = values[1];
           const isHovered = values[2];
-          
+
           if (!isExpanded && !isMobileOpen && !isHovered) {
             // this.openSubmenu = null;
             // this.savedSubMenuHeights = { ...this.subMenuHeights };
@@ -395,6 +415,23 @@ export class AppSidebarComponent {
     }
   }
 
+  toggleNested(section: string, parentIndex: number, subIndex: number) {
+    const key = `${section}-${parentIndex}-sub-${subIndex}`;
+    if (this.openNested === key) {
+      this.openNested = null;
+      this.nestedMenuHeights[key] = 0;
+    } else {
+      this.openNested = key;
+      setTimeout(() => {
+        const el = document.getElementById(key);
+        if (el) {
+          this.nestedMenuHeights[key] = el.scrollHeight;
+          this.cdr.detectChanges();
+        }
+      });
+    }
+  }
+
   onSidebarMouseEnter() {
     this.isExpanded$.subscribe(expanded => {
       if (!expanded) {
@@ -405,7 +442,7 @@ export class AppSidebarComponent {
 
   private setActiveMenuFromRoute(currentUrl: string) {
     const menuGroups = [
-      { items: this.mainItems, prefix: 'main' },
+      { items: this.filteredMainItems, prefix: 'main' },
       { items: this.othersItems, prefix: 'others' },
       { items: this.supportItems, prefix: 'support' },
     ];
@@ -456,26 +493,35 @@ export class AppSidebarComponent {
 
   private applyRoleFilter() {
     const role = this.userRole;
-    
+
     // Debug logging for modules
     const user = this.authService.getCurrentUser();
     console.log('Current User Role:', role);
     console.log('User Modules:', user?.modules);
-    
+
     this.filteredMainItems = this.mainItems
       .filter(item => {
          const roleMatch = !item.roles || (role ? item.roles.includes(role) : false);
          const moduleMatch = !item.moduleSlug || this.authService.hasModule(item.moduleSlug);
-         
+
          if (item.moduleSlug) {
             console.log(`Menu Item: ${item.name}, Slug: ${item.moduleSlug}, HasModule: ${moduleMatch}`);
          }
-         
+
          return roleMatch && moduleMatch;
       })
       .map(item => ({
         ...item,
-        subItems: item.subItems?.filter(si => !si.roles || (role ? si.roles.includes(role) : false)) || [],
+        subItems: item.subItems
+          ? item.subItems
+              .filter(si => !si.roles || (role ? si.roles.includes(role) : false))
+              .map(si => ({
+                ...si,
+                subItems: si.subItems
+                  ? si.subItems.filter(c => !c.roles || (role ? c.roles.includes(role) : false))
+                  : si.subItems
+              }))
+          : [],
       }));
     // this.cdr.detectChanges();
   }

@@ -6,7 +6,7 @@ import { FinancialService } from '../../financial.service';
 import { FinancialToastService } from '../../financial-toast.service';
 import { ContaPagar, StatusConta, TransactionsSummary } from '../../models/conta-pagar';
 import { LocalStorageService } from '../../../shared/services/local-storage.service';
-import { Store } from '../../../pages/pub/admin/home-admin/store.service';
+import { Store } from '../../../pages/admin/stores/store.service';
 import { PopoverComponent } from '../../../shared/components/ui/popover/popover/popover.component';
 import { ModalComponent } from '../../../shared/components/ui/modal/modal.component';
 import { MultiSelectComponent, Option } from '../../../shared/components/form/multi-select/multi-select.component';

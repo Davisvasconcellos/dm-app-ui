@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService, User } from '../../../shared/services/auth.service';
-import { Store, StoreService } from '../../../pages/pub/admin/home-admin/store.service';
+import { Store, StoreService } from '../../../pages/admin/stores/store.service';
 import { LocalStorageService } from '../../../shared/services/local-storage.service';
 
 @Component({

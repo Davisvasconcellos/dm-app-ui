@@ -1,10 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService, User } from '../../../../shared/services/auth.service';
-import { Store, StoreService } from './store.service';
+import { Store, StoreService } from '../../../admin/stores/store.service';
 import { LocalStorageService } from '../../../../shared/services/local-storage.service';
 import { TranslateModule } from '@ngx-translate/core';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-home-admin',
@@ -14,22 +15,26 @@ import { TranslateModule } from '@ngx-translate/core';
 })
 export class HomeAdminComponent implements OnInit {
   currentUser: User | null = null;
-  
+
   // Propriedades para o modal de lojas
   availableStores: Store[] = [];
   selectedStore: Store | null = null;
   showStoreModal = false;
   isLoadingStores = false;
   private readonly STORE_KEY = 'selectedStore';
+  showOnboardingModal = false;
 
-  constructor(
-    private authService: AuthService,
-    private storeService: StoreService,
-    private localStorageService: LocalStorageService
-  ) {}
+  private authService = inject(AuthService);
+  private storeService = inject(StoreService);
+  private localStorageService = inject(LocalStorageService);
+  private router = inject(Router);
 
   ngOnInit(): void {
     this.currentUser = this.authService.getCurrentUser();
+    const owned = (this.currentUser as any)?.ownedOrganizations;
+    if (this.currentUser?.role === 'admin' && (!Array.isArray(owned) || owned.length === 0)) {
+      this.showOnboardingModal = true;
+    }
     this.loadStores();
     this.loadSelectedStore();
   }
@@ -63,6 +68,11 @@ export class HomeAdminComponent implements OnInit {
     this.selectedStore = store;
     this.localStorageService.saveData(this.STORE_KEY, store);
     this.closeStoreModal();
+  }
+
+  goToOnboarding(): void {
+    this.router.navigate(['/admin/organizations'], { queryParams: { onboarding: '1', returnUrl: '/pub/admin' } });
+    this.showOnboardingModal = false;
   }
 
   // Sem helper: o template usa diretamente store.logo_url (URL completa)

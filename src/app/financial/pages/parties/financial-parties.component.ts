@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { StoreService, Store } from '../../../pages/pub/admin/home-admin/store.service';
+import { StoreService, Store } from '../../../pages/admin/stores/store.service';
 import { LocalStorageService } from '../../../shared/services/local-storage.service';
 import { FinancialService } from '../../financial.service';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';

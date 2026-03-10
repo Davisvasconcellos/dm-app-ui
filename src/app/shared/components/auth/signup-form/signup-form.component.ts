@@ -133,9 +133,14 @@ export class SignupFormComponent implements OnInit {
           }
 
           // Caso contrário, redirecionar baseado no papel
-          const userRole = response.data.user.role;
-          if (userRole === 'admin' || userRole === 'master') {
-            this.router.navigate(['/pub/admin']);
+          const user = response.data.user as any;
+          const userRole = user.role;
+          if (userRole === 'admin') {
+            const owned = user?.ownedOrganizations;
+            const hasOwned = Array.isArray(owned) && owned.length > 0;
+            this.router.navigate([hasOwned ? '/admin/home' : '/admin/organizations'], { queryParams: hasOwned ? {} : { onboarding: '1', returnUrl: '/admin/home' } });
+          } else if (userRole === 'master') {
+            this.router.navigate(['/pub/master']);
           } else if (userRole === 'waiter') {
             this.router.navigate(['/pub/waiter']);
           } else {

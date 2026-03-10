@@ -52,6 +52,8 @@ export interface User {
     abbreviation: string;
     shield: string;
   };
+  ownedOrganizations?: any[];
+  storeMemberships?: any[];
 }
 
 export interface UserMeResponse {
