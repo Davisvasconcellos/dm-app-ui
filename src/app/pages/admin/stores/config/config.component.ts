@@ -253,7 +253,7 @@ export class ConfigComponent implements OnInit, AfterViewInit, OnDestroy {
 
     if (creating) {
       const orgIdCode = this.route.snapshot.queryParamMap.get('org');
-      const create$ = orgIdCode
+      const create$ = orgIdCode 
         ? this.orgService.createOrganizationStore(orgIdCode, storeData as any)
         : this.storeService.createStore(storeData as any);
       create$.subscribe({
@@ -413,7 +413,7 @@ export class ConfigComponent implements OnInit, AfterViewInit, OnDestroy {
   private revertLogoPreview(): void {
     this.logo_url = this.originalLogoUrl;
   }
-
+  
   onCnpjInput(event: Event): void {
     const input = event.target as HTMLInputElement;
     const digits = input.value.replace(/\D/g, '');
