@@ -1,7 +1,7 @@
 import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient, HttpClientModule, HttpErrorResponse } from '@angular/common/http';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { LabelComponent } from '../../../../shared/components/form/label/label.component';
 import { ConfigService, StoreDetails } from './config.service';
 import { StoreService } from '../store.service';
@@ -14,6 +14,14 @@ import { AuthService } from '../../../../shared/services/auth.service';
 import { ToastService } from '../../../../shared/services/toast.service';
 import * as L from 'leaflet';
 import { formatToCNPJ } from 'brazilian-values';
+import { FinancialService } from '../../../../financial/financial.service';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { InputFieldComponent } from '../../../../shared/components/form/input/input-field.component';
+import { SelectComponent } from '../../../../shared/components/form/select/select.component';
+import { ButtonComponent } from '../../../../shared/components/ui/button/button.component';
+import { CheckboxComponent } from '../../../../shared/components/form/input/checkbox.component';
+import { ModalComponent } from '../../../../shared/components/ui/modal/modal.component';
+import { FinancialCategory, CostCenter, FinancialTag } from '../../../../financial/models/financial-settings.models';
 
 const iconRetinaUrl = 'images/leaflet/marker-icon-2x.png';
 const iconUrl = 'images/leaflet/marker-icon.png';
@@ -27,8 +35,15 @@ L.Marker.prototype.options.icon = iconDefault;
   imports: [
     CommonModule,
     FormsModule,
+    ReactiveFormsModule,
     LabelComponent,
     HttpClientModule,
+    TranslateModule,
+    InputFieldComponent,
+    SelectComponent,
+    ButtonComponent,
+    CheckboxComponent,
+    ModalComponent
   ],
   templateUrl: './config.component.html',
   styleUrls: []
@@ -42,6 +57,86 @@ export class ConfigComponent implements OnInit, AfterViewInit, OnDestroy {
   cnpjValid: boolean = true;
   cnpjComplete: boolean = false;
   isSubmitting: boolean = false;
+
+  // Financial Injections
+  private financialService = inject(FinancialService);
+  private translate = inject(TranslateService);
+  private fb = inject(FormBuilder);
+
+  // Financial Tabs State
+  bankAccountForm!: FormGroup;
+  categoryForm!: FormGroup;
+  costCenterForm!: FormGroup;
+  tagForm!: FormGroup;
+
+  categories: FinancialCategory[] = [];
+  showCategoryForm = false;
+  editingCategory: FinancialCategory | null = null;
+  categoryToDelete: FinancialCategory | null = null;
+  isDeleteCategoryModalOpen = false;
+
+  costCenters: CostCenter[] = [];
+  showCostCenterForm = false;
+  editingCostCenter: CostCenter | null = null;
+  costCenterToDelete: CostCenter | null = null;
+  isDeleteCostCenterModalOpen = false;
+
+  tags: FinancialTag[] = [];
+  showTagForm = false;
+  editingTag: FinancialTag | null = null;
+  tagToDelete: FinancialTag | null = null;
+  isDeleteTagModalOpen = false;
+
+  collaboratorForm!: FormGroup;
+  collaborators: any[] = [
+    { id: '1', name: 'João Silva', email: 'joao@example.com', role: 'admin', status: 'approved', modules: ['Vendas', 'Financeiro'] },
+    { id: '2', name: 'Maria Souza', email: 'maria@example.com', role: 'user', status: 'pending', modules: ['Estoque'] },
+    { id: '3', name: 'Carlos Oliveira', email: 'carlos@example.com', role: 'user', status: 'approved', modules: ['Vendas'] }
+  ];
+  showCollaboratorForm = false;
+  isDeleteCollaboratorModalOpen = false;
+  collaboratorToDelete: any | null = null;
+
+  moduleOptions = [
+    { value: 'vendas', label: 'Vendas' },
+    { value: 'estoque', label: 'Estoque' },
+    { value: 'financeiro', label: 'Financeiro' }
+  ];
+
+  bankAccounts: any[] = [];
+  showBankAccountForm = false;
+  isDeleteBankAccountModalOpen = false;
+  editingBankAccount: any | null = null;
+  bankAccountToDelete: any | null = null;
+
+  accountTypes = [
+    { value: 'checking', labelKey: 'financial.bankAccount.form.types.checking' },
+    { value: 'savings', labelKey: 'financial.bankAccount.form.types.savings' },
+    { value: 'investment', labelKey: 'financial.bankAccount.form.types.investment' },
+    { value: 'payment', labelKey: 'financial.bankAccount.form.types.payment' },
+    { value: 'other', labelKey: 'financial.bankAccount.form.types.other' }
+  ];
+
+  paymentMethodOptions = [
+    { value: 'pix', labelKey: 'financial.transactions.form.payment.pix' },
+    { value: 'credit_card', labelKey: 'financial.transactions.form.payment.creditCard' },
+    { value: 'debit_card', labelKey: 'financial.transactions.form.payment.debitCard' },
+    { value: 'cash', labelKey: 'financial.transactions.form.payment.cash' },
+    { value: 'bank_transfer', labelKey: 'financial.transactions.form.payment.bankTransfer' },
+    { value: 'boleto', labelKey: 'financial.transactions.form.payment.billet' }
+  ];
+
+  categoryTypes = [
+    { value: 'receivable', label: 'Receita' },
+    { value: 'payable', label: 'Despesa' }
+  ];
+
+  get typeOptions() {
+    return this.accountTypes.map(type => ({
+      value: type.value,
+      label: this.translate.instant(type.labelKey)
+    }));
+  }
 
   private readonly STORE_KEY = 'selectedStore';
 
@@ -142,6 +237,7 @@ export class ConfigComponent implements OnInit, AfterViewInit, OnDestroy {
   private pendingBannerFile: File | null = null;
 
   ngOnInit(): void {
+    this.initFinancialForms();
     const routePath = this.route.snapshot.routeConfig?.path || '';
     if (routePath.includes('stores/create')) {
       this.isCreate = true;
@@ -152,7 +248,41 @@ export class ConfigComponent implements OnInit, AfterViewInit, OnDestroy {
     this.loadStoreDetails();
   }
 
-  ngAfterViewInit(): void {}
+  private initFinancialForms(): void {
+    this.bankAccountForm = this.fb.group({
+      name: ['', Validators.required],
+      bank_name: ['', Validators.required],
+      agency: [''],
+      account_number: [''],
+      type: ['checking', Validators.required],
+      initial_balance: [0, [Validators.required, Validators.min(0)]],
+      is_default: [false],
+      allowed_payment_methods: [[]],
+    });
+
+    this.categoryForm = this.fb.group({
+      name: ['', Validators.required],
+      type: ['payable', Validators.required]
+    });
+
+    this.costCenterForm = this.fb.group({
+      name: ['', Validators.required],
+      code: ['']
+    });
+
+    this.tagForm = this.fb.group({
+      name: ['', Validators.required],
+      color: ['#3B82F6'] // Default blue
+    });
+
+    this.collaboratorForm = this.fb.group({
+      email: ['', [Validators.required, Validators.email]],
+      role: ['user', Validators.required],
+      modules: [[]]
+    });
+  }
+
+  ngAfterViewInit(): void { }
 
   ngOnDestroy(): void {
     this.map?.remove();
@@ -166,6 +296,7 @@ export class ConfigComponent implements OnInit, AfterViewInit, OnDestroy {
       this.configService.getStoreById(idFromRoute).subscribe({
         next: (storeDetails: StoreDetails) => {
           this.populateForm(storeDetails);
+          this.loadFinancialData(idFromRoute);
           this.isLoading = false;
         },
         error: (err: HttpErrorResponse) => {
@@ -188,6 +319,7 @@ export class ConfigComponent implements OnInit, AfterViewInit, OnDestroy {
     this.configService.getStoreById(selectedStore.id_code).subscribe({
       next: (storeDetails: StoreDetails) => {
         this.populateForm(storeDetails);
+        this.loadFinancialData(selectedStore.id_code);
         this.isLoading = false;
       },
       error: (err: HttpErrorResponse) => {
@@ -195,6 +327,430 @@ export class ConfigComponent implements OnInit, AfterViewInit, OnDestroy {
         this.isLoading = false;
       }
     });
+  }
+
+  private loadFinancialData(storeId: string): void {
+    this.loadBankAccounts(storeId);
+    this.loadCategories(storeId);
+    this.loadCostCenters(storeId);
+    this.loadTags(storeId);
+  }
+
+  // --- Bank Accounts Logic ---
+  loadBankAccounts(storeId: string) {
+    this.financialService.getBankAccounts(storeId).subscribe({
+      next: (data) => this.bankAccounts = data,
+      error: (err) => console.error('Error fetching bank accounts', err)
+    });
+  }
+
+  isPaymentMethodSelected(methodValue: string): boolean {
+    const currentMethods = this.bankAccountForm.get('allowed_payment_methods')?.value || [];
+    return Array.isArray(currentMethods) && currentMethods.includes(methodValue);
+  }
+
+  togglePaymentMethod(methodValue: string, isChecked: boolean) {
+    const currentMethods = this.bankAccountForm.get('allowed_payment_methods')?.value || [];
+    let updatedMethods = Array.isArray(currentMethods) ? [...currentMethods] : [];
+    if (isChecked) {
+      if (!updatedMethods.includes(methodValue)) updatedMethods.push(methodValue);
+    } else {
+      updatedMethods = updatedMethods.filter((m: string) => m !== methodValue);
+    }
+    this.bankAccountForm.patchValue({ allowed_payment_methods: updatedMethods });
+    this.bankAccountForm.markAsDirty();
+  }
+
+  addAccount() {
+    this.editingBankAccount = null;
+    this.bankAccountForm.reset({ type: 'checking', initial_balance: 0, is_default: false, allowed_payment_methods: [] });
+    this.showBankAccountForm = true;
+  }
+
+  editAccount(account: any) {
+    this.editingBankAccount = account;
+    this.bankAccountForm.patchValue({
+      name: account.name,
+      bank_name: account.bank_name,
+      agency: account.agency,
+      account_number: account.account_number,
+      type: account.type || 'checking',
+      initial_balance: account.initial_balance,
+      is_default: account.is_default,
+      allowed_payment_methods: account.allowed_payment_methods || []
+    });
+    this.showBankAccountForm = true;
+  }
+
+  cancelBankAccountForm() {
+    this.showBankAccountForm = false;
+    this.editingBankAccount = null;
+  }
+
+  saveBankAccount() {
+    if (this.bankAccountForm.invalid) {
+      this.bankAccountForm.markAllAsTouched();
+      return;
+    }
+    const storeId = this.route.snapshot.paramMap.get('id_code') || this.route.snapshot.paramMap.get('id');
+    if (!storeId) return;
+    this.isSubmitting = true;
+    const formValue = this.bankAccountForm.value;
+    const payload = { ...formValue, store_id: storeId };
+    const request$ = this.editingBankAccount
+      ? this.financialService.updateBankAccount(this.editingBankAccount.id_code, payload)
+      : this.financialService.createBankAccount(payload);
+    request$.subscribe({
+      next: () => {
+        this.toast.triggerToast('success', 'Sucesso', this.editingBankAccount ? 'Conta atualizada com sucesso.' : 'Conta criada com sucesso.');
+        this.loadBankAccounts(storeId);
+        this.cancelBankAccountForm();
+        this.isSubmitting = false;
+      },
+      error: (err) => {
+        console.error('Error saving bank account', err);
+        this.toast.triggerToast('error', 'Erro', 'Erro ao salvar conta bancária.');
+        this.isSubmitting = false;
+      }
+    });
+  }
+
+  confirmDeleteAccount(account: any) {
+    this.bankAccountToDelete = account;
+    this.isDeleteBankAccountModalOpen = true;
+  }
+
+  deleteBankAccount() {
+    if (!this.bankAccountToDelete) return;
+    const storeId = this.route.snapshot.paramMap.get('id_code') || this.route.snapshot.paramMap.get('id');
+    this.isSubmitting = true;
+    this.financialService.deleteBankAccount(this.bankAccountToDelete.id_code).subscribe({
+      next: () => {
+        this.toast.triggerToast('success', 'Sucesso', 'Conta removida com sucesso.');
+        if (storeId) this.loadBankAccounts(storeId);
+        this.isDeleteBankAccountModalOpen = false;
+        this.bankAccountToDelete = null;
+        this.isSubmitting = false;
+      },
+      error: (err) => {
+        console.error('Error deleting bank account', err);
+        this.toast.triggerToast('error', 'Erro', 'Erro ao excluir conta bancária.');
+        this.isSubmitting = false;
+      }
+    });
+  }
+
+  cancelDeleteBankAccount() {
+    this.isDeleteBankAccountModalOpen = false;
+    this.bankAccountToDelete = null;
+  }
+
+  // --- Categories Logic ---
+  loadCategories(storeId: string) {
+    this.financialService.getCategorias(storeId).subscribe({
+      next: (data) => this.categories = data,
+      error: (err) => console.error('Error loading categories', err)
+    });
+  }
+
+  addCategory() {
+    this.editingCategory = null;
+    this.categoryForm.reset({ type: 'payable' });
+    this.showCategoryForm = true;
+  }
+
+  editCategory(category: FinancialCategory) {
+    this.editingCategory = category;
+    this.categoryForm.patchValue({ name: category.name, type: category.type });
+    this.showCategoryForm = true;
+  }
+
+  cancelCategoryForm() {
+    this.showCategoryForm = false;
+    this.editingCategory = null;
+  }
+
+  saveCategory() {
+    if (this.categoryForm.invalid) return;
+    const storeId = this.route.snapshot.paramMap.get('id_code') || this.route.snapshot.paramMap.get('id');
+    if (!storeId) return;
+    this.isSubmitting = true;
+    const payload = { ...this.categoryForm.value, store_id: storeId };
+    const categoryId = this.editingCategory ? (this.editingCategory.id || this.editingCategory.id_code) : null;
+    const request$ = this.editingCategory && categoryId
+      ? this.financialService.updateCategory(categoryId, payload)
+      : this.financialService.createCategory(payload);
+    request$.subscribe({
+      next: () => {
+        this.toast.triggerToast('success', 'Sucesso', this.editingCategory ? 'Categoria atualizada.' : 'Categoria criada.');
+        this.loadCategories(storeId);
+        this.cancelCategoryForm();
+        this.isSubmitting = false;
+      },
+      error: (err) => {
+        console.error('Error saving category', err);
+        this.toast.triggerToast('error', 'Erro', 'Erro ao salvar categoria.');
+        this.isSubmitting = false;
+      }
+    });
+  }
+
+  confirmDeleteCategory(category: FinancialCategory) {
+    this.categoryToDelete = category;
+    this.isDeleteCategoryModalOpen = true;
+  }
+
+  deleteCategory() {
+    if (!this.categoryToDelete) return;
+    const storeId = this.route.snapshot.paramMap.get('id_code') || this.route.snapshot.paramMap.get('id');
+    const categoryId = this.categoryToDelete.id || this.categoryToDelete.id_code;
+    if (!categoryId) return;
+    this.isSubmitting = true;
+    this.financialService.deleteCategory(categoryId).subscribe({
+      next: () => {
+        this.toast.triggerToast('success', 'Sucesso', 'Categoria removida.');
+        if (storeId) this.loadCategories(storeId);
+        this.isDeleteCategoryModalOpen = false;
+        this.categoryToDelete = null;
+        this.isSubmitting = false;
+      },
+      error: (err) => {
+        console.error('Error deleting category', err);
+        this.toast.triggerToast('error', 'Erro', 'Erro ao excluir categoria.');
+        this.isSubmitting = false;
+      }
+    });
+  }
+
+  cancelDeleteCategory() {
+    this.isDeleteCategoryModalOpen = false;
+    this.categoryToDelete = null;
+  }
+
+  // --- Cost Centers Logic ---
+  loadCostCenters(storeId: string) {
+    this.financialService.getCentrosDeCusto(storeId).subscribe({
+      next: (data) => this.costCenters = data,
+      error: (err) => console.error('Error loading cost centers', err)
+    });
+  }
+
+  addCostCenter() {
+    this.editingCostCenter = null;
+    this.costCenterForm.reset();
+    this.showCostCenterForm = true;
+  }
+
+  editCostCenter(cc: CostCenter) {
+    this.editingCostCenter = cc;
+    this.costCenterForm.patchValue({ name: cc.name, code: cc.code });
+    this.showCostCenterForm = true;
+  }
+
+  cancelCostCenterForm() {
+    this.showCostCenterForm = false;
+    this.editingCostCenter = null;
+  }
+
+  saveCostCenter() {
+    if (this.costCenterForm.invalid) return;
+    const storeId = this.route.snapshot.paramMap.get('id_code') || this.route.snapshot.paramMap.get('id');
+    if (!storeId) return;
+    this.isSubmitting = true;
+    const payload = { ...this.costCenterForm.value, store_id: storeId };
+    const ccId = this.editingCostCenter ? (this.editingCostCenter.id || this.editingCostCenter.id_code) : null;
+    const request$ = this.editingCostCenter && ccId
+      ? this.financialService.updateCostCenter(ccId, payload)
+      : this.financialService.createCostCenter(payload);
+    request$.subscribe({
+      next: () => {
+        this.toast.triggerToast('success', 'Sucesso', this.editingCostCenter ? 'Centro de custo atualizado.' : 'Centro de custo criado.');
+        this.loadCostCenters(storeId);
+        this.cancelCostCenterForm();
+        this.isSubmitting = false;
+      },
+      error: (err) => {
+        console.error('Error saving cost center', err);
+        this.toast.triggerToast('error', 'Erro', 'Erro ao salvar centro de custo.');
+        this.isSubmitting = false;
+      }
+    });
+  }
+
+  confirmDeleteCostCenter(cc: CostCenter) {
+    this.costCenterToDelete = cc;
+    this.isDeleteCostCenterModalOpen = true;
+  }
+
+  deleteCostCenter() {
+    if (!this.costCenterToDelete) return;
+    const storeId = this.route.snapshot.paramMap.get('id_code') || this.route.snapshot.paramMap.get('id');
+    const ccId = this.costCenterToDelete.id || this.costCenterToDelete.id_code;
+    if (!ccId) return;
+    this.isSubmitting = true;
+    this.financialService.deleteCostCenter(ccId).subscribe({
+      next: () => {
+        this.toast.triggerToast('success', 'Sucesso', 'Centro de custo removido.');
+        if (storeId) this.loadCostCenters(storeId);
+        this.isDeleteCostCenterModalOpen = false;
+        this.costCenterToDelete = null;
+        this.isSubmitting = false;
+      },
+      error: (err) => {
+        console.error('Error deleting cost center', err);
+        this.toast.triggerToast('error', 'Erro', 'Erro ao excluir centro de custo.');
+        this.isSubmitting = false;
+      }
+    });
+  }
+
+  cancelDeleteCostCenter() {
+    this.isDeleteCostCenterModalOpen = false;
+    this.costCenterToDelete = null;
+  }
+
+  // --- Tags Logic ---
+  loadTags(storeId: string) {
+    this.financialService.getTags(storeId).subscribe({
+      next: (data) => this.tags = data,
+      error: (err) => console.error('Error loading tags', err)
+    });
+  }
+
+  addTag() {
+    this.editingTag = null;
+    this.tagForm.reset({ color: '#3B82F6' });
+    this.showTagForm = true;
+  }
+
+  editTag(tag: FinancialTag) {
+    this.editingTag = tag;
+    this.tagForm.patchValue({ name: tag.name, color: tag.color });
+    this.showTagForm = true;
+  }
+
+  cancelTagForm() {
+    this.showTagForm = false;
+    this.editingTag = null;
+  }
+
+  saveTag() {
+    if (this.tagForm.invalid) return;
+    const storeId = this.route.snapshot.paramMap.get('id_code') || this.route.snapshot.paramMap.get('id');
+    if (!storeId) return;
+    this.isSubmitting = true;
+    const payload = { ...this.tagForm.value, store_id: storeId };
+    const tagId = this.editingTag ? (this.editingTag.id || this.editingTag.id_code) : null;
+    const request$ = this.editingTag && tagId
+      ? this.financialService.updateTag(tagId, payload)
+      : this.financialService.createTag(payload);
+    request$.subscribe({
+      next: () => {
+        this.toast.triggerToast('success', 'Sucesso', this.editingTag ? 'Tag atualizada.' : 'Tag criada.');
+        this.loadTags(storeId);
+        this.cancelTagForm();
+        this.isSubmitting = false;
+      },
+      error: (err) => {
+        console.error('Error saving tag', err);
+        this.toast.triggerToast('error', 'Erro', 'Erro ao salvar tag.');
+        this.isSubmitting = false;
+      }
+    });
+  }
+
+  confirmDeleteTag(tag: FinancialTag) {
+    this.tagToDelete = tag;
+    this.isDeleteTagModalOpen = true;
+  }
+
+  deleteTag() {
+    if (!this.tagToDelete) return;
+    const storeId = this.route.snapshot.paramMap.get('id_code') || this.route.snapshot.paramMap.get('id');
+    const tagId = this.tagToDelete.id || this.tagToDelete.id_code;
+    if (!tagId) return;
+    this.isSubmitting = true;
+    this.financialService.deleteTag(tagId).subscribe({
+      next: () => {
+        this.toast.triggerToast('success', 'Sucesso', 'Tag removida.');
+        if (storeId) this.loadTags(storeId);
+        this.isDeleteTagModalOpen = false;
+        this.tagToDelete = null;
+        this.isSubmitting = false;
+      },
+      error: (err) => {
+        console.error('Error deleting tag', err);
+        this.toast.triggerToast('error', 'Erro', 'Erro ao excluir tag.');
+        this.isSubmitting = false;
+      }
+    });
+  }
+
+  cancelDeleteTag() {
+    this.isDeleteTagModalOpen = false;
+    this.tagToDelete = null;
+  }
+
+  // --- Collaborators Logic ---
+  addCollaborator() {
+    this.showCollaboratorForm = true;
+    this.collaboratorForm.reset({ role: 'user', modules: [] });
+  }
+
+  cancelCollaboratorForm() {
+    this.showCollaboratorForm = false;
+  }
+
+  toggleModule(moduleLabel: string, isChecked: boolean) {
+    const currentModules = this.collaboratorForm.get('modules')?.value || [];
+    let updatedModules = [...currentModules];
+    if (isChecked) {
+      if (!updatedModules.includes(moduleLabel)) updatedModules.push(moduleLabel);
+    } else {
+      updatedModules = updatedModules.filter(m => m !== moduleLabel);
+    }
+    this.collaboratorForm.patchValue({ modules: updatedModules });
+  }
+
+  isModuleSelected(moduleLabel: string): boolean {
+    return (this.collaboratorForm.get('modules')?.value || []).includes(moduleLabel);
+  }
+
+  sendInvitation() {
+    if (this.collaboratorForm.invalid) {
+      this.collaboratorForm.markAllAsTouched();
+      return;
+    }
+    const formValue = this.collaboratorForm.value;
+    const newCollaborator = {
+      id: Math.random().toString(36).substr(2, 9),
+      name: 'Pendente',
+      email: formValue.email,
+      role: formValue.role,
+      status: 'pending',
+      modules: formValue.modules
+    };
+    this.collaborators.unshift(newCollaborator);
+    this.toast.triggerToast('success', 'Sucesso', 'Convite enviado com sucesso.');
+    this.cancelCollaboratorForm();
+  }
+
+  confirmDeleteCollaborator(collaborator: any) {
+    this.collaboratorToDelete = collaborator;
+    this.isDeleteCollaboratorModalOpen = true;
+  }
+
+  deleteCollaborator() {
+    if (!this.collaboratorToDelete) return;
+    this.collaborators = this.collaborators.filter(c => c.id !== this.collaboratorToDelete.id);
+    this.toast.triggerToast('success', 'Sucesso', 'Colaborador removido.');
+    this.isDeleteCollaboratorModalOpen = false;
+    this.collaboratorToDelete = null;
+  }
+
+  cancelDeleteCollaborator() {
+    this.isDeleteCollaboratorModalOpen = false;
+    this.collaboratorToDelete = null;
   }
 
   private populateForm(data: StoreDetails): void {
@@ -278,7 +834,7 @@ export class ConfigComponent implements OnInit, AfterViewInit, OnDestroy {
 
     if (creating) {
       const orgIdCode = this.route.snapshot.queryParamMap.get('org');
-      const create$ = orgIdCode 
+      const create$ = orgIdCode
         ? this.orgService.createOrganizationStore(orgIdCode, storeData as any)
         : this.storeService.createStore(storeData as any);
       create$.subscribe({
@@ -327,7 +883,7 @@ export class ConfigComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  onCancel(): void {}
+  onCancel(): void { }
 
   onCepBlur(): void {
     const cep = this.zip_code.replace(/\D/g, '');
@@ -342,7 +898,7 @@ export class ConfigComponent implements OnInit, AfterViewInit, OnDestroy {
       this.address_city = data.localidade;
       this.address_state = data.uf;
       this.geocodeAddress();
-    }, () => {});
+    }, () => { });
   }
 
   onAddressNumberChange(): void {
@@ -360,7 +916,7 @@ export class ConfigComponent implements OnInit, AfterViewInit, OnDestroy {
         this.longitude = data[0].lon;
         this.updateMap(parseFloat(this.latitude), parseFloat(this.longitude));
       }
-    }, () => {});
+    }, () => { });
   }
 
   private initMap(lat: number, lon: number): void {
@@ -438,7 +994,7 @@ export class ConfigComponent implements OnInit, AfterViewInit, OnDestroy {
   private revertLogoPreview(): void {
     this.logo_url = this.originalLogoUrl;
   }
-  
+
   onCnpjInput(event: Event): void {
     const input = event.target as HTMLInputElement;
     const digits = input.value.replace(/\D/g, '');
@@ -515,9 +1071,9 @@ export class ConfigComponent implements OnInit, AfterViewInit, OnDestroy {
       const rest = sum % 11;
       return rest < 2 ? 0 : 11 - rest;
     };
-    const dv1 = calcDV(c.substring(0, 12), [5,4,3,2,9,8,7,6,5,4,3,2]);
+    const dv1 = calcDV(c.substring(0, 12), [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]);
     if (dv1 !== Number(c[12])) return false;
-    const dv2 = calcDV(c.substring(0, 13), [6,5,4,3,2,9,8,7,6,5,4,3,2]);
+    const dv2 = calcDV(c.substring(0, 13), [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]);
     return dv2 === Number(c[13]);
   }
 }
