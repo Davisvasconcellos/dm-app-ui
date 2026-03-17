@@ -238,7 +238,7 @@ export class FinancialService {
       params.type = type;
     }
     
-    return this.http.get<any>(`${this.API_BASE_URL}/financial/parties`, { 
+    return this.http.get<any>(`${this.API_BASE_URL}/parties`, { 
       headers,
       params
     }).pipe(
@@ -248,19 +248,19 @@ export class FinancialService {
 
   createParty(data: Partial<Party>): Observable<Party> {
     const headers = { 'Authorization': `Bearer ${this.authService.getAuthToken()}` };
-    return this.http.post<any>(`${this.API_BASE_URL}/financial/parties`, data, { headers })
+    return this.http.post<any>(`${this.API_BASE_URL}/parties`, data, { headers })
       .pipe(map(response => response.data || response));
   }
 
   updateParty(idCode: string, data: Partial<Party>): Observable<Party> {
     const headers = { 'Authorization': `Bearer ${this.authService.getAuthToken()}` };
-    return this.http.put<any>(`${this.API_BASE_URL}/financial/parties/${idCode}`, data, { headers })
+    return this.http.put<any>(`${this.API_BASE_URL}/parties/${idCode}`, data, { headers })
       .pipe(map(response => response.data || response));
   }
 
   deleteParty(idCode: string): Observable<void> {
     const headers = { 'Authorization': `Bearer ${this.authService.getAuthToken()}` };
-    return this.http.delete<any>(`${this.API_BASE_URL}/financial/parties/${idCode}`, { headers });
+    return this.http.delete<any>(`${this.API_BASE_URL}/parties/${idCode}`, { headers });
   }
 
   getBankAccountById(idCode: string): Observable<any> {
