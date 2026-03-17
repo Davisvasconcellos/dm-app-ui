@@ -104,6 +104,31 @@ export class ConfigComponent implements OnInit, AfterViewInit, OnDestroy {
   sundayOpen: string = '';
   sundayClose: string = '';
 
+  // Payment methods
+  paymentDinheiro: boolean = false;
+  paymentPix: boolean = false;
+  paymentDebitoVisa: boolean = false;
+  paymentDebitoMaster: boolean = false;
+  paymentCreditoVisa: boolean = false;
+  paymentCreditoMaster: boolean = false;
+  paymentCreditoAmex: boolean = false;
+  paymentCreditoElo: boolean = false;
+  paymentValeRefeicao: boolean = false;
+  paymentValeAlimentacao: boolean = false;
+  paymentCheque: boolean = false;
+  paymentTransferencia: boolean = false;
+
+  // Delivery settings
+  deliveryMode: string = 'none';
+  deliveryRadiusKm: number | null = null;
+  deliveryFee: number | null = null;
+  deliveryMinOrder: number | null = null;
+  deliveryEstimatedMinutes: number | null = null;
+  deliveryFreeAbove: boolean = false;
+  deliveryFreeAboveValue: number | null = null;
+  pickupEnabled: boolean = false;
+  pickupEstimatedMinutes: number | null = null;
+
   private configService = inject(ConfigService);
   private localStorageService = inject(LocalStorageService);
   private http = inject(HttpClient);

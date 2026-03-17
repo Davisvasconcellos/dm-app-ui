@@ -204,6 +204,294 @@
       </div>
       <div id="map" class="h-64 w-full rounded-lg mt-4"></div>
     }
+
+    @if (activeTab === 'hours') {
+      <h3 class="mb-6 text-lg font-medium text-gray-800 dark:text-white">Horários de Funcionamento</h3>
+      <div class="space-y-3">
+
+        <!-- Segunda-feira -->
+        <div class="flex items-center gap-4 rounded-lg border border-gray-200 dark:border-gray-700 p-3">
+          <label class="flex items-center gap-2 w-36 shrink-0 cursor-pointer select-none">
+            <input type="checkbox" [(ngModel)]="mondayEnabled" name="mondayEnabled" class="h-4 w-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500">
+            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Segunda</span>
+          </label>
+          @if (mondayEnabled) {
+            <div class="flex items-center gap-2 flex-1">
+              <input type="time" [(ngModel)]="mondayOpen" name="mondayOpen" class="w-full rounded-lg border-[1.5px] border-gray-300 bg-transparent py-2 px-3 text-sm font-medium outline-none transition focus:border-primary dark:border-gray-800 dark:bg-gray-800 dark:text-white">
+              <span class="text-gray-500 text-sm">até</span>
+              <input type="time" [(ngModel)]="mondayClose" name="mondayClose" class="w-full rounded-lg border-[1.5px] border-gray-300 bg-transparent py-2 px-3 text-sm font-medium outline-none transition focus:border-primary dark:border-gray-800 dark:bg-gray-800 dark:text-white">
+            </div>
+          } @else {
+            <span class="text-sm text-gray-400 dark:text-gray-500 italic">Fechado</span>
+          }
+        </div>
+
+        <!-- Terça-feira -->
+        <div class="flex items-center gap-4 rounded-lg border border-gray-200 dark:border-gray-700 p-3">
+          <label class="flex items-center gap-2 w-36 shrink-0 cursor-pointer select-none">
+            <input type="checkbox" [(ngModel)]="tuesdayEnabled" name="tuesdayEnabled" class="h-4 w-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500">
+            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Terça</span>
+          </label>
+          @if (tuesdayEnabled) {
+            <div class="flex items-center gap-2 flex-1">
+              <input type="time" [(ngModel)]="tuesdayOpen" name="tuesdayOpen" class="w-full rounded-lg border-[1.5px] border-gray-300 bg-transparent py-2 px-3 text-sm font-medium outline-none transition focus:border-primary dark:border-gray-800 dark:bg-gray-800 dark:text-white">
+              <span class="text-gray-500 text-sm">até</span>
+              <input type="time" [(ngModel)]="tuesdayClose" name="tuesdayClose" class="w-full rounded-lg border-[1.5px] border-gray-300 bg-transparent py-2 px-3 text-sm font-medium outline-none transition focus:border-primary dark:border-gray-800 dark:bg-gray-800 dark:text-white">
+            </div>
+          } @else {
+            <span class="text-sm text-gray-400 dark:text-gray-500 italic">Fechado</span>
+          }
+        </div>
+
+        <!-- Quarta-feira -->
+        <div class="flex items-center gap-4 rounded-lg border border-gray-200 dark:border-gray-700 p-3">
+          <label class="flex items-center gap-2 w-36 shrink-0 cursor-pointer select-none">
+            <input type="checkbox" [(ngModel)]="wednesdayEnabled" name="wednesdayEnabled" class="h-4 w-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500">
+            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Quarta</span>
+          </label>
+          @if (wednesdayEnabled) {
+            <div class="flex items-center gap-2 flex-1">
+              <input type="time" [(ngModel)]="wednesdayOpen" name="wednesdayOpen" class="w-full rounded-lg border-[1.5px] border-gray-300 bg-transparent py-2 px-3 text-sm font-medium outline-none transition focus:border-primary dark:border-gray-800 dark:bg-gray-800 dark:text-white">
+              <span class="text-gray-500 text-sm">até</span>
+              <input type="time" [(ngModel)]="wednesdayClose" name="wednesdayClose" class="w-full rounded-lg border-[1.5px] border-gray-300 bg-transparent py-2 px-3 text-sm font-medium outline-none transition focus:border-primary dark:border-gray-800 dark:bg-gray-800 dark:text-white">
+            </div>
+          } @else {
+            <span class="text-sm text-gray-400 dark:text-gray-500 italic">Fechado</span>
+          }
+        </div>
+
+        <!-- Quinta-feira -->
+        <div class="flex items-center gap-4 rounded-lg border border-gray-200 dark:border-gray-700 p-3">
+          <label class="flex items-center gap-2 w-36 shrink-0 cursor-pointer select-none">
+            <input type="checkbox" [(ngModel)]="thursdayEnabled" name="thursdayEnabled" class="h-4 w-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500">
+            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Quinta</span>
+          </label>
+          @if (thursdayEnabled) {
+            <div class="flex items-center gap-2 flex-1">
+              <input type="time" [(ngModel)]="thursdayOpen" name="thursdayOpen" class="w-full rounded-lg border-[1.5px] border-gray-300 bg-transparent py-2 px-3 text-sm font-medium outline-none transition focus:border-primary dark:border-gray-800 dark:bg-gray-800 dark:text-white">
+              <span class="text-gray-500 text-sm">até</span>
+              <input type="time" [(ngModel)]="thursdayClose" name="thursdayClose" class="w-full rounded-lg border-[1.5px] border-gray-300 bg-transparent py-2 px-3 text-sm font-medium outline-none transition focus:border-primary dark:border-gray-800 dark:bg-gray-800 dark:text-white">
+            </div>
+          } @else {
+            <span class="text-sm text-gray-400 dark:text-gray-500 italic">Fechado</span>
+          }
+        </div>
+
+        <!-- Sexta-feira -->
+        <div class="flex items-center gap-4 rounded-lg border border-gray-200 dark:border-gray-700 p-3">
+          <label class="flex items-center gap-2 w-36 shrink-0 cursor-pointer select-none">
+            <input type="checkbox" [(ngModel)]="fridayEnabled" name="fridayEnabled" class="h-4 w-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500">
+            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Sexta</span>
+          </label>
+          @if (fridayEnabled) {
+            <div class="flex items-center gap-2 flex-1">
+              <input type="time" [(ngModel)]="fridayOpen" name="fridayOpen" class="w-full rounded-lg border-[1.5px] border-gray-300 bg-transparent py-2 px-3 text-sm font-medium outline-none transition focus:border-primary dark:border-gray-800 dark:bg-gray-800 dark:text-white">
+              <span class="text-gray-500 text-sm">até</span>
+              <input type="time" [(ngModel)]="fridayClose" name="fridayClose" class="w-full rounded-lg border-[1.5px] border-gray-300 bg-transparent py-2 px-3 text-sm font-medium outline-none transition focus:border-primary dark:border-gray-800 dark:bg-gray-800 dark:text-white">
+            </div>
+          } @else {
+            <span class="text-sm text-gray-400 dark:text-gray-500 italic">Fechado</span>
+          }
+        </div>
+
+        <!-- Sábado -->
+        <div class="flex items-center gap-4 rounded-lg border border-gray-200 dark:border-gray-700 p-3">
+          <label class="flex items-center gap-2 w-36 shrink-0 cursor-pointer select-none">
+            <input type="checkbox" [(ngModel)]="saturdayEnabled" name="saturdayEnabled" class="h-4 w-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500">
+            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Sábado</span>
+          </label>
+          @if (saturdayEnabled) {
+            <div class="flex items-center gap-2 flex-1">
+              <input type="time" [(ngModel)]="saturdayOpen" name="saturdayOpen" class="w-full rounded-lg border-[1.5px] border-gray-300 bg-transparent py-2 px-3 text-sm font-medium outline-none transition focus:border-primary dark:border-gray-800 dark:bg-gray-800 dark:text-white">
+              <span class="text-gray-500 text-sm">até</span>
+              <input type="time" [(ngModel)]="saturdayClose" name="saturdayClose" class="w-full rounded-lg border-[1.5px] border-gray-300 bg-transparent py-2 px-3 text-sm font-medium outline-none transition focus:border-primary dark:border-gray-800 dark:bg-gray-800 dark:text-white">
+            </div>
+          } @else {
+            <span class="text-sm text-gray-400 dark:text-gray-500 italic">Fechado</span>
+          }
+        </div>
+
+        <!-- Domingo -->
+        <div class="flex items-center gap-4 rounded-lg border border-gray-200 dark:border-gray-700 p-3">
+          <label class="flex items-center gap-2 w-36 shrink-0 cursor-pointer select-none">
+            <input type="checkbox" [(ngModel)]="sundayEnabled" name="sundayEnabled" class="h-4 w-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500">
+            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Domingo</span>
+          </label>
+          @if (sundayEnabled) {
+            <div class="flex items-center gap-2 flex-1">
+              <input type="time" [(ngModel)]="sundayOpen" name="sundayOpen" class="w-full rounded-lg border-[1.5px] border-gray-300 bg-transparent py-2 px-3 text-sm font-medium outline-none transition focus:border-primary dark:border-gray-800 dark:bg-gray-800 dark:text-white">
+              <span class="text-gray-500 text-sm">até</span>
+              <input type="time" [(ngModel)]="sundayClose" name="sundayClose" class="w-full rounded-lg border-[1.5px] border-gray-300 bg-transparent py-2 px-3 text-sm font-medium outline-none transition focus:border-primary dark:border-gray-800 dark:bg-gray-800 dark:text-white">
+            </div>
+          } @else {
+            <span class="text-sm text-gray-400 dark:text-gray-500 italic">Fechado</span>
+          }
+        </div>
+
+      </div>
+    }
+
+    @if (activeTab === 'payments') {
+      <h3 class="mb-6 text-lg font-medium text-gray-800 dark:text-white">Formas de Pagamento Aceitas</h3>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+
+        <label class="flex items-center gap-3 rounded-lg border border-gray-200 dark:border-gray-700 p-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition">
+          <input type="checkbox" [(ngModel)]="paymentDinheiro" name="paymentDinheiro" class="h-4 w-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500">
+          <span class="text-sm font-medium text-gray-700 dark:text-gray-300">💵 Dinheiro</span>
+        </label>
+
+        <label class="flex items-center gap-3 rounded-lg border border-gray-200 dark:border-gray-700 p-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition">
+          <input type="checkbox" [(ngModel)]="paymentPix" name="paymentPix" class="h-4 w-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500">
+          <span class="text-sm font-medium text-gray-700 dark:text-gray-300">⚡ PIX</span>
+        </label>
+
+        <label class="flex items-center gap-3 rounded-lg border border-gray-200 dark:border-gray-700 p-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition">
+          <input type="checkbox" [(ngModel)]="paymentDebitoVisa" name="paymentDebitoVisa" class="h-4 w-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500">
+          <span class="text-sm font-medium text-gray-700 dark:text-gray-300">💳 Débito Visa</span>
+        </label>
+
+        <label class="flex items-center gap-3 rounded-lg border border-gray-200 dark:border-gray-700 p-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition">
+          <input type="checkbox" [(ngModel)]="paymentDebitoMaster" name="paymentDebitoMaster" class="h-4 w-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500">
+          <span class="text-sm font-medium text-gray-700 dark:text-gray-300">💳 Débito Mastercard</span>
+        </label>
+
+        <label class="flex items-center gap-3 rounded-lg border border-gray-200 dark:border-gray-700 p-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition">
+          <input type="checkbox" [(ngModel)]="paymentCreditoVisa" name="paymentCreditoVisa" class="h-4 w-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500">
+          <span class="text-sm font-medium text-gray-700 dark:text-gray-300">💳 Crédito Visa</span>
+        </label>
+
+        <label class="flex items-center gap-3 rounded-lg border border-gray-200 dark:border-gray-700 p-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition">
+          <input type="checkbox" [(ngModel)]="paymentCreditoMaster" name="paymentCreditoMaster" class="h-4 w-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500">
+          <span class="text-sm font-medium text-gray-700 dark:text-gray-300">💳 Crédito Mastercard</span>
+        </label>
+
+        <label class="flex items-center gap-3 rounded-lg border border-gray-200 dark:border-gray-700 p-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition">
+          <input type="checkbox" [(ngModel)]="paymentCreditoAmex" name="paymentCreditoAmex" class="h-4 w-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500">
+          <span class="text-sm font-medium text-gray-700 dark:text-gray-300">💳 Crédito American Express</span>
+        </label>
+
+        <label class="flex items-center gap-3 rounded-lg border border-gray-200 dark:border-gray-700 p-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition">
+          <input type="checkbox" [(ngModel)]="paymentCreditoElo" name="paymentCreditoElo" class="h-4 w-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500">
+          <span class="text-sm font-medium text-gray-700 dark:text-gray-300">💳 Crédito Elo</span>
+        </label>
+
+        <label class="flex items-center gap-3 rounded-lg border border-gray-200 dark:border-gray-700 p-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition">
+          <input type="checkbox" [(ngModel)]="paymentValeRefeicao" name="paymentValeRefeicao" class="h-4 w-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500">
+          <span class="text-sm font-medium text-gray-700 dark:text-gray-300">🍽️ Vale Refeição (VR, Sodexo, etc.)</span>
+        </label>
+
+        <label class="flex items-center gap-3 rounded-lg border border-gray-200 dark:border-gray-700 p-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition">
+          <input type="checkbox" [(ngModel)]="paymentValeAlimentacao" name="paymentValeAlimentacao" class="h-4 w-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500">
+          <span class="text-sm font-medium text-gray-700 dark:text-gray-300">🛒 Vale Alimentação</span>
+        </label>
+
+        <label class="flex items-center gap-3 rounded-lg border border-gray-200 dark:border-gray-700 p-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition">
+          <input type="checkbox" [(ngModel)]="paymentCheque" name="paymentCheque" class="h-4 w-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500">
+          <span class="text-sm font-medium text-gray-700 dark:text-gray-300">📝 Cheque</span>
+        </label>
+
+        <label class="flex items-center gap-3 rounded-lg border border-gray-200 dark:border-gray-700 p-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition">
+          <input type="checkbox" [(ngModel)]="paymentTransferencia" name="paymentTransferencia" class="h-4 w-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500">
+          <span class="text-sm font-medium text-gray-700 dark:text-gray-300">🏦 Transferência Bancária (TED/DOC)</span>
+        </label>
+
+      </div>
+    }
+
+    @if (activeTab === 'delivery') {
+      <h3 class="mb-6 text-lg font-medium text-gray-800 dark:text-white">Configurações de Delivery</h3>
+
+      <!-- Modalidade de entrega -->
+      <div class="mb-6">
+        <app-label>Modalidade de Entrega</app-label>
+        <div class="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-3">
+
+          <label class="flex items-center gap-3 rounded-lg border border-gray-200 dark:border-gray-700 p-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition"
+                 [class.border-primary]="deliveryMode === 'own'"
+                 [class.bg-primary-50]="deliveryMode === 'own'">
+            <input type="radio" [(ngModel)]="deliveryMode" name="deliveryMode" value="own" class="h-4 w-4 border-gray-300 text-brand-500 focus:ring-brand-500">
+            <div>
+              <div class="text-sm font-medium text-gray-700 dark:text-gray-300">🚴 Entrega Própria</div>
+              <div class="text-xs text-gray-500 dark:text-gray-400">Seus motoboys</div>
+            </div>
+          </label>
+
+          <label class="flex items-center gap-3 rounded-lg border border-gray-200 dark:border-gray-700 p-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition"
+                 [class.border-primary]="deliveryMode === 'platform'"
+                 [class.bg-primary-50]="deliveryMode === 'platform'">
+            <input type="radio" [(ngModel)]="deliveryMode" name="deliveryMode" value="platform" class="h-4 w-4 border-gray-300 text-brand-500 focus:ring-brand-500">
+            <div>
+              <div class="text-sm font-medium text-gray-700 dark:text-gray-300">📦 Plataforma</div>
+              <div class="text-xs text-gray-500 dark:text-gray-400">iFood, Rappi, etc.</div>
+            </div>
+          </label>
+
+          <label class="flex items-center gap-3 rounded-lg border border-gray-200 dark:border-gray-700 p-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition"
+                 [class.border-primary]="deliveryMode === 'none'"
+                 [class.bg-primary-50]="deliveryMode === 'none'">
+            <input type="radio" [(ngModel)]="deliveryMode" name="deliveryMode" value="none" class="h-4 w-4 border-gray-300 text-brand-500 focus:ring-brand-500">
+            <div>
+              <div class="text-sm font-medium text-gray-700 dark:text-gray-300">🚫 Não oferece</div>
+              <div class="text-xs text-gray-500 dark:text-gray-400">Somente retirada</div>
+            </div>
+          </label>
+
+        </div>
+      </div>
+
+      @if (deliveryMode !== 'none') {
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 mb-4.5">
+          <div>
+            <app-label>Raio de Entrega (km)</app-label>
+            <input type="number" [(ngModel)]="deliveryRadiusKm" name="deliveryRadiusKm" min="0" step="0.5" placeholder="Ex: 5" class="w-full rounded-lg border-[1.5px] border-gray-300 bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-gray-200 dark:border-gray-800 dark:bg-gray-800 dark:text-white dark:focus:border-primary">
+          </div>
+          <div>
+            <app-label>Taxa de Entrega Padrão (R$)</app-label>
+            <input type="number" [(ngModel)]="deliveryFee" name="deliveryFee" min="0" step="0.01" placeholder="Ex: 5.00" class="w-full rounded-lg border-[1.5px] border-gray-300 bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-gray-200 dark:border-gray-800 dark:bg-gray-800 dark:text-white dark:focus:border-primary">
+          </div>
+        </div>
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 mb-4.5">
+          <div>
+            <app-label>Pedido Mínimo (R$)</app-label>
+            <input type="number" [(ngModel)]="deliveryMinOrder" name="deliveryMinOrder" min="0" step="0.01" placeholder="Ex: 20.00" class="w-full rounded-lg border-[1.5px] border-gray-300 bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-gray-200 dark:border-gray-800 dark:bg-gray-800 dark:text-white dark:focus:border-primary">
+          </div>
+          <div>
+            <app-label>Tempo Estimado de Entrega (min)</app-label>
+            <input type="number" [(ngModel)]="deliveryEstimatedMinutes" name="deliveryEstimatedMinutes" min="0" step="5" placeholder="Ex: 40" class="w-full rounded-lg border-[1.5px] border-gray-300 bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-gray-200 dark:border-gray-800 dark:bg-gray-800 dark:text-white dark:focus:border-primary">
+          </div>
+        </div>
+        <div class="mb-4.5">
+          <label class="flex items-center gap-3 cursor-pointer select-none">
+            <input type="checkbox" [(ngModel)]="deliveryFreeAbove" name="deliveryFreeAbove" class="h-4 w-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500">
+            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Frete grátis acima de um valor</span>
+          </label>
+          @if (deliveryFreeAbove) {
+            <div class="mt-3">
+              <app-label>Valor mínimo para frete grátis (R$)</app-label>
+              <input type="number" [(ngModel)]="deliveryFreeAboveValue" name="deliveryFreeAboveValue" min="0" step="0.01" placeholder="Ex: 50.00" class="w-full rounded-lg border-[1.5px] border-gray-300 bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-gray-200 dark:border-gray-800 dark:bg-gray-800 dark:text-white dark:focus:border-primary">
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Retirada no local -->
+      <div class="rounded-lg border border-gray-200 dark:border-gray-700 p-4 mt-2">
+        <label class="flex items-center gap-3 cursor-pointer select-none">
+          <input type="checkbox" [(ngModel)]="pickupEnabled" name="pickupEnabled" class="h-4 w-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500">
+          <div>
+            <div class="text-sm font-medium text-gray-700 dark:text-gray-300">🏪 Permitir retirada no local</div>
+            <div class="text-xs text-gray-500 dark:text-gray-400">O cliente pode buscar o pedido diretamente no estabelecimento.</div>
+          </div>
+        </label>
+        @if (pickupEnabled) {
+          <div class="mt-3">
+            <app-label>Tempo estimado para retirada (min)</app-label>
+            <input type="number" [(ngModel)]="pickupEstimatedMinutes" name="pickupEstimatedMinutes" min="0" step="5" placeholder="Ex: 20" class="w-full rounded-lg border-[1.5px] border-gray-300 bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-gray-200 dark:border-gray-800 dark:bg-gray-800 dark:text-white dark:focus:border-primary">
+          </div>
+        }
+      </div>
+    }
+
   </div>
 </div>
 <div class="flex justify-end gap-4.5 pt-6 border-t border-gray-200 dark:border-gray-800 mt-6">
