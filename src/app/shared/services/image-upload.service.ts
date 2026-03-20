@@ -33,7 +33,7 @@ export class ImageUploadService {
   constructor(
     private authService: AuthService,
     private http: HttpClient
-  ) {}
+  ) { }
 
   /**
    * Método genérico para processar e fazer upload de uma imagem.
@@ -52,24 +52,24 @@ export class ImageUploadService {
     try {
       console.log(`🚀 [DEBUG-${Date.now()}] Iniciando upload do tipo "${type}":`, file.name);
       console.log(`📂 [DEBUG] Folder solicitado: "${folder}"`);
-      
+
       // Validar arquivo
       const validation = this.validateFile(file);
       if (!validation.valid) {
         return { success: false, error: validation.error };
       }
-      
+
       const processingOptions = { ...this.defaultOptions, ...options };
-      
+
       // Processar imagem
       const processedBlob = await this.processImage(file, processingOptions);
-      
+
       // Fazer upload para o servidor
       const result = await this._uploadToServer(processedBlob, file.name, type, entityId, folder);
-      
+
       console.log('✅ Upload concluído com sucesso:', result.fileName);
       console.log('📁 Arquivo salvo em:', result.filePath);
-      
+
       // Após upload, atualizar a entidade correspondente na API, quando aplicável
       if (result.success && result.filePath) {
         // Atualiza avatar se for o tipo correspondente (suporta quem usa uploadImage diretamente)
@@ -85,9 +85,50 @@ export class ImageUploadService {
             const update = await this.updateStoreLogo(entityId, result.filePath);
             if (!update.success) {
               console.error('❌ Falha ao atualizar logo da loja na API:', update.error);
-              // Mantém o resultado do upload, mas sinaliza erro de atualização (opcional)
             } else {
               console.log('🟢 Logo da loja atualizado na API com sucesso.');
+            }
+          }
+        }
+
+        // Atualiza banner da store quando o tipo for 'store-banner'
+        if (type === 'store-banner') {
+          if (!entityId) {
+            console.warn('⚠️ Nenhum storeId fornecido para atualização do banner. Pulei a atualização da API.');
+          } else {
+            const update = await this.updateStoreBanner(entityId, result.filePath);
+            if (!update.success) {
+              console.error('❌ Falha ao atualizar banner da loja na API:', update.error);
+            } else {
+              console.log('🟢 Banner da loja atualizado na API com sucesso.');
+            }
+          }
+        }
+
+        // Atualiza logo da organização quando o tipo for 'org-logo'
+        if (type === 'org-logo') {
+          if (!entityId) {
+            console.warn('⚠️ Nenhum orgId fornecido para atualização do logo. Pulei a atualização da API.');
+          } else {
+            const update = await this.updateOrganizationBranding(entityId, { logo_url: result.filePath });
+            if (!update.success) {
+              console.error('❌ Falha ao atualizar logo da organização na API:', update.error);
+            } else {
+              console.log('🟢 Logo da organização atualizado na API com sucesso.');
+            }
+          }
+        }
+
+        // Atualiza banner da organização quando o tipo for 'org-banner'
+        if (type === 'org-banner') {
+          if (!entityId) {
+            console.warn('⚠️ Nenhum orgId fornecido para atualização do banner. Pulei a atualização da API.');
+          } else {
+            const update = await this.updateOrganizationBranding(entityId, { banner_url: result.filePath });
+            if (!update.success) {
+              console.error('❌ Falha ao atualizar banner da organização na API:', update.error);
+            } else {
+              console.log('🟢 Banner da organização atualizado na API com sucesso.');
             }
           }
         }
@@ -97,9 +138,9 @@ export class ImageUploadService {
 
     } catch (error) {
       console.error('❌ Erro no upload:', error);
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Erro desconhecido' 
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
       };
     }
   }
@@ -120,9 +161,9 @@ export class ImageUploadService {
 
     // Chama o método genérico
     const result = await this.uploadImage(
-      file, 
-      'user-avatar', 
-      user.id_code, 
+      file,
+      'user-avatar',
+      user.id_code,
       this.defaultOptions,
       `users/${user.id_code}/avatar`
     );
@@ -140,7 +181,7 @@ export class ImageUploadService {
   private validateFile(file: File): { valid: boolean; error?: string } {
     // Verificar tipo
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
-    
+
     if (!allowedTypes.includes(file.type)) {
       return {
         valid: false,
@@ -151,9 +192,9 @@ export class ImageUploadService {
     // Verificar tamanho (5MB máximo)
     const maxSize = 5 * 1024 * 1024; // 5MB
     if (file.size > maxSize) {
-      return { 
-        valid: false, 
-        error: 'Arquivo muito grande. Máximo 5MB.' 
+      return {
+        valid: false,
+        error: 'Arquivo muito grande. Máximo 5MB.'
       };
     }
 
@@ -173,9 +214,9 @@ export class ImageUploadService {
         try {
           // Calcular dimensões mantendo proporção
           const { width, height } = this.calculateDimensions(
-            img.width, 
-            img.height, 
-            options.maxWidth!, 
+            img.width,
+            img.height,
+            options.maxWidth!,
             options.maxHeight!
           );
 
@@ -213,9 +254,9 @@ export class ImageUploadService {
    * Calcula dimensões mantendo proporção
    */
   private calculateDimensions(
-    originalWidth: number, 
-    originalHeight: number, 
-    maxWidth: number, 
+    originalWidth: number,
+    originalHeight: number,
+    maxWidth: number,
     maxHeight: number
   ): { width: number; height: number } {
     let { width, height } = { width: originalWidth, height: originalHeight };
@@ -251,7 +292,7 @@ export class ImageUploadService {
       formData.append('file', file); // API espera 'file'
       formData.append('type', type);
       formData.append('entityId', entityId);
-      
+
       // Determinar pasta
       let folderToSend = folderPath;
 
@@ -263,7 +304,7 @@ export class ImageUploadService {
         else if (t.includes('user')) folderToSend = 'users';
         console.log(`⚠️ [DEBUG] Folder não informado. Fallback automático para: "${folderToSend}"`);
       }
-      
+
       if (folderToSend) formData.append('folder', folderToSend);
 
       console.log(`📤 [DEBUG] Enviando arquivo para API principal (tipo: ${type}):`, fileName);
@@ -275,7 +316,7 @@ export class ImageUploadService {
       if (response.success) {
         // A API agora retorna a URL pronta para uso (proxy ou direta)
         const finalUrl = response.data.url || response.data.downloadUrl || response.data.fileUrl;
-        
+
         return {
           success: true,
           fileName: response.data.name || fileName,
@@ -332,11 +373,11 @@ export class ImageUploadService {
   private async updateUserAvatar(filePath: string): Promise<{ success: boolean; error?: string }> {
     try {
       const avatarUrl = filePath;
-      
+
       console.log('🔄 Atualizando avatar via API:', avatarUrl);
-      
+
       const result = await this.authService.updateUser({ avatar_url: avatarUrl }).toPromise();
-      
+
       if (result?.success) {
         console.log('✅ API atualizada com sucesso');
         return { success: true };
@@ -345,9 +386,9 @@ export class ImageUploadService {
       }
     } catch (error) {
       console.error('❌ Erro na API:', error);
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Erro na API' 
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erro na API'
       };
     }
   }
@@ -356,24 +397,31 @@ export class ImageUploadService {
    * Atualiza o logo da loja via API
    */
   private async updateStoreLogo(storeId: string, filePath: string): Promise<{ success: boolean; error?: string }> {
-    try {
-      console.log('🔄 Atualizando logo da loja via API (URL completa):', filePath);
+    return this.patchStoreBranding(storeId, { logo_url: filePath });
+  }
 
-      // Agora armazenamos a URL completa servida pelo servidor utilitário
-      const logoUrl = filePath;
-      console.log('📦 Payload de atualização do logo (full URL):', { storeId, logo_url: logoUrl });
-      
-      // O endpoint de atualização da loja já existe no ConfigService, mas para manter
-      // a lógica de upload encapsulada, replicamos a chamada aqui.
-      // Adicionar o token de autenticação à requisição
+  /**
+   * Atualiza o banner da loja via API
+   */
+  private async updateStoreBanner(storeId: string, filePath: string): Promise<{ success: boolean; error?: string }> {
+    return this.patchStoreBranding(storeId, { banner_url: filePath });
+  }
+
+  /**
+   * Método interno para fazer o patch de branding da loja
+   */
+  private async patchStoreBranding(storeId: string, data: any): Promise<{ success: boolean; error?: string }> {
+    try {
+      console.log(`🔄 Fazendo patch na loja ${storeId}:`, data);
+
       const token = this.authService.getAuthToken();
       let headers = new HttpHeaders();
       if (token) {
         headers = headers.set('Authorization', `Bearer ${token}`);
       }
 
-      const result = await this.http.put<any>(`${environment.apiUrl}/api/v1/stores/${storeId}`, { logo_url: logoUrl }, { headers, responseType: 'json' }).toPromise();
-      
+      const result = await this.http.put<any>(`${environment.apiUrl}/api/v1/stores/${storeId}`, data, { headers, responseType: 'json' }).toPromise();
+
       if (result?.success) {
         console.log('✅ API da loja atualizada com sucesso');
         return { success: true };
@@ -390,7 +438,7 @@ export class ImageUploadService {
    * Processa múltiplas imagens (para uso futuro)
    */
   async processMultipleImages(
-    files: FileList, 
+    files: FileList,
     options?: ImageProcessingOptions
   ): Promise<UploadResult[]> {
     const results: UploadResult[] = [];
@@ -415,7 +463,7 @@ export class ImageUploadService {
   }> {
     return new Promise((resolve, reject) => {
       const img = new Image();
-      
+
       img.onload = () => {
         resolve({
           width: img.width,
@@ -424,9 +472,36 @@ export class ImageUploadService {
           type: file.type
         });
       };
-      
+
       img.onerror = () => reject(new Error('Falha ao carregar imagem'));
       img.src = URL.createObjectURL(file);
     });
+  }
+
+  /**
+   * Atualiza o branding da organização via API
+   */
+  private async updateOrganizationBranding(orgId: string, data: any): Promise<{ success: boolean; error?: string }> {
+    try {
+      console.log(`🔄 Fazendo patch na organização ${orgId}:`, data);
+
+      const token = this.authService.getAuthToken();
+      let headers = new HttpHeaders();
+      if (token) {
+        headers = headers.set('Authorization', `Bearer ${token}`);
+      }
+
+      const result = await this.http.put<any>(`${environment.apiUrl}/api/v1/organizations/${orgId}`, data, { headers, responseType: 'json' }).toPromise();
+
+      if (result?.success) {
+        console.log('✅ API da organização atualizada com sucesso');
+        return { success: true };
+      } else {
+        return { success: false, error: 'Resposta inválida da API da organização' };
+      }
+    } catch (error) {
+      console.error('❌ Erro na API da organização:', error);
+      return { success: false, error: error instanceof Error ? error.message : 'Erro na API da organização' };
+    }
   }
 }

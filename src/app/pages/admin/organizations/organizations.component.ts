@@ -8,11 +8,31 @@ import { AuthService, User } from '../../../shared/services/auth.service';
 import { OrganizationStore } from './organization.service';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { LocalStorageService } from '../../../shared/services/local-storage.service';
+import { StoreInviteService, StoreInvite, CreateInvitePayload } from '../stores/config/store-invite.service';
+import { LabelComponent } from '../../../shared/components/form/label/label.component';
+import { InputFieldComponent } from '../../../shared/components/form/input/input-field.component';
+import { SelectComponent } from '../../../shared/components/form/select/select.component';
+import { ButtonComponent } from '../../../shared/components/ui/button/button.component';
+import { CheckboxComponent } from '../../../shared/components/form/input/checkbox.component';
+import { ModalComponent } from '../../../shared/components/ui/modal/modal.component';
+import { NgClass } from '@angular/common';
 
 @Component({
   selector: 'app-organizations',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
+    RouterModule,
+    LabelComponent,
+    InputFieldComponent,
+    SelectComponent,
+    ButtonComponent,
+    CheckboxComponent,
+    ModalComponent,
+    NgClass
+  ],
   template: `
     <div class="p-6">
       <h1 class="text-2xl font-bold mb-4 text-gray-800 dark:text-white">Organizations</h1>
@@ -64,7 +84,7 @@ import { LocalStorageService } from '../../../shared/services/local-storage.serv
               [class.text-gray-500]="activeTab !== 'users'"
               class="whitespace-nowrap border-b-2 py-2 px-1 text-sm font-medium hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
             >
-              Users
+              Colaboradores
             </button>
           </nav>
         </div>
@@ -156,9 +176,8 @@ import { LocalStorageService } from '../../../shared/services/local-storage.serv
                 <p class="text-xs text-gray-600 dark:text-gray-400">{{ st.city || '-' }}</p>
                 <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">Status: {{ st.status }}</p>
               </div>
-              <div class="px-4 pb-4 flex items-center gap-2">
-                <a [routerLink]="['/admin/stores', st.id_code, 'config']" class="px-3 py-1.5 text-xs font-medium rounded-md bg-blue-500 text-white">Abrir</a>
-                <a [routerLink]="['/admin/stores', st.id_code, 'config']" class="px-3 py-1.5 text-xs font-medium rounded-md border border-gray-300 text-gray-700 dark:border-gray-600 dark:text-gray-300">Gerenciar</a>
+               <div class="px-4 pb-4 flex items-center gap-2">
+                <a [routerLink]="['/admin/stores', st.id_code, 'config']" class="px-3 py-1.5 text-xs font-medium rounded-md bg-blue-500 text-white">Gerenciar</a>
               </div>
             </div>
             }
@@ -199,7 +218,7 @@ import { LocalStorageService } from '../../../shared/services/local-storage.serv
                   <td class="px-6 py-3 text-sm text-gray-700 dark:text-gray-300">{{ st.city || '-' }}</td>
                   <td class="px-6 py-3 text-sm text-gray-700 dark:text-gray-300">{{ st.status }}</td>
                   <td class="px-6 py-3 text-right">
-                    <a [routerLink]="['/admin/stores', st.id_code, 'config']" class="px-3 py-1.5 text-xs font-medium rounded-md bg-blue-500 text-white">Abrir</a>
+                    <a [routerLink]="['/admin/stores', st.id_code, 'config']" class="px-3 py-1.5 text-xs font-medium rounded-md bg-blue-500 text-white">Gerenciar</a>
                   </td>
                 </tr>
                 }
@@ -224,10 +243,208 @@ import { LocalStorageService } from '../../../shared/services/local-storage.serv
         </div>
         }
         @if (activeTab === 'users') {
-        <div class="px-1 py-3">
-          <p class="text-sm text-gray-600 dark:text-gray-300">Convites e usuários da organização (em breve).</p>
+        <div class="px-1 py-3 space-y-6">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <h2 class="text-xl font-semibold text-gray-800 dark:text-white/90">
+              Gestão Central de Colaboradores
+            </h2>
+            <app-button *ngIf="!showCollaboratorForm" (click)="addCollaborator()">
+              Convidar Novo
+            </app-button>
+          </div>
+
+          @if (showCollaboratorForm) {
+          <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-white/[0.03]">
+            <h4 class="text-base font-semibold text-gray-800 dark:text-white mb-4">
+              Enviar Convite de Colaborador
+            </h4>
+            <form [formGroup]="collaboratorForm" (ngSubmit)="sendInvitation()">
+              <div class="grid gap-6 sm:grid-cols-2 mb-6">
+                <div class="sm:col-span-2">
+                  <app-label>Ponto de Venda (Store) *</app-label>
+                  <app-select [value]="collaboratorForm.get('store_id')?.value"
+                    (valueChange)="collaboratorForm.get('store_id')?.setValue($event)"
+                    [options]="storeOptions"
+                    placeholder="Selecione a loja para este convite" />
+                </div>
+                <div>
+                  <app-label>Email do Usuário *</app-label>
+                  <app-input-field type="email" formControlName="email" placeholder="Digite o email para convite" />
+                </div>
+                <div>
+                  <app-label>Tipo de Usuário *</app-label>
+                  <app-select [value]="collaboratorForm.get('role')?.value"
+                    (valueChange)="collaboratorForm.get('role')?.setValue($event)"
+                    [options]="[{value: 'manager', label: 'Gerente'}, {value: 'collaborator', label: 'Colaborador'}, {value: 'viewer', label: 'Observador'}]" />
+                </div>
+                <div class="sm:col-span-2">
+                  <app-label>Módulos de Acesso *</app-label>
+                  <div class="flex flex-wrap gap-4 mt-2">
+                    @for (module of filteredModuleOptions; track module.value) {
+                    <app-checkbox [id]="'mod_' + module.value" [label]="module.label"
+                      [checked]="isModuleSelected(module.label)" (checkedChange)="toggleModule(module.label, $event)" />
+                    }
+                  </div>
+                </div>
+              </div>
+              <div class="flex justify-end gap-3">
+                <app-button type="button" variant="outline" (click)="cancelCollaboratorForm()">Cancelar</app-button>
+                <app-button type="submit" [disabled]="isSubmitting || collaboratorForm.invalid || (collaboratorForm.get('modules')?.value || []).length === 0">Enviar Convite</app-button>
+              </div>
+            </form>
+          </div>
+          }
+
+          <div class="space-y-4">
+            @for (st of stores; track st.id_code) {
+            <div class="rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden bg-white dark:bg-white/[0.03] transition-all">
+              <button (click)="toggleStore(st.id_code)" 
+                class="w-full flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors text-left">
+                <div class="flex items-center gap-4">
+                  <div class="w-10 h-10 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800 flex-shrink-0">
+                    <img [src]="st.logo_url || '/images/stores/default-store-logo.png'" class="w-full h-full object-cover">
+                  </div>
+                  <div>
+                    <h3 class="font-semibold text-gray-900 dark:text-white">{{ st.name }}</h3>
+                    <div class="flex items-center gap-2 mt-0.5">
+                      <span class="text-xs text-gray-500 dark:text-gray-400">{{ st.city || 'Local não definido' }}</span>
+                      <span class="text-[10px] px-1.5 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 font-medium">
+                        {{ storeUserGroups[st.id_code]?.collaborators?.length || 0 }} ativos · {{ storeUserGroups[st.id_code]?.pendingInvites?.length || 0 }} pendentes
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div class="flex items-center gap-3">
+                  @if (storeUserGroups[st.id_code]?.isLoading) {
+                    <div class="w-5 h-5 border-2 border-brand-500 border-t-transparent rounded-full animate-spin"></div>
+                  }
+                  <svg [class.rotate-180]="storeUserGroups[st.id_code]?.expanded" class="w-5 h-5 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                  </svg>
+                </div>
+              </button>
+
+              @if (storeUserGroups[st.id_code]?.expanded) {
+              <div class="p-6 border-t border-gray-100 dark:border-white/[0.05] bg-gray-50/30 dark:bg-transparent space-y-6">
+                <!-- Ativos -->
+                <div>
+                  <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
+                    <span class="inline-block w-2 h-2 rounded-full bg-green-500"></span>
+                    Colaboradores Ativos
+                  </h4>
+                  <div class="overflow-x-auto rounded-lg border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-800/20">
+                    <table class="w-full text-sm">
+                      <thead class="bg-gray-50 dark:bg-white/[0.02]">
+                        <tr>
+                          <th class="px-4 py-2 text-left font-medium text-gray-500 dark:text-gray-400">Usuário</th>
+                          <th class="px-4 py-2 text-left font-medium text-gray-500 dark:text-gray-400">Role</th>
+                          <th class="px-4 py-2 text-left font-medium text-gray-500 dark:text-gray-400">Ações</th>
+                        </tr>
+                      </thead>
+                      <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                        @for (colab of storeUserGroups[st.id_code]?.collaborators; track colab.id) {
+                        <tr>
+                          <td class="px-4 py-3">
+                            <div class="flex flex-col">
+                              <span class="font-medium text-gray-900 dark:text-white">{{ colab.email }}</span>
+                            </div>
+                          </td>
+                          <td class="px-4 py-3 capitalize text-gray-600 dark:text-gray-300">{{ colab.role }}</td>
+                          <td class="px-4 py-3">
+                             <a [routerLink]="['/admin/stores', st.id_code, 'config']" [queryParams]="{tab: 'collaborators'}" class="text-brand-500 hover:text-brand-600 text-xs font-medium">Gerenciar</a>
+                          </td>
+                        </tr>
+                        }
+                        @if ((storeUserGroups[st.id_code]?.collaborators?.length || 0) === 0) {
+                        <tr>
+                          <td colspan="3" class="px-4 py-6 text-center text-gray-500 italic">Nenhum colaborador ativo nesta loja.</td>
+                        </tr>
+                        }
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <!-- Pendentes -->
+                <div>
+                  <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
+                    <span class="inline-block w-2 h-2 rounded-full bg-yellow-500"></span>
+                    Convites em Aberto
+                  </h4>
+                  <div class="overflow-x-auto rounded-lg border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-800/20">
+                    <table class="w-full text-sm">
+                      <thead class="bg-gray-50 dark:bg-white/[0.02]">
+                        <tr>
+                          <th class="px-4 py-2 text-left font-medium text-gray-500 dark:text-gray-400">Email</th>
+                          <th class="px-4 py-2 text-left font-medium text-gray-500 dark:text-gray-400">Status</th>
+                          <th class="px-4 py-2 text-left font-medium text-gray-500 dark:text-gray-400">Expira</th>
+                          <th class="px-4 py-2 text-right font-medium text-gray-500 dark:text-gray-400">Links</th>
+                        </tr>
+                      </thead>
+                      <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                        @for (invite of storeUserGroups[st.id_code]?.pendingInvites; track invite.id_code) {
+                        <tr>
+                          <td class="px-4 py-3 text-gray-900 dark:text-white">{{ invite.invited_email }}</td>
+                          <td class="px-4 py-3">
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase" [ngClass]="{
+                              'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400': invite.status === 'revoked' || invite.status === 'expired' || (invite.status === 'pending' && isExpired(invite.expires_at)),
+                              'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400': invite.status === 'pending' && !isExpired(invite.expires_at)
+                            }">
+                              {{ invite.status === 'revoked' ? 'Revogado' : (isExpired(invite.expires_at) ? 'Expirado' : 'Pendente') }}
+                            </span>
+                          </td>
+                          <td class="px-4 py-3 text-xs text-gray-500">{{ invite.expires_at | date:'dd/MM HH:mm' }}</td>
+                          <td class="px-4 py-3 text-right">
+                            <button *ngIf="invite.status === 'pending' && !isExpired(invite.expires_at) && getInviteFromCache(invite.id_code)" 
+                              (click)="copyInviteLink(getInviteFromCache(invite.id_code)!)"
+                              class="text-gray-400 hover:text-brand-500">
+                              <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+                            </button>
+                          </td>
+                        </tr>
+                        }
+                        @if ((storeUserGroups[st.id_code]?.pendingInvites?.length || 0) === 0) {
+                        <tr>
+                          <td colspan="4" class="px-4 py-6 text-center text-gray-500 italic">Nenhum convite pendente.</td>
+                        </tr>
+                        }
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+              }
+            </div>
+            }
+          </div>
         </div>
         }
+
+        <!-- Invite Link Modal (Centralizado) -->
+        <app-modal [isOpen]="showInviteLinkModal" (close)="closeInviteLinkModal()">
+          <div class="p-6">
+            <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-brand-100 text-brand-600 dark:bg-brand-900/30 dark:text-brand-500">
+              <svg class="size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.826L10.242 9.172a4 4 0 015.656 0l4 4a4 4 0 01-5.656 5.656l-1.102 1.101"></path></svg>
+            </div>
+            <h3 class="text-lg font-semibold text-center text-gray-900 dark:text-white mb-2">Convite Gerado!</h3>
+            <p class="text-sm text-center text-gray-500 dark:text-gray-400 mb-6">
+              Copie o link abaixo e envie para o convidado. <br>
+              <span class="text-xs font-medium text-warning-600 dark:text-warning-500">Por segurança, o token só é visível agora.</span>
+            </p>
+
+            <div class="flex items-center gap-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-800 mb-6 group">
+              <input type="text" [value]="generatedInviteLink" readonly
+                class="flex-1 bg-transparent border-none outline-none text-xs text-gray-600 dark:text-gray-300 font-mono overflow-hidden text-ellipsis">
+              <button (click)="copyInviteLink()" class="p-2 text-gray-400 hover:text-brand-500 transition-colors">
+                <svg class="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+              </button>
+            </div>
+
+            <div class="flex justify-center">
+              <app-button class="w-full sm:w-auto" (click)="closeInviteLinkModal()">Concluído</app-button>
+            </div>
+          </div>
+        </app-modal>
       </div>
     </div>
   `
@@ -245,9 +462,33 @@ export class OrganizationsComponent implements OnInit {
   stores: OrganizationStore[] = [];
   isLoadingStores = false;
   showOnboardingModal = false;
+  storeOptions: { value: string, label: string }[] = [];
+
+  // Collaborator Management properties
+  collaboratorForm: FormGroup;
+  showCollaboratorForm = false;
+  storeUserGroups: Record<string, {
+    collaborators: any[],
+    pendingInvites: StoreInvite[],
+    isLoading: boolean,
+    expanded: boolean,
+    hasLoaded: boolean
+  }> = {};
+
+  moduleOptions = [
+    { value: 'financial', label: 'Financeiro', slug: 'financial', permissions: ['financial:read', 'financial:write'] },
+    { value: 'events', label: 'Eventos', slug: 'events', permissions: ['events:read', 'events:write'] },
+    { value: 'pub', label: 'Pub', slug: 'pub', permissions: ['pub:read', 'pub:write'] }
+  ];
+  filteredModuleOptions: any[] = [];
+
+  generatedInviteLink: string | null = null;
+  showInviteLinkModal: boolean = false;
+  private readonly INVITE_LINKS_CACHE_KEY = 'dm_invite_links_cache';
 
   private fb = inject(FormBuilder);
   private orgService = inject(OrganizationService);
+  private storeInviteService = inject(StoreInviteService);
   private imageUpload = inject(ImageUploadService);
   private toast = inject(ToastService);
   private authService = inject(AuthService);
@@ -260,6 +501,17 @@ export class OrganizationsComponent implements OnInit {
       name: ['', Validators.required],
       document: ['']
     });
+
+    this.collaboratorForm = this.fb.group({
+      store_id: ['', Validators.required],
+      email: ['', [Validators.required, Validators.email]],
+      role: ['collaborator', Validators.required],
+      modules: [[]],
+      expires_in_days: [7]
+    });
+
+    // Filtra os módulos baseados nos módulos do usuário logado
+    this.filteredModuleOptions = this.moduleOptions.filter(opt => this.authService.hasModule(opt.slug));
     const qpOnboarding = this.route.snapshot.queryParamMap.get('onboarding') === '1';
     this.showOnboardingModal = qpOnboarding;
     this.authService.currentUser$.subscribe((user: User | null) => {
@@ -304,24 +556,72 @@ export class OrganizationsComponent implements OnInit {
   onLogoSelected(event: any) {
     const file = event.target.files?.[0];
     if (!file) return;
-    this.pendingLogoFile = file;
+
     const reader = new FileReader();
     reader.onload = (e: any) => this.logoPreview = e.target.result;
     reader.readAsDataURL(file);
+
+    if (this.existingOrgId) {
+      this.uploadLogo(file, this.existingOrgId);
+    } else {
+      this.pendingLogoFile = file;
+    }
+  }
+
+  async uploadLogo(file: File, orgId: string) {
+    try {
+      const upload = await this.imageUpload.uploadImage(
+        file,
+        'org-logo',
+        orgId,
+        { maxWidth: 300, maxHeight: 300, quality: 0.9 },
+        `organizations/${orgId}/branding`
+      );
+      if (upload.success) {
+        this.pendingLogoFile = null;
+        this.toast.triggerToast('success', 'Sucesso', 'Logo atualizado com sucesso.');
+      }
+    } catch (e) {
+      this.toast.triggerToast('error', 'Erro', 'Falha ao enviar o logo.');
+    }
   }
 
   onBannerSelected(event: any) {
     const file = event.target.files?.[0];
     if (!file) return;
-    this.pendingBannerFile = file;
+
     const reader = new FileReader();
     reader.onload = (e: any) => this.bannerPreview = e.target.result;
     reader.readAsDataURL(file);
+
+    if (this.existingOrgId) {
+      this.uploadBanner(file, this.existingOrgId);
+    } else {
+      this.pendingBannerFile = file;
+    }
+  }
+
+  async uploadBanner(file: File, orgId: string) {
+    try {
+      const upload = await this.imageUpload.uploadImage(
+        file,
+        'org-banner',
+        orgId,
+        { maxWidth: 1200, maxHeight: 400, quality: 0.9 },
+        `organizations/${orgId}/branding`
+      );
+      if (upload.success) {
+        this.pendingBannerFile = null;
+        this.toast.triggerToast('success', 'Sucesso', 'Banner atualizado com sucesso.');
+      }
+    } catch (e) {
+      this.toast.triggerToast('error', 'Erro', 'Falha ao enviar o banner.');
+    }
   }
 
   setActiveTab(tab: string) {
     this.activeTab = tab;
-    if (tab === 'stores' && this.existingOrgId) {
+    if ((tab === 'stores' || tab === 'users') && this.existingOrgId) {
       this.loadOrganizationStores();
     }
   }
@@ -337,6 +637,7 @@ export class OrganizationsComponent implements OnInit {
           banner_url: typeof s.banner_url === 'string' ? s.banner_url.replace(/`/g, '').trim() : s.banner_url,
           city: s.city || ''
         }));
+        this.storeOptions = this.stores.map(s => ({ value: s.id_code, label: s.name }));
         this.isLoadingStores = false;
       },
       error: () => {
@@ -424,5 +725,164 @@ export class OrganizationsComponent implements OnInit {
     } finally {
       this.isSubmitting = false;
     }
+  }
+
+  // --- Collaborator Management Methods ---
+
+  addCollaborator() {
+    this.showCollaboratorForm = true;
+    this.collaboratorForm.reset({ role: 'collaborator', modules: [], expires_in_days: 7 });
+  }
+
+  cancelCollaboratorForm() {
+    this.showCollaboratorForm = false;
+  }
+
+  toggleModule(moduleLabel: string, isChecked: boolean) {
+    const currentModules = this.collaboratorForm.get('modules')?.value || [];
+    let updatedModules = [...currentModules];
+    if (isChecked) {
+      if (!updatedModules.includes(moduleLabel)) updatedModules.push(moduleLabel);
+    } else {
+      updatedModules = updatedModules.filter(m => m !== moduleLabel);
+    }
+    this.collaboratorForm.patchValue({ modules: updatedModules });
+  }
+
+  isModuleSelected(moduleLabel: string): boolean {
+    return (this.collaboratorForm.get('modules')?.value || []).includes(moduleLabel);
+  }
+
+  sendInvitation() {
+    if (this.collaboratorForm.invalid) {
+      this.collaboratorForm.markAllAsTouched();
+      return;
+    }
+    this.isSubmitting = true;
+    const formValue = this.collaboratorForm.value;
+    const storeId = formValue.store_id;
+
+    const selectedPermissions: string[] = [];
+    formValue.modules.forEach((modLabel: string) => {
+      const mod = this.moduleOptions.find(m => m.label === modLabel);
+      if (mod) selectedPermissions.push(...mod.permissions);
+    });
+
+    const payload: CreateInvitePayload = {
+      email: formValue.email,
+      role: formValue.role,
+      permissions: selectedPermissions,
+      expires_in_days: formValue.expires_in_days || 7
+    };
+
+    this.storeInviteService.createInvite(storeId, payload).subscribe({
+      next: (res) => {
+        const token = this.getInviteTokenFromLink(res.invite_link);
+        this.generatedInviteLink = `${window.location.origin}/invite/accept?token=${token}`;
+        if (token) this.saveInviteToCache(res.data.id_code, token);
+        this.showInviteLinkModal = true;
+        this.fetchStoreUsers(storeId, true);
+        this.toast.triggerToast('success', 'Sucesso', 'Convite criado com sucesso.');
+        this.cancelCollaboratorForm();
+        this.isSubmitting = false;
+      },
+      error: () => {
+        this.toast.triggerToast('error', 'Erro', 'Erro ao criar convite.');
+        this.isSubmitting = false;
+      }
+    });
+  }
+
+  toggleStore(storeId: string) {
+    if (!this.storeUserGroups[storeId]) {
+      this.storeUserGroups[storeId] = {
+        collaborators: [],
+        pendingInvites: [],
+        isLoading: false,
+        expanded: false,
+        hasLoaded: false
+      };
+    }
+
+    this.storeUserGroups[storeId].expanded = !this.storeUserGroups[storeId].expanded;
+
+    if (this.storeUserGroups[storeId].expanded && !this.storeUserGroups[storeId].hasLoaded) {
+      this.fetchStoreUsers(storeId);
+    }
+  }
+
+  fetchStoreUsers(storeId: string, force = false) {
+    if (!this.storeUserGroups[storeId]) return;
+    if (this.storeUserGroups[storeId].isLoading && !force) return;
+
+    this.storeUserGroups[storeId].isLoading = true;
+    this.storeInviteService.listInvites(storeId).subscribe({
+      next: (res) => {
+        const allInvites = (res.data || []).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+        this.storeUserGroups[storeId].pendingInvites = allInvites.filter(i => i.status !== 'accepted');
+        this.storeUserGroups[storeId].collaborators = allInvites.filter(i => i.status === 'accepted').map(i => ({
+          id: i.id_code,
+          name: i.invited_email.split('@')[0],
+          email: i.invited_email,
+          role: i.role,
+          permissions: i.permissions
+        }));
+
+        this.storeUserGroups[storeId].isLoading = false;
+        this.storeUserGroups[storeId].hasLoaded = true;
+      },
+      error: () => {
+        this.storeUserGroups[storeId].isLoading = false;
+        this.toast.triggerToast('error', 'Erro', 'Falha ao carregar usuários da loja.');
+      }
+    });
+  }
+
+  // --- Invite Helpers ---
+
+  getInviteTokenFromLink(link: string): string {
+    if (!link) return '';
+    try {
+      const url = new URL(link);
+      return url.searchParams.get('token') || link;
+    } catch {
+      if (link.includes('token=')) {
+        return link.split('token=')[1].split('&')[0];
+      }
+      return link;
+    }
+  }
+
+  saveInviteToCache(idCode: string, value: string) {
+    const cache = this.localStorage.getData<Record<string, string>>(this.INVITE_LINKS_CACHE_KEY) || {};
+    cache[idCode] = value;
+    this.localStorage.saveData(this.INVITE_LINKS_CACHE_KEY, cache);
+  }
+
+  getInviteFromCache(idCode: string): string | null {
+    const cache = this.localStorage.getData<Record<string, string>>(this.INVITE_LINKS_CACHE_KEY) || {};
+    const value = cache[idCode];
+    if (!value) return null;
+
+    const token = this.getInviteTokenFromLink(value);
+    return `${window.location.origin}/invite/accept?token=${token}`;
+  }
+
+  copyInviteLink(link?: string) {
+    const linkToCopy = link || this.generatedInviteLink;
+    if (linkToCopy) {
+      navigator.clipboard.writeText(linkToCopy);
+      this.toast.triggerToast('success', 'Sucesso', 'Link copiado para a área de transferência.');
+    }
+  }
+
+  closeInviteLinkModal() {
+    this.showInviteLinkModal = false;
+    this.generatedInviteLink = null;
+  }
+
+  isExpired(date: string): boolean {
+    return new Date(date) < new Date();
   }
 }

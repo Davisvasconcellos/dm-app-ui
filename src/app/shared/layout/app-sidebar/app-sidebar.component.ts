@@ -52,7 +52,7 @@ export class AppSidebarComponent implements OnInit, OnDestroy {
     {
       name: 'Admin Área',
       icon: '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>',
-      roles: ['admin','master'],
+      roles: ['admin', 'master'],
       subItems: [
         { name: 'Home Admin', path: '/admin/home' },
         { name: 'Organizations', path: '/admin/organizations' },
@@ -101,7 +101,7 @@ export class AppSidebarComponent implements OnInit, OnDestroy {
         { name: 'Criar Evento', path: '/events/event-create' },
         // { name: 'Home Guest (sem layout)', path: '/events/home-guest' },
         // { name: 'Criar Jam', path: '/events/criar-jam' },
-       { name: 'Jam Kanban', path: '/events/jam-kanban' },
+        { name: 'Jam Kanban', path: '/events/jam-kanban' },
       ],
     },
     {
@@ -137,13 +137,6 @@ export class AppSidebarComponent implements OnInit, OnDestroy {
         { name: 'Comissões', path: '/financial/comissoes' },
         { name: 'Relatórios', path: '/financial/relatorios' },
         { name: 'Saldos bancários', path: '/financial/saldos-bancarios' },
-        {
-          name: 'Configurações',
-          subItems: [
-            { name: 'Organização', path: '/financial/configuracoes' },
-            { name: 'Users', path: '/financial/parceiros' }
-          ]
-        },
       ],
     },
     /*
@@ -501,26 +494,26 @@ export class AppSidebarComponent implements OnInit, OnDestroy {
 
     this.filteredMainItems = this.mainItems
       .filter(item => {
-         const roleMatch = !item.roles || (role ? item.roles.includes(role) : false);
-         const moduleMatch = !item.moduleSlug || this.authService.hasModule(item.moduleSlug);
+        const roleMatch = !item.roles || (role ? item.roles.includes(role) : false);
+        const moduleMatch = !item.moduleSlug || this.authService.hasModule(item.moduleSlug);
 
-         if (item.moduleSlug) {
-            console.log(`Menu Item: ${item.name}, Slug: ${item.moduleSlug}, HasModule: ${moduleMatch}`);
-         }
+        if (item.moduleSlug) {
+          console.log(`Menu Item: ${item.name}, Slug: ${item.moduleSlug}, HasModule: ${moduleMatch}`);
+        }
 
-         return roleMatch && moduleMatch;
+        return roleMatch && moduleMatch;
       })
       .map(item => ({
         ...item,
         subItems: item.subItems
           ? item.subItems
-              .filter(si => !si.roles || (role ? si.roles.includes(role) : false))
-              .map(si => ({
-                ...si,
-                subItems: si.subItems
-                  ? si.subItems.filter(c => !c.roles || (role ? c.roles.includes(role) : false))
-                  : si.subItems
-              }))
+            .filter(si => !si.roles || (role ? si.roles.includes(role) : false))
+            .map(si => ({
+              ...si,
+              subItems: si.subItems
+                ? si.subItems.filter(c => !c.roles || (role ? c.roles.includes(role) : false))
+                : si.subItems
+            }))
           : [],
       }));
     // this.cdr.detectChanges();

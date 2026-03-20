@@ -42,7 +42,7 @@ export class SignupFormComponent implements OnInit {
     private authService: AuthService,
     private router: Router,
     private route: ActivatedRoute
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.route.queryParamMap.subscribe((params) => {
@@ -50,9 +50,19 @@ export class SignupFormComponent implements OnInit {
       const flow = params.get('flow');
       this.currentReturnUrl = returnUrl && returnUrl.startsWith('/') && !returnUrl.includes('://') ? returnUrl : null;
       this.currentFlow = flow;
+
+      const token = params.get('token');
+      const emailParam = params.get('email');
+      if (emailParam) this.email = emailParam;
+
+      if (token && !this.currentReturnUrl) {
+        this.currentReturnUrl = `/invite/accept?token=${token}`;
+      }
+
       const qp: any = {};
       if (this.currentReturnUrl) qp.returnUrl = this.currentReturnUrl;
       if (this.currentFlow) qp.flow = this.currentFlow;
+      if (token) qp.token = token;
       this.signinQueryParams = qp;
     });
   }
@@ -66,9 +76,9 @@ export class SignupFormComponent implements OnInit {
   }
 
   isPasswordValid(): boolean {
-    return this.password.length >= 6 && 
-           this.hasNumber(this.password) && 
-           this.hasLetter(this.password);
+    return this.password.length >= 6 &&
+      this.hasNumber(this.password) &&
+      this.hasLetter(this.password);
   }
 
   hasNumber(str: string): boolean {
@@ -82,7 +92,7 @@ export class SignupFormComponent implements OnInit {
   onSignUp() {
     // Reset error message
     this.errorMessage = '';
-    
+
     // Basic validation
     if (!this.fname.trim() || !this.lname.trim() || !this.email.trim() || !this.password.trim() || !this.confirmPassword.trim()) {
       this.errorMessage = 'All fields are required';

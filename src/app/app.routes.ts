@@ -134,11 +134,11 @@ export const routes: Routes = [
     ]
   },
   {
-    path:'',
-    component:AppLayoutComponent,
+    path: '',
+    component: AppLayoutComponent,
     canActivate: [AuthGuard],
     canActivateChild: [AdminOrgGuard],
-    children:[
+    children: [
       {
         path: '',
         component: EcommerceComponent,
@@ -147,179 +147,179 @@ export const routes: Routes = [
           'DM-APP',
       },
       {
-        path:'analytics',
-        component:AnalyticsComponent,
-        title:'DM-APP Analytics Dashboard'
+        path: 'analytics',
+        component: AnalyticsComponent,
+        title: 'DM-APP Analytics Dashboard'
       },
       {
-        path:'marketing',
-        component:MarketingComponent,
-        title:'DM-APP Marketing Dashboard'
+        path: 'marketing',
+        component: MarketingComponent,
+        title: 'DM-APP Marketing Dashboard'
       },
       {
-        path:'crm',
-        component:CrmComponent,
-        title:'DM-APP CRM Dashboard'
+        path: 'crm',
+        component: CrmComponent,
+        title: 'DM-APP CRM Dashboard'
       },
       {
-        path:'stocks',
-        component:StocksComponent,
-        title:'DM-APP Stocks Dashboard'
+        path: 'stocks',
+        component: StocksComponent,
+        title: 'DM-APP Stocks Dashboard'
       },
       {
-        path:'saas',
-        component:SaasComponent,
-        title:'DM-APP SaaS Dashboard'
+        path: 'saas',
+        component: SaasComponent,
+        title: 'DM-APP SaaS Dashboard'
       },
       {
-        path:'logistics',
-        component:LogisticsComponent,
-        title:'DM-APP Logistics Dashboard'
+        path: 'logistics',
+        component: LogisticsComponent,
+        title: 'DM-APP Logistics Dashboard'
       },
       {
         path: 'financial',
         canActivate: [RoleGuard],
-        data: { expectedRoles: ['user','manager','admin','master'] },
+        data: { expectedRoles: ['user', 'manager', 'admin', 'master'] },
         loadChildren: () => import('./financial/financial.module').then(m => m.FinancialModule),
         title: 'Financeiro'
       },
       {
-        path:'calendar',
-        component:CalenderComponent,
-        title:'DM-APP Calendar'
+        path: 'calendar',
+        component: CalenderComponent,
+        title: 'DM-APP Calendar'
       },
       // ecommerce pages
       {
-        path:'products-list',
-        component:ProductListComponent,
-        title:'DM-APP Product List Dashboard'
+        path: 'products-list',
+        component: ProductListComponent,
+        title: 'DM-APP Product List Dashboard'
       },
       {
-        path:'add-product',
-        component:AddProductComponent,
-        title:'DM-APP Add Product Dashboard'
+        path: 'add-product',
+        component: AddProductComponent,
+        title: 'DM-APP Add Product Dashboard'
       },
       {
-        path:'billing',
-        component:BillingComponent,
-        title:'DM-APP Ecommerce Billing Dashboard'
+        path: 'billing',
+        component: BillingComponent,
+        title: 'DM-APP Ecommerce Billing Dashboard'
       },
       {
-        path:'invoices',
-        component:InvoiceComponent,
-        title:'DM-APP Ecommerce Invoice Dashboard'
+        path: 'invoices',
+        component: InvoiceComponent,
+        title: 'DM-APP Ecommerce Invoice Dashboard'
       },
       {
-        path:'single-invoice',
-        component:SingleInvoiceComponent,
-        title:'DM-APP Single Invoice Dashboard'
+        path: 'single-invoice',
+        component: SingleInvoiceComponent,
+        title: 'DM-APP Single Invoice Dashboard'
       },
       {
-        path:'create-invoice',
-        component:CreateInvoiceComponent,
-        title:'DM-APP Create Invoice Dashboard'
+        path: 'create-invoice',
+        component: CreateInvoiceComponent,
+        title: 'DM-APP Create Invoice Dashboard'
       },
       {
-        path:'transactions',
-        component:TransactionsComponent,
-        title:'DM-APP Transactions Dashboard'
+        path: 'transactions',
+        component: TransactionsComponent,
+        title: 'DM-APP Transactions Dashboard'
       },
       {
-        path:'single-transaction',
-        component:SingleTransactionComponent,
-        title:'DM-APP Single Transaction Dashboard'
+        path: 'single-transaction',
+        component: SingleTransactionComponent,
+        title: 'DM-APP Single Transaction Dashboard'
       },
       {
-        path:'profile',
-        component:ProfileComponent,
-        title:'DM-APP Profile Dashboard'
+        path: 'profile',
+        component: ProfileComponent,
+        title: 'DM-APP Profile Dashboard'
       },
       {
-        path:'profile-new',
-        component:ProfileNewComponent,
-        title:'DM-APP New Profile Dashboard'
+        path: 'profile-new',
+        component: ProfileNewComponent,
+        title: 'DM-APP New Profile Dashboard'
       },
       {
-        path:'profile-qr',
-        component:ProfileQrComponent,
-        title:'DM-APP Profile QR Dashboard'
+        path: 'profile-qr',
+        component: ProfileQrComponent,
+        title: 'DM-APP Profile QR Dashboard'
       },
       {
-        path:'task-list',
-        component:TaskListComponent,
-        title:'DM-APP Task List Dashboard'
+        path: 'task-list',
+        component: TaskListComponent,
+        title: 'DM-APP Task List Dashboard'
       },
       {
-        path:'task-kanban',
-        component:TaskKanbanComponent,
-        title:'DM-APP Task Kanban Dashboard'
+        path: 'task-kanban',
+        component: TaskKanbanComponent,
+        title: 'DM-APP Task Kanban Dashboard'
       },
       {
-        path:'form-elements',
-        component:FormElementsComponent,
-        title:'DM-APP Form Elements Dashboard'
+        path: 'form-elements',
+        component: FormElementsComponent,
+        title: 'DM-APP Form Elements Dashboard'
       },
       {
-        path:'form-layout',
-        component:FormLayoutComponent,
-        title:'DM-APP Form Layout Dashboard'
+        path: 'form-layout',
+        component: FormLayoutComponent,
+        title: 'DM-APP Form Layout Dashboard'
       },
       {
-        path:'basic-tables',
-        component:BasicTablesComponent,
-        title:'DM-APP Basic Tables Dashboard'
+        path: 'basic-tables',
+        component: BasicTablesComponent,
+        title: 'DM-APP Basic Tables Dashboard'
       },
       {
-        path:'data-tables',
-        component:DataTablesComponent,
-        title:'DM-APP Data Tables Dashboard'
+        path: 'data-tables',
+        component: DataTablesComponent,
+        title: 'DM-APP Data Tables Dashboard'
       },
       {
-        path:'file-manager',
-        component:FileManagerComponent,
-        title:'DM-APP File Manager Dashboard'
+        path: 'file-manager',
+        component: FileManagerComponent,
+        title: 'DM-APP File Manager Dashboard'
       },
       {
-        path:'upload-demo',
-        component:UploadDemoComponent,
-        title:'Upload de Imagens (Demo)'
+        path: 'upload-demo',
+        component: UploadDemoComponent,
+        title: 'Upload de Imagens (Demo)'
       },
       {
-        path:'pdf-demo',
+        path: 'pdf-demo',
         loadComponent: () => import('./pages/pdf/pdf-demo/pdf-demo.component').then(m => m.PdfDemoComponent),
-        title:'PDF Simples (Demo)'
+        title: 'PDF Simples (Demo)'
       },
       {
-        path:'pdf-rich-demo',
+        path: 'pdf-rich-demo',
         loadComponent: () => import('./pages/pdf/pdf-rich-demo/pdf-rich-demo.component').then(m => m.PdfRichDemoComponent),
-        title:'PDF Rico (Demo)'
+        title: 'PDF Rico (Demo)'
       },
       {
-        path:'pricing-tables',
-        component:PricingTablesComponent,
-        title:'DM-APP Pricing Dashboard'
+        path: 'pricing-tables',
+        component: PricingTablesComponent,
+        title: 'DM-APP Pricing Dashboard'
       },
       {
-        path:'faq',
-        component:FaqsComponent,
-        title:'DM-APP Faqs Dashboard'
+        path: 'faq',
+        component: FaqsComponent,
+        title: 'DM-APP Faqs Dashboard'
       },
       {
-        path:'api-keys',
-        component:ApiKeysComponent,
-        title:'DM-APP Api Keys Dashboard'
+        path: 'api-keys',
+        component: ApiKeysComponent,
+        title: 'DM-APP Api Keys Dashboard'
       },
       {
-        path:'integrations',
-        component:IntegrationsComponent,
-        title:'DM-APP Integrations Dashboard'
+        path: 'integrations',
+        component: IntegrationsComponent,
+        title: 'DM-APP Integrations Dashboard'
       },
       {
-        path:'check-user-status',
-        component:CheckUserStatusComponent,
+        path: 'check-user-status',
+        component: CheckUserStatusComponent,
         canActivate: [AuthGuard, RoleGuard],
         data: { expectedRoles: ['waiter'] },
-        title:'DM-APP Check User Status'
+        title: 'DM-APP Check User Status'
       },
       {
         path: 'master',
@@ -368,280 +368,280 @@ export const routes: Routes = [
         ]
       },
       {
-        path:'pub/admin',
-        component:HomeAdminComponent,
+        path: 'pub/admin',
+        component: HomeAdminComponent,
         canActivate: [AuthGuard, RoleGuard],
         data: { expectedRoles: ['admin'] },
-        title:'DM-APP Configurações | DM-APP'
+        title: 'DM-APP Configurações | DM-APP'
       },
       {
-        path:'pub/master',
-        component:HomeMasterComponent,
+        path: 'pub/master',
+        component: HomeMasterComponent,
         canActivate: [AuthGuard, RoleGuard],
         data: { expectedRoles: ['master'] },
-        title:'DM-APP Master | DM-APP'
+        title: 'DM-APP Master | DM-APP'
       },
       {
-        path:'pub/user',
-        component:HomeUserComponent,
+        path: 'pub/user',
+        component: HomeUserComponent,
         canActivate: [AuthGuard, RoleGuard],
         data: { expectedRoles: ['user'] },
-        title:'DM-APP User | DM-APP'
+        title: 'DM-APP User | DM-APP'
       },
       {
-        path:'pub/waiter',
-        component:HomeWaiterComponent,
+        path: 'pub/waiter',
+        component: HomeWaiterComponent,
         canActivate: [AuthGuard, RoleGuard],
         data: { expectedRoles: ['waiter'] },
-        title:'DM-APP Waiter | DM-APP'
+        title: 'DM-APP Waiter | DM-APP'
       },
       {
-        path:'pub/waiter/scan-qr',
-        component:QrScannerComponent,
+        path: 'pub/waiter/scan-qr',
+        component: QrScannerComponent,
         canActivate: [AuthGuard, RoleGuard],
         data: { expectedRoles: ['waiter'] },
-        title:'Leitor QR | DM-APP'
+        title: 'Leitor QR | DM-APP'
       },
       {
-        path:'pub/waiter/orders',
-        component:OrdersComponent,
+        path: 'pub/waiter/orders',
+        component: OrdersComponent,
         canActivate: [AuthGuard, RoleGuard],
         data: { expectedRoles: ['waiter'] },
-        title:'DM-APP Pedidos | DM-APP'
+        title: 'DM-APP Pedidos | DM-APP'
       },
       {
-        path:'pub/waiter/menu',
-        component:MenuComponent,
+        path: 'pub/waiter/menu',
+        component: MenuComponent,
         canActivate: [AuthGuard, RoleGuard],
         data: { expectedRoles: ['waiter'] },
-        title:'DM-APP Cardápio | DM-APP'
+        title: 'DM-APP Cardápio | DM-APP'
       },
       {
-        path:'pub/waiter/tables',
-        component:TablesComponent,
+        path: 'pub/waiter/tables',
+        component: TablesComponent,
         canActivate: [AuthGuard, RoleGuard],
         data: { expectedRoles: ['waiter'] },
-        title:'DM-APP Mesas | DM-APP'
+        title: 'DM-APP Mesas | DM-APP'
       },
       {
-        path:'pub/waiter/payments',
-        component:PaymentsComponent,
+        path: 'pub/waiter/payments',
+        component: PaymentsComponent,
         canActivate: [AuthGuard, RoleGuard],
         data: { expectedRoles: ['waiter'] },
-        title:'DM-APP Pagamentos | DM-APP'
+        title: 'DM-APP Pagamentos | DM-APP'
       },
       {
-        path:'pub/admin/admin-dashboard',
-        component:AdminDashboardComponent,
+        path: 'pub/admin/admin-dashboard',
+        component: AdminDashboardComponent,
         canActivate: [AuthGuard, RoleGuard],
         data: { expectedRoles: ['admin'] },
-        title:'DM-APP Dashboard Admin | DM-APP'
+        title: 'DM-APP Dashboard Admin | DM-APP'
       },
       {
-        path:'pub/admin/product-list',
-        component:AdminProductListComponent,
+        path: 'pub/admin/product-list',
+        component: AdminProductListComponent,
         canActivate: [AuthGuard, RoleGuard],
         data: { expectedRoles: ['admin'] },
-        title:'DM-APP Lista de Produtos | DM-APP'
+        title: 'DM-APP Lista de Produtos | DM-APP'
       },
       {
-        path:'pub/admin/add-product',
-        component:AdminAddProductComponent,
+        path: 'pub/admin/add-product',
+        component: AdminAddProductComponent,
         canActivate: [AuthGuard, RoleGuard],
         data: { expectedRoles: ['admin'] },
-        title:'DM-APP Cadastro de Produto | DM-APP'
+        title: 'DM-APP Cadastro de Produto | DM-APP'
       },
       {
-        path:'pub/admin/config',
+        path: 'pub/admin/config',
         redirectTo: 'admin/home',
         pathMatch: 'full'
       },
       {
-        path:'pub/admin/clients',
-        component:ClientsComponent,
+        path: 'pub/admin/clients',
+        component: ClientsComponent,
         canActivate: [AuthGuard, RoleGuard],
         data: { expectedRoles: ['admin'] },
-        title:'DM-APP Clientes | DM-APP'
+        title: 'DM-APP Clientes | DM-APP'
       },
       {
-        path:'pub/admin/waiters',
-        component:WaitersComponent,
+        path: 'pub/admin/waiters',
+        component: WaitersComponent,
         canActivate: [AuthGuard, RoleGuard],
         data: { expectedRoles: ['admin'] },
-        title:'DM-APP Garçons | DM-APP'
+        title: 'DM-APP Garçons | DM-APP'
       },
       {
-        path:'pub/admin/tables',
-        component:AdminTablesComponent,
+        path: 'pub/admin/tables',
+        component: AdminTablesComponent,
         canActivate: [AuthGuard, RoleGuard],
         data: { expectedRoles: ['admin'] },
-        title:'DM-APP Mesas | DM-APP'
+        title: 'DM-APP Mesas | DM-APP'
       },
       {
-        path:'stream',
+        path: 'stream',
         loadComponent: () => import('./pages/stream/stream.component').then(m => m.StreamComponent),
-        title:'SSE Stream Test'
+        title: 'SSE Stream Test'
       },
       {
-        path:'blank',
-        component:BlankComponent,
-        title:'DM-APP Blank Dashboard'
+        path: 'blank',
+        component: BlankComponent,
+        title: 'DM-APP Blank Dashboard'
       },
       {
-        path:'chat',
-        component:ChatsComponent,
-        title:'DM-APP Chats Dashboard'
+        path: 'chat',
+        component: ChatsComponent,
+        title: 'DM-APP Chats Dashboard'
       },
       // support tickets
       {
-        path:'support-tickets',
-        component:TicketListComponent,
-        title:'DM-APP Support Tickets Dashboard'
+        path: 'support-tickets',
+        component: TicketListComponent,
+        title: 'DM-APP Support Tickets Dashboard'
       },
       {
-        path:'support-ticket-reply',
-        component:TicketReplyComponent,
-        title:'DM-APP Ticket Details Dashboard'
+        path: 'support-ticket-reply',
+        component: TicketReplyComponent,
+        title: 'DM-APP Ticket Details Dashboard'
       },
       {
-        path:'inbox',
-        component:EmailInboxComponent,
-        title:'DM-APP Email Inbox Dashboard'
+        path: 'inbox',
+        component: EmailInboxComponent,
+        title: 'DM-APP Email Inbox Dashboard'
       },
       {
-        path:'inbox-details',
-        component:EmailDetailsComponent,
-        title:'DM-APP Email Inbox Details Dashboard'
+        path: 'inbox-details',
+        component: EmailDetailsComponent,
+        title: 'DM-APP Email Inbox Details Dashboard'
       },
       {
-        path:'invoice',
-        component:InvoicesComponent,
-        title:'DM-APP Invoice Details Dashboard'
+        path: 'invoice',
+        component: InvoicesComponent,
+        title: 'DM-APP Invoice Details Dashboard'
       },
       {
-        path:'line-chart',
-        component:LineChartComponent,
-        title:'DM-APP Line Chart Dashboard'
+        path: 'line-chart',
+        component: LineChartComponent,
+        title: 'DM-APP Line Chart Dashboard'
       },
       {
-        path:'bar-chart',
-        component:BarChartComponent,
-        title:'DM-APP Bar Chart Dashboard'
+        path: 'bar-chart',
+        component: BarChartComponent,
+        title: 'DM-APP Bar Chart Dashboard'
       },
       {
-        path:'pie-chart',
-        component:PieChartComponent,
-        title:'DM-APP Pie Chart Dashboard'
+        path: 'pie-chart',
+        component: PieChartComponent,
+        title: 'DM-APP Pie Chart Dashboard'
       },
       {
-        path:'alerts',
-        component:AlertsComponent,
-        title:'DM-APP Alerts Dashboard'
+        path: 'alerts',
+        component: AlertsComponent,
+        title: 'DM-APP Alerts Dashboard'
       },
       {
-        path:'avatars',
-        component:AvatarElementComponent,
-        title:'DM-APP Avatars Dashboard'
+        path: 'avatars',
+        component: AvatarElementComponent,
+        title: 'DM-APP Avatars Dashboard'
       },
       {
-        path:'badge',
-        component:BadgesComponent,
-        title:'DM-APP Badges Dashboard'
+        path: 'badge',
+        component: BadgesComponent,
+        title: 'DM-APP Badges Dashboard'
       },
       {
-        path:'breadcrumb',
-        component:BreadcrumbComponent,
-        title:'DM-APP Breadcrumb Dashboard'
+        path: 'breadcrumb',
+        component: BreadcrumbComponent,
+        title: 'DM-APP Breadcrumb Dashboard'
       },
       {
-        path:'buttons',
-        component:ButtonsComponent,
-        title:'DM-APP Buttons Dashboard'
+        path: 'buttons',
+        component: ButtonsComponent,
+        title: 'DM-APP Buttons Dashboard'
       },
       {
-        path:'buttons-group',
-        component:ButtonGroupComponent,
-        title:'DM-APP Buttons Group Dashboard'
+        path: 'buttons-group',
+        component: ButtonGroupComponent,
+        title: 'DM-APP Buttons Group Dashboard'
       },
       {
-        path:'cards',
-        component:CardsComponent,
-        title:'DM-APP Cards Dashboard'
+        path: 'cards',
+        component: CardsComponent,
+        title: 'DM-APP Cards Dashboard'
       },
       {
-        path:'carousel',
-        component:CarouselComponent,
-        title:'DM-APP Carousel Dashboard'
+        path: 'carousel',
+        component: CarouselComponent,
+        title: 'DM-APP Carousel Dashboard'
       },
       {
-        path:'dropdowns',
-        component:DropdownsComponent,
-        title:'DM-APP Dropdown Dashboard'
+        path: 'dropdowns',
+        component: DropdownsComponent,
+        title: 'DM-APP Dropdown Dashboard'
       },
       {
-        path:'images',
-        component:ImagesComponent,
-        title:'DM-APP Images Dashboard'
+        path: 'images',
+        component: ImagesComponent,
+        title: 'DM-APP Images Dashboard'
       },
       {
-        path:'links',
-        component:LinksComponent,
-        title:'DM-APP Links Dashboard'
+        path: 'links',
+        component: LinksComponent,
+        title: 'DM-APP Links Dashboard'
       },
       {
-        path:'list',
-        component:ListsComponent,
-        title:'DM-APP Lists Dashboard'
+        path: 'list',
+        component: ListsComponent,
+        title: 'DM-APP Lists Dashboard'
       },
       {
-        path:'modals',
-        component:ModalsComponent,
-        title:'DM-APP Modals Dashboard'
+        path: 'modals',
+        component: ModalsComponent,
+        title: 'DM-APP Modals Dashboard'
       },
       {
-        path:'notifications',
-        component:NotificationsComponent,
-        title:'DM-APP Notifications Dashboard'
+        path: 'notifications',
+        component: NotificationsComponent,
+        title: 'DM-APP Notifications Dashboard'
       },
       {
-        path:'pagination',
-        component:PaginationsComponent,
-        title:'DM-APP Pagination Dashboard'
+        path: 'pagination',
+        component: PaginationsComponent,
+        title: 'DM-APP Pagination Dashboard'
       },
       {
-        path:'popovers',
-        component:PopoversComponent,
-        title:'DM-APP Popovers Dashboard'
+        path: 'popovers',
+        component: PopoversComponent,
+        title: 'DM-APP Popovers Dashboard'
       },
       {
-        path:'progress-bar',
-        component:ProgressBarComponent,
-        title:'DM-APP Progressbar Dashboard'
+        path: 'progress-bar',
+        component: ProgressBarComponent,
+        title: 'DM-APP Progressbar Dashboard'
       },
       {
-        path:'ribbons',
-        component:RibbonsComponent,
-        title:'DM-APP Ribbons Dashboard'
+        path: 'ribbons',
+        component: RibbonsComponent,
+        title: 'DM-APP Ribbons Dashboard'
       },
       {
-        path:'spinners',
-        component:SpinnersComponent,
-        title:'DM-APP Spinners Dashboard'
+        path: 'spinners',
+        component: SpinnersComponent,
+        title: 'DM-APP Spinners Dashboard'
       },
       {
-        path:'tabs',
-        component:TabsComponent,
-        title:'DM-APP Tabs Dashboard'
+        path: 'tabs',
+        component: TabsComponent,
+        title: 'DM-APP Tabs Dashboard'
       },
       {
-        path:'tooltips',
-        component:TooltipsComponent,
-        title:'DM-APP Tooltips Dashboard'
+        path: 'tooltips',
+        component: TooltipsComponent,
+        title: 'DM-APP Tooltips Dashboard'
       },
       {
-        path:'videos',
-        component:VideosComponent,
-        title:'DM-APP Videos Dashboard'
+        path: 'videos',
+        component: VideosComponent,
+        title: 'DM-APP Videos Dashboard'
       },
       {
         path: 'events/event-list-admin',
@@ -679,29 +679,29 @@ export const routes: Routes = [
     ]
   },
   {
-    path:'',
-    component:AlternativeLayoutComponent,
-    children:[
-       // ai pages
+    path: '',
+    component: AlternativeLayoutComponent,
+    children: [
+      // ai pages
       {
-        path:'text-generator',
-        component:TextGeneratorComponent,
-        title:'DM-APP AI Text Generator'
+        path: 'text-generator',
+        component: TextGeneratorComponent,
+        title: 'DM-APP AI Text Generator'
       },
       {
-        path:'image-generator',
-        component:ImageGeneratorComponent,
-        title:'DM-APP AI Image Generator'
+        path: 'image-generator',
+        component: ImageGeneratorComponent,
+        title: 'DM-APP AI Image Generator'
       },
       {
-        path:'code-generator',
-        component:CodeGeneratorComponent,
-        title:'DM-APP AI Code Generator'
+        path: 'code-generator',
+        component: CodeGeneratorComponent,
+        title: 'DM-APP AI Code Generator'
       },
       {
-        path:'video-generator',
-        component:VideoGeneratorComponent,
-        title:'DM-APP AI Video Generator'
+        path: 'video-generator',
+        component: VideoGeneratorComponent,
+        title: 'DM-APP AI Video Generator'
       },
       {
         path: 'events/answer/:id_code',
@@ -712,13 +712,13 @@ export const routes: Routes = [
     ]
   },
   {
-    path:'',
-    component:BlankLayoutComponent,
-    children:[
+    path: '',
+    component: BlankLayoutComponent,
+    children: [
       {
-        path:'blank-no-layout',
+        path: 'blank-no-layout',
         component: BlankComponent,
-        title:'Página em Branco (sem layout)'
+        title: 'Página em Branco (sem layout)'
       },
       {
         path: 'events/answer-plain/:id_code',
@@ -727,110 +727,115 @@ export const routes: Routes = [
         title: 'Responder Perguntas (Sem layout)'
       },
       {
-                path: 'events/home-guest',
-                loadComponent: () => import('./pages/events/home-guest/home-guest.component').then(m => m.HomeGuestComponent),
-                canActivate: [AutoCheckinGuard],
-                title: 'Home do Convidado (Sem layout)'
-            },
-            {
-                path: 'events/home-guest/:id_code',
-                loadComponent: () => import('./pages/events/home-guest/home-guest.component').then(m => m.HomeGuestComponent),
-                canActivate: [AutoCheckinGuard],
-                title: 'Home do Convidado (Sem layout)'
-            },
-            {
-                path: 'events/home-guest-v2',
-                loadComponent: () => import('./pages/events/home-guest-v2/home-guest-v2.component').then(m => m.HomeGuestV2Component),
-                canActivate: [AutoCheckinGuard],
-                title: 'Home do Convidado V2 (Sem layout)'
-            },
-            {
-                path: 'events/home-guest-v2/:id_code',
-                loadComponent: () => import('./pages/events/home-guest-v2/home-guest-v2.component').then(m => m.HomeGuestV2Component),
-                canActivate: [AutoCheckinGuard],
-                title: 'Home do Convidado V2 (Sem layout)'
-            },
-            {
-                path: 'events/playlist/:id_code',
-                loadComponent: () => import('./pages/events/playlist/playlist.component').then(m => m.PlaylistComponent),
-                title: 'Playlist (Telão)'
-            },
+        path: 'events/home-guest',
+        loadComponent: () => import('./pages/events/home-guest/home-guest.component').then(m => m.HomeGuestComponent),
+        canActivate: [AutoCheckinGuard],
+        title: 'Home do Convidado (Sem layout)'
+      },
+      {
+        path: 'events/home-guest/:id_code',
+        loadComponent: () => import('./pages/events/home-guest/home-guest.component').then(m => m.HomeGuestComponent),
+        canActivate: [AutoCheckinGuard],
+        title: 'Home do Convidado (Sem layout)'
+      },
+      {
+        path: 'events/home-guest-v2',
+        loadComponent: () => import('./pages/events/home-guest-v2/home-guest-v2.component').then(m => m.HomeGuestV2Component),
+        canActivate: [AutoCheckinGuard],
+        title: 'Home do Convidado V2 (Sem layout)'
+      },
+      {
+        path: 'events/home-guest-v2/:id_code',
+        loadComponent: () => import('./pages/events/home-guest-v2/home-guest-v2.component').then(m => m.HomeGuestV2Component),
+        canActivate: [AutoCheckinGuard],
+        title: 'Home do Convidado V2 (Sem layout)'
+      },
+      {
+        path: 'events/playlist/:id_code',
+        loadComponent: () => import('./pages/events/playlist/playlist.component').then(m => m.PlaylistComponent),
+        title: 'Playlist (Telão)'
+      },
+      {
+        path: 'invite/accept',
+        loadComponent: () => import('./pages/public/accept-invite/accept-invite.component').then(m => m.AcceptInviteComponent),
+        title: 'Aceitar Convite'
+      },
     ]
   },
   {
-    path:'coming-soon',
-    component:ComingSoonComponent,
-    title:'DM-APP Coming soon Dashboard'
+    path: 'coming-soon',
+    component: ComingSoonComponent,
+    title: 'DM-APP Coming soon Dashboard'
   },
   {
-    path:'maintenance',
-    component:MaintenanceComponent,
-    title:'DM-APP Maintenance Dashboard'
+    path: 'maintenance',
+    component: MaintenanceComponent,
+    title: 'DM-APP Maintenance Dashboard'
   },
   {
-    path:'no-permission',
-    component:NoPermissionComponent,
-    title:'No Permission'
+    path: 'no-permission',
+    component: NoPermissionComponent,
+    title: 'No Permission'
   },
   {
-    path:'success',
-    component:SuccessComponent,
-    title:'DM-APP Success Dashboard'
+    path: 'success',
+    component: SuccessComponent,
+    title: 'DM-APP Success Dashboard'
   },
   {
-    path:'end-quest-success',
-    component:EndQuestSuccessComponent,
-    title:'Questionário Finalizado'
+    path: 'end-quest-success',
+    component: EndQuestSuccessComponent,
+    title: 'Questionário Finalizado'
   },
   // auth pages
   {
-    path:'signin',
-    component:SignInComponent,
+    path: 'signin',
+    component: SignInComponent,
     canActivate: [GuestGuard],
-    title:'DM-APP Sign In Dashboard'
+    title: 'DM-APP Sign In Dashboard'
   },
   {
-    path:'signout',
-    component:SignoutComponent,
-    title:'DM-APP Sign Out'
+    path: 'signout',
+    component: SignoutComponent,
+    title: 'DM-APP Sign Out'
   },
   {
-    path:'logout',
-    component:LogoutComponent,
-    title:'DM-APP Logout'
+    path: 'logout',
+    component: LogoutComponent,
+    title: 'DM-APP Logout'
   },
   {
-    path:'signup',
-    component:SignUpComponent,
+    path: 'signup',
+    component: SignUpComponent,
     canActivate: [GuestGuard],
-    title:'DM-APP Sign Up Dashboard'
+    title: 'DM-APP Sign Up Dashboard'
   },
   {
-    path:'reset-password',
-    component:ResetPasswordComponent,
+    path: 'reset-password',
+    component: ResetPasswordComponent,
     canActivate: [GuestGuard],
-    title:'DM-APP Reset Password Dashboard'
+    title: 'DM-APP Reset Password Dashboard'
   },
   {
-    path:'two-step-verification',
-    component:TwoStepVerificationComponent,
+    path: 'two-step-verification',
+    component: TwoStepVerificationComponent,
     canActivate: [GuestGuard],
-    title:'DM-APP Two Step Verification Dashboard'
+    title: 'DM-APP Two Step Verification Dashboard'
   },
   // error pages
   {
-    path:'error-500',
-    component:Error500Component,
-    title:'DM-APP Error 500 Dashboard'
+    path: 'error-500',
+    component: Error500Component,
+    title: 'DM-APP Error 500 Dashboard'
   },
   {
-    path:'error-503',
-    component:Error503Component,
-    title:'DM-APP Error 503 Dashboard'
+    path: 'error-503',
+    component: Error503Component,
+    title: 'DM-APP Error 503 Dashboard'
   },
   {
-    path:'**',
-    component:NotFoundComponent,
-    title:'DM-APP NotFound Dashboard'
+    path: '**',
+    component: NotFoundComponent,
+    title: 'DM-APP NotFound Dashboard'
   },
 ];

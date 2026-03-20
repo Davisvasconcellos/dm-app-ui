@@ -22,6 +22,7 @@ import { ButtonComponent } from '../../../../shared/components/ui/button/button.
 import { CheckboxComponent } from '../../../../shared/components/form/input/checkbox.component';
 import { ModalComponent } from '../../../../shared/components/ui/modal/modal.component';
 import { FinancialCategory, CostCenter, FinancialTag } from '../../../../financial/models/financial-settings.models';
+import { StoreInviteService, StoreInvite, CreateInvitePayload } from './store-invite.service';
 
 const iconRetinaUrl = 'images/leaflet/marker-icon-2x.png';
 const iconUrl = 'images/leaflet/marker-icon.png';
@@ -62,6 +63,7 @@ export class ConfigComponent implements OnInit, AfterViewInit, OnDestroy {
   private financialService = inject(FinancialService);
   private translate = inject(TranslateService);
   private fb = inject(FormBuilder);
+  private storeInviteService = inject(StoreInviteService);
 
   // Financial Tabs State
   bankAccountForm!: FormGroup;
@@ -87,21 +89,13 @@ export class ConfigComponent implements OnInit, AfterViewInit, OnDestroy {
   tagToDelete: FinancialTag | null = null;
   isDeleteTagModalOpen = false;
 
-  collaboratorForm!: FormGroup;
-  collaborators: any[] = [
-    { id: '1', name: 'João Silva', email: 'joao@example.com', role: 'admin', status: 'approved', modules: ['Vendas', 'Financeiro'] },
-    { id: '2', name: 'Maria Souza', email: 'maria@example.com', role: 'user', status: 'pending', modules: ['Estoque'] },
-    { id: '3', name: 'Carlos Oliveira', email: 'carlos@example.com', role: 'user', status: 'approved', modules: ['Vendas'] }
-  ];
-  showCollaboratorForm = false;
   isDeleteCollaboratorModalOpen = false;
   collaboratorToDelete: any | null = null;
-
-  moduleOptions = [
-    { value: 'vendas', label: 'Vendas' },
-    { value: 'estoque', label: 'Estoque' },
-    { value: 'financeiro', label: 'Financeiro' }
-  ];
+  collaborators: any[] = [];
+  pendingInvites: StoreInvite[] = [];
+  generatedInviteLink: string | null = null;
+  showInviteLinkModal: boolean = false;
+  private readonly INVITE_LINKS_CACHE_KEY = 'dm_invite_links_cache';
 
   bankAccounts: any[] = [];
   showBankAccountForm = false;
@@ -274,12 +268,6 @@ export class ConfigComponent implements OnInit, AfterViewInit, OnDestroy {
       name: ['', Validators.required],
       color: ['#3B82F6'] // Default blue
     });
-
-    this.collaboratorForm = this.fb.group({
-      email: ['', [Validators.required, Validators.email]],
-      role: ['user', Validators.required],
-      modules: [[]]
-    });
   }
 
   ngAfterViewInit(): void { }
@@ -297,6 +285,7 @@ export class ConfigComponent implements OnInit, AfterViewInit, OnDestroy {
         next: (storeDetails: StoreDetails) => {
           this.populateForm(storeDetails);
           this.loadFinancialData(idFromRoute);
+          this.loadInvites(idFromRoute);
           this.isLoading = false;
         },
         error: (err: HttpErrorResponse) => {
@@ -320,6 +309,7 @@ export class ConfigComponent implements OnInit, AfterViewInit, OnDestroy {
       next: (storeDetails: StoreDetails) => {
         this.populateForm(storeDetails);
         this.loadFinancialData(selectedStore.id_code);
+        this.loadInvites(selectedStore.id_code);
         this.isLoading = false;
       },
       error: (err: HttpErrorResponse) => {
@@ -691,48 +681,122 @@ export class ConfigComponent implements OnInit, AfterViewInit, OnDestroy {
     this.tagToDelete = null;
   }
 
-  // --- Collaborators Logic ---
-  addCollaborator() {
-    this.showCollaboratorForm = true;
-    this.collaboratorForm.reset({ role: 'user', modules: [] });
+  loadInvites(storeId?: string) {
+    const id = storeId || this.route.snapshot.paramMap.get('id_code') || this.route.snapshot.paramMap.get('id') || this.localStorageService.getData<Store>(this.STORE_KEY)?.id_code;
+    if (!id) return;
+
+    this.storeInviteService.listInvites(id).subscribe({
+      next: (res) => {
+        const allInvites = res.data.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+        // Pendentes são aqueles que NÃO foram aceitos
+        this.pendingInvites = allInvites.filter(i => i.status !== 'accepted');
+
+        // Colaboradores são os que já aceitaram
+        this.collaborators = allInvites.filter(i => i.status === 'accepted').map(i => ({
+          id: i.id_code,
+          name: i.invited_email.split('@')[0], // Fallback name
+          email: i.invited_email,
+          role: i.role,
+          permissions: i.permissions
+        }));
+      },
+      error: (err) => {
+        console.error('Error loading invites', err);
+      }
+    });
   }
 
-  cancelCollaboratorForm() {
-    this.showCollaboratorForm = false;
+  regenerateInvite(invite: StoreInvite) {
+    const storeId = this.route.snapshot.paramMap.get('id_code') || this.route.snapshot.paramMap.get('id') || this.localStorageService.getData<Store>(this.STORE_KEY)?.id_code;
+    if (!storeId) return;
+
+    this.isSubmitting = true;
+    this.storeInviteService.regenerateInvite(invite.id_code, storeId).subscribe({
+      next: (res) => {
+        const token = this.getInviteTokenFromLink(res.invite_link);
+        this.generatedInviteLink = `${window.location.origin}/invite/accept?token=${token}`;
+        if (token) this.saveInviteToCache(invite.id_code, token);
+        this.showInviteLinkModal = true;
+        this.loadInvites(storeId);
+        this.toast.triggerToast('success', 'Sucesso', 'Link regenerado com sucesso.');
+        this.isSubmitting = false;
+      },
+      error: (err) => {
+        this.toast.triggerToast('error', 'Erro', 'Erro ao regenerar link.');
+        this.isSubmitting = false;
+      }
+    });
   }
 
-  toggleModule(moduleLabel: string, isChecked: boolean) {
-    const currentModules = this.collaboratorForm.get('modules')?.value || [];
-    let updatedModules = [...currentModules];
-    if (isChecked) {
-      if (!updatedModules.includes(moduleLabel)) updatedModules.push(moduleLabel);
-    } else {
-      updatedModules = updatedModules.filter(m => m !== moduleLabel);
+  revokeInvite(invite: StoreInvite) {
+    const storeId = this.route.snapshot.paramMap.get('id_code') || this.route.snapshot.paramMap.get('id') || this.localStorageService.getData<Store>(this.STORE_KEY)?.id_code;
+    if (!storeId) return;
+
+    this.isSubmitting = true;
+    this.storeInviteService.revokeInvite(invite.id_code, storeId).subscribe({
+      next: () => {
+        this.removeInviteFromCache(invite.id_code);
+        this.loadInvites(storeId);
+        this.toast.triggerToast('success', 'Sucesso', 'Convite revogado com sucesso.');
+        this.isSubmitting = false;
+      },
+      error: (err) => {
+        this.toast.triggerToast('error', 'Erro', 'Erro ao revogar convite.');
+        this.isSubmitting = false;
+      }
+    });
+  }
+
+  copyInviteLink(link?: string) {
+    const linkToCopy = link || this.generatedInviteLink;
+    if (linkToCopy) {
+      navigator.clipboard.writeText(linkToCopy);
+      this.toast.triggerToast('success', 'Sucesso', 'Link copiado para a área de transferência.');
     }
-    this.collaboratorForm.patchValue({ modules: updatedModules });
   }
 
-  isModuleSelected(moduleLabel: string): boolean {
-    return (this.collaboratorForm.get('modules')?.value || []).includes(moduleLabel);
+  saveInviteToCache(idCode: string, value: string) {
+    const cache = this.localStorageService.getData<Record<string, string>>(this.INVITE_LINKS_CACHE_KEY) || {};
+    cache[idCode] = value;
+    this.localStorageService.saveData(this.INVITE_LINKS_CACHE_KEY, cache);
   }
 
-  sendInvitation() {
-    if (this.collaboratorForm.invalid) {
-      this.collaboratorForm.markAllAsTouched();
-      return;
+  getInviteFromCache(idCode: string): string | null {
+    const cache = this.localStorageService.getData<Record<string, string>>(this.INVITE_LINKS_CACHE_KEY) || {};
+    const value = cache[idCode];
+    if (!value) return null;
+
+    const token = this.getInviteTokenFromLink(value);
+    return `${window.location.origin}/invite/accept?token=${token}`;
+  }
+
+  private getInviteTokenFromLink(link: string): string {
+    if (!link) return '';
+    try {
+      const url = new URL(link);
+      return url.searchParams.get('token') || link;
+    } catch {
+      if (link.includes('token=')) {
+        return link.split('token=')[1].split('&')[0];
+      }
+      return link;
     }
-    const formValue = this.collaboratorForm.value;
-    const newCollaborator = {
-      id: Math.random().toString(36).substr(2, 9),
-      name: 'Pendente',
-      email: formValue.email,
-      role: formValue.role,
-      status: 'pending',
-      modules: formValue.modules
-    };
-    this.collaborators.unshift(newCollaborator);
-    this.toast.triggerToast('success', 'Sucesso', 'Convite enviado com sucesso.');
-    this.cancelCollaboratorForm();
+  }
+
+  removeInviteFromCache(idCode: string) {
+    const cache = this.localStorageService.getData<Record<string, string>>(this.INVITE_LINKS_CACHE_KEY) || {};
+    delete cache[idCode];
+    this.localStorageService.saveData(this.INVITE_LINKS_CACHE_KEY, cache);
+  }
+
+  closeInviteLinkModal() {
+    this.showInviteLinkModal = false;
+    this.generatedInviteLink = null;
+  }
+
+  isExpired(date: string): boolean {
+    return new Date(date) < new Date();
   }
 
   confirmDeleteCollaborator(collaborator: any) {

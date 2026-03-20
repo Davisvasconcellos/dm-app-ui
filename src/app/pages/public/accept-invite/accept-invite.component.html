@@ -1,0 +1,52 @@
+<div class="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900 px-4">
+    <div class="max-w-md w-full bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 text-center animate-fade-in">
+        @if (loading) {
+        <div class="flex flex-col items-center">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500 mb-4"></div>
+            <h2 class="text-xl font-semibold text-gray-800 dark:text-white">Verificando convite...</h2>
+            <p class="text-gray-500 dark:text-gray-400 mt-2">Aguarde um momento enquanto validamos seu convite.</p>
+        </div>
+        }
+
+        @if (error) {
+        <div class="flex flex-col items-center">
+            <div
+                class="h-16 w-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center text-red-600 dark:text-red-500 mb-4">
+                <svg class="size-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                    </path>
+                </svg>
+            </div>
+            <h2 class="text-xl font-bold text-gray-800 dark:text-white">{{ error }}</h2>
+            <p class="text-gray-500 dark:text-gray-400 mt-2 mb-6">Este link pode ter expirado ou ser inválido.</p>
+            <app-button routerLink="/" size="md" class="w-full">Voltar para a Home</app-button>
+        </div>
+        }
+
+        @if (!loading && !error && inviteData) {
+        <div class="flex flex-col items-center">
+            <div
+                class="h-16 w-16 bg-brand-100 dark:bg-brand-900/30 rounded-full flex items-center justify-center text-brand-600 dark:text-brand-500 mb-4">
+                <svg class="size-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+            </div>
+            <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-2">Convite para {{ inviteData.store.name }}
+            </h2>
+            <p class="text-gray-500 dark:text-gray-400 mb-6">
+                Você foi convidado como <strong>{{ inviteData.invite.role }}</strong>.
+            </p>
+
+            <div class="w-full space-y-3">
+                @if (inviteData.invite.user_exists) {
+                <app-button (click)="acceptInvite()" size="md" class="w-full">Aceitar Convite</app-button>
+                } @else {
+                <app-button [routerLink]="['/signup']"
+                    [queryParams]="{ token: token, email: inviteData.invite.invited_email }" size="md"
+                    class="w-full">Criar Conta e Aceitar</app-button>
+                }
+            </div>
+        </div>
+        }
+    </div>
+</div>

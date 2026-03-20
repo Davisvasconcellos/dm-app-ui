@@ -49,21 +49,6 @@
             class="whitespace-nowrap lg:w-full rounded-lg px-4 py-3 text-left text-sm font-medium transition-colors">
             Colaboradores
           </button>
-          <button (click)="setActiveTab('hours')"
-            [ngClass]="activeTab === 'hours' ? 'text-primary bg-primary/10 dark:bg-primary/20' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/5'"
-            class="whitespace-nowrap lg:w-full rounded-lg px-4 py-3 text-left text-sm font-medium transition-colors">
-            Horários
-          </button>
-          <button (click)="setActiveTab('payments')"
-            [ngClass]="activeTab === 'payments' ? 'text-primary bg-primary/10 dark:bg-primary/20' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/5'"
-            class="whitespace-nowrap lg:w-full rounded-lg px-4 py-3 text-left text-sm font-medium transition-colors">
-            Pagamentos
-          </button>
-          <button (click)="setActiveTab('delivery')"
-            [ngClass]="activeTab === 'delivery' ? 'text-primary bg-primary/10 dark:bg-primary/20' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/5'"
-            class="whitespace-nowrap lg:w-full rounded-lg px-4 py-3 text-left text-sm font-medium transition-colors">
-            Delivery
-          </button>
           <button (click)="setActiveTab('categories')"
             [ngClass]="activeTab === 'categories' ? 'text-primary bg-primary/10 dark:bg-primary/20' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/5'"
             class="whitespace-nowrap lg:w-full rounded-lg px-4 py-3 text-left text-sm font-medium transition-colors">
@@ -83,6 +68,30 @@
             [ngClass]="activeTab === 'bank-accounts' ? 'text-primary bg-primary/10 dark:bg-primary/20' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/5'"
             class="whitespace-nowrap lg:w-full rounded-lg px-4 py-3 text-left text-sm font-medium transition-colors">
             Contas Bancárias
+          </button>
+          <button (click)="setActiveTab('hours')"
+            [ngClass]="activeTab === 'hours' ? 'text-primary bg-primary/10 dark:bg-primary/20' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/5'"
+            class="flex items-center justify-between whitespace-nowrap lg:w-full rounded-lg px-4 py-3 text-left text-sm font-medium transition-colors">
+            <span>Horários</span>
+            <span
+              class="ml-2 px-1.5 py-0.5 text-[9px] bg-brand-100 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400 rounded uppercase font-bold shrink-0">em
+              breve</span>
+          </button>
+          <button (click)="setActiveTab('payments')"
+            [ngClass]="activeTab === 'payments' ? 'text-primary bg-primary/10 dark:bg-primary/20' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/5'"
+            class="flex items-center justify-between whitespace-nowrap lg:w-full rounded-lg px-4 py-3 text-left text-sm font-medium transition-colors">
+            <span>Pagamentos</span>
+            <span
+              class="ml-2 px-1.5 py-0.5 text-[9px] bg-brand-100 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400 rounded uppercase font-bold shrink-0">em
+              breve</span>
+          </button>
+          <button (click)="setActiveTab('delivery')"
+            [ngClass]="activeTab === 'delivery' ? 'text-primary bg-primary/10 dark:bg-primary/20' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/5'"
+            class="flex items-center justify-between whitespace-nowrap lg:w-full rounded-lg px-4 py-3 text-left text-sm font-medium transition-colors">
+            <span>Delivery</span>
+            <span
+              class="ml-2 px-1.5 py-0.5 text-[9px] bg-brand-100 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400 rounded uppercase font-bold shrink-0">em
+              breve</span>
           </button>
         </nav>
       </div>
@@ -184,111 +193,211 @@
         @if (activeTab === 'collaborators') {
         <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
           <h2 class="text-xl font-semibold text-gray-800 dark:text-white/90">
-            Colaboradores
+            Colaboradores e Acessos
           </h2>
-          <button *ngIf="!showCollaboratorForm" (click)="addCollaborator()"
-            class="flex items-center justify-center rounded-lg bg-brand-500 px-4 py-2 text-center text-sm font-medium text-white hover:bg-brand-600 focus:outline-none focus:ring-4 focus:ring-brand-500/50 dark:bg-brand-500 dark:hover:bg-brand-600">
-            Convidar Colaborador
-          </button>
         </div>
 
-        @if (showCollaboratorForm) {
-        <div
-          class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-white/[0.03] mb-6">
-          <h4 class="text-base font-semibold text-gray-800 dark:text-white mb-4">
-            Convidar Novo Colaborador
-          </h4>
-          <form [formGroup]="collaboratorForm" (ngSubmit)="sendInvitation()">
-            <div class="grid gap-6 sm:grid-cols-2 mb-6">
-              <div class="sm:col-span-2">
-                <app-label>Email do Usuário *</app-label>
-                <app-input-field type="email" formControlName="email" placeholder="Digite o email para convite" />
-              </div>
-              <div>
-                <app-label>Tipo de Usuário *</app-label>
-                <app-select [value]="collaboratorForm.get('role')?.value"
-                  (valueChange)="collaboratorForm.get('role')?.setValue($event)"
-                  [options]="[{value: 'admin', label: 'Administrador'}, {value: 'user', label: 'Usuário'}]" />
-              </div>
-              <div class="sm:col-span-2">
-                <app-label>Módulos Ativos (Teste)</app-label>
-                <div class="flex flex-wrap gap-4 mt-2">
-                  @for (module of moduleOptions; track module.value) {
-                  <app-checkbox [id]="'mod_' + module.value" [label]="module.label"
-                    [checked]="isModuleSelected(module.label)" (checkedChange)="toggleModule(module.label, $event)" />
+        <div class="mb-8">
+          <h3 class="text-lg font-medium text-gray-800 dark:text-white mb-4">Colaboradores Ativos</h3>
+          <div
+            class="overflow-hidden rounded-xl bg-white dark:bg-white/[0.03] border border-gray-200 dark:border-gray-800">
+            <div class="max-w-full overflow-x-auto">
+              <table class="w-full">
+                <thead class="bg-gray-50 dark:bg-white/[0.03] border-b border-gray-100 dark:border-white/[0.05]">
+                  <tr>
+                    <th
+                      class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">
+                      Nome / Email</th>
+                    <th
+                      class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">
+                      Tipo</th>
+                    <th
+                      class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">
+                      Permissões</th>
+                    <th
+                      class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">
+                      Ações</th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200 dark:bg-transparent dark:divide-gray-800">
+                  @for (colab of collaborators; track colab.id) {
+                  <tr>
+                    <td class="px-4 py-4 whitespace-nowrap">
+                      <div class="flex flex-col">
+                        <span class="text-sm font-medium text-gray-900 dark:text-white">{{ colab.name }}</span>
+                        <span class="text-xs text-gray-500 dark:text-gray-400">{{ colab.email }}</span>
+                      </div>
+                    </td>
+                    <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 capitalize">
+                      {{ colab.role }}
+                    </td>
+                    <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                      {{ colab.permissions?.join(', ') || 'Sem permissões' }}
+                    </td>
+                    <td class="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <button (click)="confirmDeleteCollaborator(colab)"
+                        class="text-gray-500 hover:text-error-500 transition-colors">
+                        <svg class="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                          </path>
+                        </svg>
+                      </button>
+                    </td>
+                  </tr>
                   }
-                </div>
-              </div>
+                  @if (collaborators.length === 0) {
+                  <tr>
+                    <td colspan="4" class="px-4 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
+                      Nenhum colaborador ativo.
+                    </td>
+                  </tr>
+                  }
+                </tbody>
+              </table>
             </div>
-            <div class="flex justify-end gap-3">
-              <app-button type="button" variant="outline" (click)="cancelCollaboratorForm()">Cancelar</app-button>
-              <app-button type="submit">Enviar Convite</app-button>
-            </div>
-          </form>
+          </div>
         </div>
-        }
 
-        <div
-          class="overflow-hidden rounded-xl bg-white dark:bg-white/[0.03] border border-gray-200 dark:border-gray-800">
-          <div class="max-w-full overflow-x-auto">
-            <table class="w-full">
-              <thead class="bg-gray-50 dark:bg-white/[0.03] border-b border-gray-100 dark:border-white/[0.05]">
-                <tr>
-                  <th
-                    class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">
-                    Nome / Email</th>
-                  <th
-                    class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">
-                    Tipo</th>
-                  <th
-                    class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">
-                    Status</th>
-                  <th
-                    class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">
-                    Módulos</th>
-                  <th
-                    class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">
-                    Ações</th>
-                </tr>
-              </thead>
-              <tbody class="bg-white divide-y divide-gray-200 dark:bg-transparent dark:divide-gray-800">
-                @for (colab of collaborators; track colab.id) {
-                <tr>
-                  <td class="px-4 py-4 whitespace-nowrap">
-                    <div class="flex flex-col">
-                      <span class="text-sm font-medium text-gray-900 dark:text-white">{{ colab.name }}</span>
-                      <span class="text-xs text-gray-500 dark:text-gray-400">{{ colab.email }}</span>
-                    </div>
-                  </td>
-                  <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 capitalize">
-                    {{ colab.role }}
-                  </td>
-                  <td class="px-4 py-4 whitespace-nowrap">
-                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
-                      [ngClass]="colab.status === 'approved' ? 'bg-green-100 text-green-800 dark:bg-green-900/30' : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30'">
-                      {{ colab.status === 'approved' ? 'Aprovado' : 'Pendente' }}
-                    </span>
-                  </td>
-                  <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                    {{ colab.modules.join(', ') }}
-                  </td>
-                  <td class="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button (click)="confirmDeleteCollaborator(colab)"
-                      class="text-gray-500 hover:text-error-500 transition-colors">
-                      <svg class="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
-                        </path>
-                      </svg>
-                    </button>
-                  </td>
-                </tr>
-                }
-              </tbody>
-            </table>
+        <div>
+          <h3 class="text-lg font-medium text-gray-800 dark:text-white mb-4">Convites Pendentes</h3>
+          <div
+            class="overflow-hidden rounded-xl bg-white dark:bg-white/[0.03] border border-gray-200 dark:border-gray-800">
+            <div class="max-w-full overflow-x-auto">
+              <table class="w-full">
+                <thead class="bg-gray-50 dark:bg-white/[0.03] border-b border-gray-100 dark:border-white/[0.05]">
+                  <tr>
+                    <th
+                      class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">
+                      Email convidado</th>
+                    <th
+                      class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">
+                      Tipo / Role</th>
+                    <th
+                      class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">
+                      Status</th>
+                    <th
+                      class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">
+                      Expira em</th>
+                    <th
+                      class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">
+                      Ações</th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200 dark:bg-transparent dark:divide-gray-800">
+                  @for (invite of pendingInvites; track invite.id_code) {
+                  <tr>
+                    <td class="px-4 py-4 whitespace-nowrap">
+                      <span class="text-sm font-medium text-gray-900 dark:text-white">{{ invite.invited_email }}</span>
+                    </td>
+                    <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 capitalize">
+                      {{ invite.role }}
+                      @if (invite.invited_user_exists) {
+                      <span class="ml-2 text-[10px] bg-brand-100 text-brand-700 px-1 rounded uppercase font-bold"
+                        title="Usuário já tem conta no sistema">OK</span>
+                      }
+                    </td>
+                    <td class="px-4 py-4 whitespace-nowrap">
+                      <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full" [ngClass]="{
+                          'bg-green-100 text-green-800 dark:bg-green-900/30': invite.status === 'accepted',
+                          'bg-red-100 text-red-800 dark:bg-red-900/30': invite.status === 'revoked' || invite.status === 'expired' || (invite.status === 'pending' && isExpired(invite.expires_at)),
+                          'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30': invite.status === 'pending' && !isExpired(invite.expires_at)
+                        }">
+                        {{
+                        invite.status === 'accepted' ? 'Aceito' :
+                        invite.status === 'revoked' ? 'Revogado' :
+                        (invite.status === 'expired' || isExpired(invite.expires_at)) ? 'Expirado' : 'Pendente'
+                        }}
+                      </span>
+                    </td>
+                    <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                      {{ invite.expires_at | date:'dd/MM/yyyy HH:mm' }}
+                    </td>
+                    <td class="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <div class="flex items-center justify-end gap-3" *ngIf="invite.status === 'pending'">
+                        @if (!isExpired(invite.expires_at) && getInviteFromCache(invite.id_code)) {
+                        <button (click)="copyInviteLink(getInviteFromCache(invite.id_code)!)"
+                          title="Copiar link do convite" class="text-gray-500 hover:text-brand-500 transition-colors">
+                          <svg class="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3">
+                            </path>
+                          </svg>
+                        </button>
+                        } @else {
+                        <button (click)="regenerateInvite(invite)" title="Regenerar convite"
+                          class="text-gray-500 hover:text-brand-500 transition-colors">
+                          <svg class="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                            </path>
+                          </svg>
+                        </button>
+                        }
+
+                        <button (click)="revokeInvite(invite)" title="Revogar convite"
+                          class="text-gray-500 hover:text-error-500 transition-colors">
+                          <svg class="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M6 18L18 6M6 6l12 12"></path>
+                          </svg>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                  }
+                  @if (pendingInvites.length === 0) {
+                  <tr>
+                    <td colspan="4" class="px-4 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
+                      Nenhum convite pendente.
+                    </td>
+                  </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
         }
+
+        <!-- Invite Link Modal -->
+        <app-modal [isOpen]="showInviteLinkModal" (close)="closeInviteLinkModal()">
+          <div class="p-6">
+            <div
+              class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-brand-100 text-brand-600 dark:bg-brand-900/30 dark:text-brand-500">
+              <svg class="size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.826L10.242 9.172a4 4 0 015.656 0l4 4a4 4 0 01-5.656 5.656l-1.102 1.101">
+                </path>
+              </svg>
+            </div>
+            <h3 class="text-lg font-semibold text-center text-gray-900 dark:text-white mb-2">Convite Gerado!</h3>
+            <p class="text-sm text-center text-gray-500 dark:text-gray-400 mb-6">
+              Copie o link abaixo e envie para o convidado. <br>
+              <span class="text-xs font-medium text-warning-600 dark:text-warning-500">Por segurança, o token só é
+                visível agora.</span>
+            </p>
+
+            <div
+              class="flex items-center gap-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-800 mb-6 group">
+              <input type="text" [value]="generatedInviteLink" readonly
+                class="flex-1 bg-transparent border-none outline-none text-xs text-gray-600 dark:text-gray-300 font-mono overflow-hidden text-ellipsis">
+              <button (click)="copyInviteLink()"
+                class="p-2 text-gray-400 hover:text-brand-500 transition-colors tooltip tooltip-left"
+                data-tip="Copiar link">
+                <svg class="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3">
+                  </path>
+                </svg>
+              </button>
+            </div>
+
+            <div class="flex justify-center">
+              <app-button class="w-full sm:w-auto" (click)="closeInviteLinkModal()">Concluído</app-button>
+            </div>
+          </div>
+        </app-modal>
 
         @if (activeTab === 'company') {
         <h3 class="mb-6 text-lg font-medium text-gray-800 dark:text-white">Dados da Empresa</h3>
