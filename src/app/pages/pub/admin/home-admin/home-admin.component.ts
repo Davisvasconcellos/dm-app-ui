@@ -6,6 +6,7 @@ import { Store, StoreService } from '../../../admin/stores/store.service';
 import { LocalStorageService } from '../../../../shared/services/local-storage.service';
 import { TranslateModule } from '@ngx-translate/core';
 import { Router } from '@angular/router';
+import { StoreContextService } from '../../../../shared/services/store-context.service';
 
 @Component({
   selector: 'app-home-admin',
@@ -27,6 +28,7 @@ export class HomeAdminComponent implements OnInit {
   private authService = inject(AuthService);
   private storeService = inject(StoreService);
   private localStorageService = inject(LocalStorageService);
+  private storeContext = inject(StoreContextService);
   private router = inject(Router);
 
   ngOnInit(): void {
@@ -36,7 +38,10 @@ export class HomeAdminComponent implements OnInit {
       this.showOnboardingModal = true;
     }
     this.loadStores();
-    this.loadSelectedStore();
+
+    this.storeContext.activeStore$.subscribe(store => {
+      this.selectedStore = store;
+    });
   }
 
   private loadStores(): void {
@@ -44,29 +49,19 @@ export class HomeAdminComponent implements OnInit {
     this.storeService.getStores().subscribe({
       next: (stores: Store[]) => {
         this.availableStores = stores;
-        this.loadSelectedStore(); // Mover para cá garante que as lojas estejam disponíveis
         this.isLoadingStores = false;
       },
       error: () => this.isLoadingStores = false
     });
   }
 
-  /**
-   * Carrega a loja selecionada do localStorage.
-   */
-  private loadSelectedStore(): void {
-    const savedStore = this.localStorageService.getData<Store>(this.STORE_KEY);
-    if (savedStore) {
-      this.selectedStore = savedStore;
-    }
-  }
+
 
   openStoreModal(): void { this.showStoreModal = true; }
   closeStoreModal(): void { this.showStoreModal = false; }
 
   selectStore(store: Store): void {
-    this.selectedStore = store;
-    this.localStorageService.saveData(this.STORE_KEY, store);
+    this.storeContext.setActiveStore(store);
     this.closeStoreModal();
   }
 

@@ -1,5 +1,6 @@
 // AppHeaderComponent
 import { Component, ElementRef, ViewChild, Input, ChangeDetectorRef, OnInit, AfterViewInit } from '@angular/core';
+import { Observable } from 'rxjs';
 import { SidebarService } from '../../services/sidebar.service';
 import { AuthService } from '../../services/auth.service';
 import { CommonModule } from '@angular/common';
@@ -9,6 +10,7 @@ import { UserDropdownComponent } from '../../components/header/user-dropdown/use
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { DropdownComponent } from '../../components/ui/dropdown/dropdown.component';
 import { DropdownItemComponent } from '../../components/ui/dropdown/dropdown-item/dropdown-item.component';
+import { StoreContextService } from '../../services/store-context.service';
 
 @Component({
   selector: 'app-header',
@@ -26,6 +28,7 @@ import { DropdownItemComponent } from '../../components/ui/dropdown/dropdown-ite
 })
 export class AppHeaderComponent implements OnInit, AfterViewInit {
   readonly isMobileOpen$;
+  readonly activeStore$: Observable<any>;
 
   roleHomeLink: string = '/';
 
@@ -50,9 +53,11 @@ export class AppHeaderComponent implements OnInit, AfterViewInit {
     public sidebarService: SidebarService,
     private translate: TranslateService,
     private authService: AuthService,
+    private storeContext: StoreContextService,
     private cdr: ChangeDetectorRef
   ) {
     this.isMobileOpen$ = this.sidebarService.isMobileOpen$;
+    this.activeStore$ = this.storeContext.activeStore$;
     this.currentLang = (localStorage.getItem('lang') as 'pt-br' | 'en') || 'pt-br';
 
     // Definir link de home conforme a role atual

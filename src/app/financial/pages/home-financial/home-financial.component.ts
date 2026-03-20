@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { AuthService, User } from '../../../shared/services/auth.service';
 import { Store, StoreService } from '../../../pages/admin/stores/store.service';
 import { LocalStorageService } from '../../../shared/services/local-storage.service';
+import { StoreContextService } from '../../../shared/services/store-context.service';
 
 @Component({
   selector: 'app-home-financial',
@@ -13,7 +14,7 @@ import { LocalStorageService } from '../../../shared/services/local-storage.serv
 })
 export class HomeFinancialComponent implements OnInit {
   currentUser: User | null = null;
-  
+
   // Propriedades para o modal de lojas
   availableStores: Store[] = [];
   selectedStore: Store | null = null;
@@ -24,13 +25,17 @@ export class HomeFinancialComponent implements OnInit {
   constructor(
     private authService: AuthService,
     private storeService: StoreService,
-    private localStorageService: LocalStorageService
-  ) {}
+    private localStorageService: LocalStorageService,
+    private storeContext: StoreContextService
+  ) { }
 
   ngOnInit(): void {
     this.currentUser = this.authService.getCurrentUser();
     this.loadStores();
-    this.loadSelectedStore();
+
+    this.storeContext.activeStore$.subscribe(store => {
+      this.selectedStore = store;
+    });
   }
 
   private loadStores(): void {
@@ -38,29 +43,19 @@ export class HomeFinancialComponent implements OnInit {
     this.storeService.getStores().subscribe({
       next: (stores: Store[]) => {
         this.availableStores = stores;
-        this.loadSelectedStore(); // Mover para cá garante que as lojas estejam disponíveis
         this.isLoadingStores = false;
       },
       error: () => this.isLoadingStores = false
     });
   }
 
-  /**
-   * Carrega a loja selecionada do localStorage.
-   */
-  private loadSelectedStore(): void {
-    const savedStore = this.localStorageService.getData<Store>(this.STORE_KEY);
-    if (savedStore) {
-      this.selectedStore = savedStore;
-    }
-  }
+
 
   openStoreModal(): void { this.showStoreModal = true; }
   closeStoreModal(): void { this.showStoreModal = false; }
 
   selectStore(store: Store): void {
-    this.selectedStore = store;
-    this.localStorageService.saveData(this.STORE_KEY, store);
+    this.storeContext.setActiveStore(store);
     this.closeStoreModal();
   }
 }

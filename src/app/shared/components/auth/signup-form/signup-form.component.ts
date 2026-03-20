@@ -142,20 +142,8 @@ export class SignupFormComponent implements OnInit {
             return;
           }
 
-          // Caso contrário, redirecionar baseado no papel
-          const user = response.data.user as any;
-          const userRole = user.role;
-          if (userRole === 'admin') {
-            const owned = user?.ownedOrganizations;
-            const hasOwned = Array.isArray(owned) && owned.length > 0;
-            this.router.navigate([hasOwned ? '/admin/home' : '/admin/organizations'], { queryParams: hasOwned ? {} : { onboarding: '1', returnUrl: '/admin/home' } });
-          } else if (userRole === 'master') {
-            this.router.navigate(['/pub/master']);
-          } else if (userRole === 'waiter') {
-            this.router.navigate(['/pub/waiter']);
-          } else {
-            this.router.navigate(['/events/home-default']);
-          }
+          // Redirecionar para o Hub Central
+          this.router.navigate(['/']);
         }
       },
       error: (error) => {

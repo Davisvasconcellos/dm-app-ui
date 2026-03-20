@@ -8,7 +8,7 @@ export class LocalStorageService {
   private readonly CURRENT_USER_KEY = 'current_user';
   private readonly REFRESH_TOKEN_KEY = 'refresh_token';
 
-  constructor() {}
+  constructor() { }
 
   // Token de autenticação
   setAuthToken(token: string): void {
@@ -91,6 +91,18 @@ export class LocalStorageService {
     } catch (error) {
       console.error(`Erro ao recuperar dados para a chave '${key}':`, error);
       return null;
+    }
+  }
+
+  /**
+   * Remove dados genéricos do localStorage.
+   * @param key A chave dos dados a serem removidos.
+   */
+  removeData(key: string): void {
+    try {
+      localStorage.removeItem(key);
+    } catch (error) {
+      console.error(`Erro ao remover dados para a chave '${key}':`, error);
     }
   }
 

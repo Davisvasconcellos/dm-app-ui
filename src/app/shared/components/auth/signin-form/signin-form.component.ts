@@ -110,35 +110,8 @@ export class SigninFormComponent implements OnInit {
             return;
           }
 
-          // Caso não seja fluxo de quiosque, redireciona baseado no papel do usuário
-          const user = this.authService.getCurrentUser();
-          if (user) {
-            switch (user.role) {
-              case 'admin': {
-                const owned = (user as any)?.ownedOrganizations;
-                const hasOwned = Array.isArray(owned) && owned.length > 0;
-                this.router.navigate([hasOwned ? '/admin/home' : '/admin/organizations'], { queryParams: hasOwned ? {} : { onboarding: '1', returnUrl: '/admin/home' } });
-                break;
-              }
-              case 'master':
-                this.router.navigate(['/pub/master']);
-                break;
-              case 'waiter':
-                this.router.navigate(['/pub/waiter']);
-                break;
-              case 'customer':
-                this.router.navigate(['/events/home-default']); // Customer usa home-default
-                break;
-              case 'manager':
-                this.router.navigate(['/events/home-default']); // Manager usa home-default
-                break;
-              default:
-                this.router.navigate(['/']);
-                break;
-            }
-          } else {
-            this.router.navigate(['/']);
-          }
+          // Redireciona para o Hub Central, que decide o próximo passo
+          this.router.navigate(['/']);
         },
         error: (error) => {
           console.error('Erro ao fazer login:', error);
@@ -183,33 +156,8 @@ export class SigninFormComponent implements OnInit {
               return;
             }
 
-            // Caso não seja fluxo de quiosque, redireciona baseado no papel do usuário, igual ao login tradicional
-            const user = this.authService.getCurrentUser();
-            if (user) {
-              switch (user.role) {
-                case 'admin': {
-                  const owned = (user as any)?.ownedOrganizations;
-                  const hasOwned = Array.isArray(owned) && owned.length > 0;
-                  this.router.navigate([hasOwned ? '/admin/home' : '/admin/organizations'], { queryParams: hasOwned ? {} : { onboarding: '1', returnUrl: '/admin/home' } });
-                  break;
-                }
-                case 'master':
-                  this.router.navigate(['/pub/master']);
-                  break;
-                case 'waiter':
-                  this.router.navigate(['/pub/waiter']);
-                  break;
-                case 'customer':
-                case 'manager':
-                  this.router.navigate(['/events/home-default']);
-                  break;
-                default:
-                  this.router.navigate(['/']);
-                  break;
-              }
-            } else {
-              this.router.navigate(['/']);
-            }
+            // Redireciona para o Hub Central
+            this.router.navigate(['/']);
           },
           error: (err) => {
             console.error('Erro no login com Google (API):', err);

@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { EcommerceComponent } from './pages/dashboard/ecommerce/ecommerce.component';
+import { HubComponent } from './pages/hub/hub.component';
 import { AnalyticsComponent } from './pages/dashboard/analytics/analytics.component';
 import { MarketingComponent } from './pages/dashboard/marketing/marketing.component';
 import { CrmComponent } from './pages/dashboard/crm/crm.component';
@@ -141,10 +142,14 @@ export const routes: Routes = [
     children: [
       {
         path: '',
-        component: EcommerceComponent,
+        component: HubComponent,
         pathMatch: 'full',
-        title:
-          'DM-APP',
+        title: 'DM-APP | Hub',
+      },
+      {
+        path: 'ecommerce',
+        component: EcommerceComponent,
+        title: 'DM-APP | Ecommerce',
       },
       {
         path: 'analytics',

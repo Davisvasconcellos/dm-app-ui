@@ -4,7 +4,8 @@ import { SidebarService } from '../../services/sidebar.service';
 import { AuthService } from '../../services/auth.service';
 import { NavigationEnd, Router, RouterModule } from '@angular/router';
 import { SafeHtmlPipe } from '../../pipe/safe-html.pipe';
-import { combineLatest, Subscription } from 'rxjs';
+import { combineLatest, Subscription, Observable } from 'rxjs';
+import { StoreContextService, Store } from '../../services/store-context.service';
 
 interface NavItem {
   name: string;
@@ -327,10 +328,12 @@ export class AppSidebarComponent implements OnInit, OnDestroy {
   public router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
   private authService = inject(AuthService);
+  private storeContext = inject(StoreContextService);
 
   readonly isExpanded$ = this.sidebarService.isExpanded$;
   readonly isMobileOpen$ = this.sidebarService.isMobileOpen$;
   readonly isHovered$ = this.sidebarService.isHovered$;
+  readonly activeStore$ = this.storeContext.activeStore$;
 
   private subscription: Subscription = new Subscription();
 
@@ -372,6 +375,13 @@ export class AppSidebarComponent implements OnInit, OnDestroy {
       this.authService.currentUser$.subscribe(user => {
         const role = user?.role ?? null;
         this.userRole = role === 'customer' ? 'user' : role;
+        this.applyRoleFilter();
+      })
+    );
+
+    // Subscribe to store context changes
+    this.subscription.add(
+      this.storeContext.activeStore$.subscribe(() => {
         this.applyRoleFilter();
       })
     );
@@ -486,19 +496,16 @@ export class AppSidebarComponent implements OnInit, OnDestroy {
 
   private applyRoleFilter() {
     const role = this.userRole;
-
-    // Debug logging for modules
-    const user = this.authService.getCurrentUser();
-    console.log('Current User Role:', role);
-    console.log('User Modules:', user?.modules);
+    const store = this.storeContext.getActiveStore();
 
     this.filteredMainItems = this.mainItems
       .filter(item => {
         const roleMatch = !item.roles || (role ? item.roles.includes(role) : false);
-        const moduleMatch = !item.moduleSlug || this.authService.hasModule(item.moduleSlug);
 
+        // Só exibe menus de módulos se houver uma unidade selecionada
+        let moduleMatch = true;
         if (item.moduleSlug) {
-          console.log(`Menu Item: ${item.name}, Slug: ${item.moduleSlug}, HasModule: ${moduleMatch}`);
+          moduleMatch = !!store && this.authService.hasModule(item.moduleSlug);
         }
 
         return roleMatch && moduleMatch;

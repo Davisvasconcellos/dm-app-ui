@@ -5,6 +5,7 @@ import { catchError, tap } from 'rxjs/operators';
 import { LocalStorageService } from './local-storage.service';
 import { Router } from '@angular/router';
 import { environment } from '../../../environments/environment';
+import { StoreContextService } from './store-context.service';
 
 // Interfaces para tipagem
 export interface User {
@@ -26,7 +27,7 @@ export interface User {
   address_zip_code?: string | null;
   email_verified: boolean;
   status: string;
-  modules?: { 
+  modules?: {
     id: number;
     id_code: string;
     name: string;
@@ -92,16 +93,17 @@ export interface AuthResponse {
 })
 export class AuthService {
   private readonly API_BASE_URL = `${environment.apiUrl}/api/v1`;
-  
+
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
-  
+
   private isAuthenticatedSubject = new BehaviorSubject<boolean>(false);
   public isAuthenticated$ = this.isAuthenticatedSubject.asObservable();
 
   constructor(
     private http: HttpClient,
     private localStorageService: LocalStorageService,
+    private storeContext: StoreContextService,
     private router: Router
   ) {
     this.initializeAuth();
@@ -110,11 +112,11 @@ export class AuthService {
   private initializeAuth(): void {
     const token = this.localStorageService.getAuthToken();
     const user = this.localStorageService.getCurrentUser<User>();
-    
+
     if (token && user) {
       this.currentUserSubject.next(user);
       this.isAuthenticatedSubject.next(true);
-      
+
       // Refresh user data to ensure modules and permissions are up to date
       this.getUserMe().subscribe({
         error: (err) => console.error('Erro ao atualizar dados do usuário na inicialização:', err)
@@ -171,16 +173,17 @@ export class AuthService {
   logout(): Observable<any> {
     const token = this.getAuthToken();
     const headers: { [key: string]: string } = token ? { 'Authorization': `Bearer ${token}` } : {};
-    
+
     return this.http.post(`${this.API_BASE_URL}/auth/signout`, {}, { headers })
       .pipe(
         timeout(3000), // Timeout de 3 segundos
         catchError(() => of(null)), // Continua mesmo se a API falhar
         finalize(() => {
           // Este bloco `finalize` garante que o logout no cliente sempre aconteça.
-          this.localStorageService.clearAuthData();
           this.currentUserSubject.next(null);
           this.isAuthenticatedSubject.next(false);
+          this.localStorageService.clearAuthData();
+          this.storeContext.clearContext();
           this.router.navigate(['/signin']);
         })
       );
@@ -199,14 +202,14 @@ export class AuthService {
     }
 
     const headers = { 'Authorization': `Bearer ${token}` };
-    
+
     return this.http.get<UserMeResponse>(`${this.API_BASE_URL}/auth/me`, { headers })
       .pipe(
         tap((response: UserMeResponse) => {
           if (response.success && response.data) {
             // Mapear os dados da API para o formato esperado pelos componentes
             const mappedUser = this.mapApiUserToUser(response.data.user);
-            
+
             // Atualizar o usuário atual no localStorage e no BehaviorSubject
             this.localStorageService.setCurrentUser(mappedUser);
             this.currentUserSubject.next(mappedUser);
@@ -224,14 +227,14 @@ export class AuthService {
     }
 
     const headers = { 'Authorization': `Bearer ${token}` };
-    
+
     return this.http.put<UserMeResponse>(`${this.API_BASE_URL}/users/me`, userData, { headers })
       .pipe(
         tap((response: UserMeResponse) => {
           if (response.success && response.data) {
             // Mapear os dados da API para o formato esperado pelos componentes
             const mappedUser = this.mapApiUserToUser(response.data.user);
-            
+
             // Atualizar o usuário atual no localStorage e no BehaviorSubject
             this.localStorageService.setCurrentUser(mappedUser);
             this.currentUserSubject.next(mappedUser);
@@ -274,7 +277,7 @@ export class AuthService {
     if (!user) return false;
     // Master tem acesso a tudo
     if (user.role === 'master') return true;
-    
+
     const has = user.modules?.some(m => m.slug === moduleSlug) ?? false;
     // console.log(`AuthService.hasModule('${moduleSlug}') check for user '${user.name}': ${has}`);
     return has;
@@ -282,7 +285,7 @@ export class AuthService {
 
   private handleError = (error: HttpErrorResponse): Observable<never> => {
     let errorMessage = 'Erro desconhecido';
-    
+
     if (error.error instanceof ErrorEvent) {
       // Erro do lado do cliente
       errorMessage = `Erro: ${error.error.message}`;
@@ -302,7 +305,7 @@ export class AuthService {
         errorMessage = `Erro ${error.status}: ${error.message}`;
       }
     }
-    
+
     return throwError(() => new Error(errorMessage));
   };
 }
