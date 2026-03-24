@@ -15,6 +15,11 @@ export interface StoreInvite {
     created_at: string;
     user_exists?: boolean; // De resolve (público)
     invited_user_exists?: boolean; // De list (admin)
+    store?: {
+        id_code: string;
+        name: string;
+        slug: string;
+    };
 }
 
 export interface CreateInvitePayload {
@@ -51,6 +56,11 @@ export class StoreInviteService {
         return this.http.get<{ success: boolean, data: StoreInvite[] }>(this.API_BASE_URL, { params });
     }
 
+    getMyInvites(status: string = 'pending'): Observable<{ success: boolean, data: StoreInvite[] }> {
+        const params = new HttpParams().set('status', status);
+        return this.http.get<{ success: boolean, data: StoreInvite[] }>(`${this.API_BASE_URL}/my`, { params });
+    }
+
     regenerateInvite(idCode: string, storeId: string): Observable<CreateInviteResponse> {
         const params = new HttpParams().set('store_id', storeId);
         return this.http.post<CreateInviteResponse>(`${this.API_BASE_URL}/${idCode}/regenerate`, {}, { params });
@@ -61,11 +71,19 @@ export class StoreInviteService {
         return this.http.post<{ success: boolean, data: any }>(`${this.API_BASE_URL}/${idCode}/revoke`, {}, { params });
     }
 
+    revokeMyInvite(idCode: string): Observable<{ success: boolean, data: any }> {
+        return this.http.post<{ success: boolean, data: any }>(`${this.API_BASE_URL}/${idCode}/revoke`, {});
+    }
+
     resolveInvite(token: string): Observable<{ success: boolean, data: { invite: StoreInvite, store: { id_code: string, name: string } } }> {
         return this.http.post<{ success: boolean, data: { invite: StoreInvite, store: { id_code: string, name: string } } }>(`${this.PUBLIC_API_BASE_URL}/resolve`, { token });
     }
 
     acceptInvite(token: string): Observable<{ success: boolean, message: string }> {
         return this.http.post<{ success: boolean, message: string }>(`${this.API_BASE_URL}/accept`, { token });
+    }
+
+    acceptInviteById(idCode: string): Observable<{ success: boolean, message: string }> {
+        return this.http.post<{ success: boolean, message: string }>(`${this.API_BASE_URL}/${idCode}/accept`, {});
     }
 }

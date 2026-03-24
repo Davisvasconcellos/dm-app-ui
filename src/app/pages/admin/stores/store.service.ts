@@ -10,6 +10,8 @@ export interface Store {
   id: number;
   name: string;
   logo_url: string | null;
+  banner_url?: string | null;
+  city?: string | null;
 }
 
 export interface StoresResponse {
@@ -57,7 +59,7 @@ export interface StoreScheduleEntry {
 export class StoreService {
   private readonly API_BASE_URL = `${environment.apiUrl}/api/v1`;
 
-  constructor(private http: HttpClient, private authService: AuthService) {}
+  constructor(private http: HttpClient, private authService: AuthService) { }
 
   getStores(): Observable<Store[]> {
     const headers = { 'Authorization': `Bearer ${this.authService.getAuthToken()}` };

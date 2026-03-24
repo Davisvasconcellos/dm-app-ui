@@ -45,10 +45,10 @@ interface Transaction {
   selector: 'app-saldos-bancarios-list',
   standalone: true,
   imports: [
-    CommonModule, 
-    FormsModule, 
-    BadgeComponent, 
-    TranslateModule, 
+    CommonModule,
+    FormsModule,
+    BadgeComponent,
+    TranslateModule,
     NgApexchartsModule,
     DropdownComponent,
     DropdownItemComponent,
@@ -80,24 +80,24 @@ export class SaldosBancariosListComponent implements OnInit {
 
   // Filters & Pagination
   typeFilter: 'all' | 'PAYABLE' | 'RECEIVABLE' = 'all';
-  
+
   // Date Filters
   dateInterval: string = '30';
   startDate: Date | null = null;
   endDate: Date | null = null;
-  
+
   itemsPerPage = 10;
   currentPage = 1;
   totalPages = 1;
   totalItems = 0;
-  
+
   sortKey: string | null = null;
   sortOrder: 'asc' | 'desc' = 'asc';
 
   // Offcanvas
   isOffcanvasOpen = false;
   selectedTransaction: Transaction | null = null;
-  
+
   // Evidence Sidebar
   isEvidenceSidebarOpen = false;
   selectedEvidenceItems: { name: string; url?: string; type: 'image' | 'pdf' | 'file'; extension?: string }[] = [];
@@ -151,7 +151,7 @@ export class SaldosBancariosListComponent implements OnInit {
     private translate: TranslateService,
     private cdr: ChangeDetectorRef,
     private ngZone: NgZone
-  ) {}
+  ) { }
 
   ngOnInit() {
     // Initialize dates based on default interval
@@ -358,9 +358,9 @@ export class SaldosBancariosListComponent implements OnInit {
       const extensionMatch = extensionSource.split('.').pop() || '';
       const sanitizedExtension =
         extensionMatch &&
-        !extensionMatch.includes('/') &&
-        extensionMatch.length > 0 &&
-        extensionMatch.length <= 6
+          !extensionMatch.includes('/') &&
+          extensionMatch.length > 0 &&
+          extensionMatch.length <= 6
           ? extensionMatch.toUpperCase()
           : undefined;
 
@@ -438,8 +438,12 @@ export class SaldosBancariosListComponent implements OnInit {
     this.ngZone.run(() => {
       this.isLoadingTransactions = true;
     });
-    
+
     const filters: any = {};
+    if (this.selectedStore?.id_code) {
+      filters.store_id = this.selectedStore.id_code;
+    }
+
     if (this.startDate) {
       filters.start_date = this.startDate.toISOString().split('T')[0];
     }
@@ -458,8 +462,8 @@ export class SaldosBancariosListComponent implements OnInit {
         this.ngZone.run(() => {
           let totalIn = 0;
           let totalOut = 0;
-          const incomeData: {x: number, y: number}[] = [];
-          const expenseData: {x: number, y: number}[] = [];
+          const incomeData: { x: number, y: number }[] = [];
+          const expenseData: { x: number, y: number }[] = [];
 
           this.allData = transactions.map(t => {
             const amount = parseFloat(t.amount) || 0;
@@ -516,7 +520,7 @@ export class SaldosBancariosListComponent implements OnInit {
           } catch (e) {
             console.error('Error applying filters', e);
           }
-          
+
           this.isLoadingTransactions = false;
           this.cdr.detectChanges();
         });
@@ -659,7 +663,7 @@ export class SaldosBancariosListComponent implements OnInit {
 
     this.totalItems = data.length;
     this.totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
-    
+
     // Pagination
     const startIndex = (this.currentPage - 1) * this.itemsPerPage;
     this.paginatedData = data.slice(startIndex, startIndex + this.itemsPerPage);
@@ -691,7 +695,7 @@ export class SaldosBancariosListComponent implements OnInit {
   exportToCsv() {
     // Data is already filtered by server
     let data = [...this.allData];
-    
+
     // Sorting (optional for CSV but good for consistency)
     if (this.sortKey) {
       data.sort((a: any, b: any) => {
@@ -745,7 +749,7 @@ export class SaldosBancariosListComponent implements OnInit {
 
     const csvContent = [headers.join(';'), ...lines].join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    
+
     const storeCode = this.selectedStore?.id_code || 'store';
     const timestamp = new Date().toISOString().split('T')[0];
     const fileName = `saldos_${storeCode}_${timestamp}.csv`;

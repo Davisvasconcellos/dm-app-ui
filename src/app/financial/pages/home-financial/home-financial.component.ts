@@ -40,12 +40,40 @@ export class HomeFinancialComponent implements OnInit {
 
   private loadStores(): void {
     this.isLoadingStores = true;
+    const user = this.authService.getCurrentUser();
+
     this.storeService.getStores().subscribe({
-      next: (stores: Store[]) => {
-        this.availableStores = stores;
+      next: (apiStores = []) => {
+        // Capturar lojas onde o usuário é membro (colaborador/customer)
+        const memberships = (user as any)?.storeMemberships || [];
+        const memberStores = memberships
+          .filter((m: any) => m.store && (m.status === 'active' || m.status === 'accepted'))
+          .map((m: any) => ({
+            ...m.store,
+            logo_url: m.store.logo_url || null
+          }));
+
+        // Mesclar e remover duplicatas pelo id_code
+        const allStoresCombined = [...apiStores, ...memberStores];
+        const uniqueStoresMap = new Map<string, Store>();
+
+        allStoresCombined.forEach(s => {
+          if (s && s.id_code) {
+            uniqueStoresMap.set(s.id_code, s);
+          }
+        });
+
+        this.availableStores = Array.from(uniqueStoresMap.values());
         this.isLoadingStores = false;
       },
-      error: () => this.isLoadingStores = false
+      error: (err) => {
+        console.error('Erro ao carregar lojas no financial:', err);
+        const memberships = (user as any)?.storeMemberships || [];
+        this.availableStores = memberships
+          .filter((m: any) => m.store)
+          .map((m: any) => m.store);
+        this.isLoadingStores = false;
+      }
     });
   }
 

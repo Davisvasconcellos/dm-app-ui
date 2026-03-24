@@ -8,6 +8,7 @@ export interface Store {
     name: string;
     logo_url: string | null;
     banner_url?: string | null;
+    city?: string | null;
     organization?: {
         id_code: string;
         name: string;

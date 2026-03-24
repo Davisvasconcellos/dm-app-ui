@@ -56,7 +56,7 @@ export class AppSidebarComponent implements OnInit, OnDestroy {
       roles: ['admin', 'master'],
       subItems: [
         { name: 'Home Admin', path: '/admin/home' },
-        { name: 'Organizations', path: '/admin/organizations' },
+        { name: 'Unidades', path: '/admin/organizations' },
       ]
     },
     /*

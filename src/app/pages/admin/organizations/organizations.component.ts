@@ -35,7 +35,7 @@ import { NgClass } from '@angular/common';
   ],
   template: `
     <div class="p-6">
-      <h1 class="text-2xl font-bold mb-4 text-gray-800 dark:text-white">Organizations</h1>
+      <h1 class="text-2xl font-bold mb-4 text-gray-800 dark:text-white">Unidades</h1>
       <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow space-y-6">
         <div class="relative h-35 md:h-45 rounded-2xl bg-gray-200 dark:bg-gray-800">
           <img [src]="bannerPreview || '/images/stores/default-store-banner.jpg'" alt="Banner" class="w-full h-full object-cover rounded-t-2xl">
@@ -74,7 +74,7 @@ import { NgClass } from '@angular/common';
               [class.text-gray-500]="activeTab !== 'stores'"
               class="whitespace-nowrap border-b-2 py-2 px-1 text-sm font-medium hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
             >
-              Stores
+              Unidades
             </button>
             <button
               (click)="setActiveTab('users')"
@@ -158,7 +158,7 @@ import { NgClass } from '@angular/common';
               </button>
             </div>
             <a [routerLink]="['/admin/stores/create']" [queryParams]="{ org: existingOrgId }" class="rounded-lg bg-brand-500 px-4 py-2 text-xs font-semibold text-white hover:bg-brand-600">
-              Adicionar Loja
+              Adicionar Unidade
             </a>
           </div>
           @if (storeViewMode === 'grid') {
@@ -184,8 +184,8 @@ import { NgClass } from '@angular/common';
             @if (!isLoadingStores && stores.length === 0) {
             <div class="col-span-full">
               <div class="p-8 rounded-xl bg-gray-50 dark:bg-gray-800/50 border-2 border-dashed border-gray-300 dark:border-gray-600 text-center">
-                <h4 class="text-sm font-medium text-gray-900 dark:text-white mb-2">Nenhuma loja encontrada</h4>
-                <p class="text-xs text-gray-500 dark:text-gray-400">Crie sua organização para gerar a loja Matriz ou adicione novas lojas.</p>
+                <h4 class="text-sm font-medium text-gray-900 dark:text-white mb-2">Nenhuma unidade encontrada</h4>
+                <p class="text-xs text-gray-500 dark:text-gray-400">Crie sua organização para gerar a unidade Matriz ou adicione novas unidades.</p>
               </div>
             </div>
             }
@@ -196,7 +196,7 @@ import { NgClass } from '@angular/common';
             <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead>
                 <tr class="bg-gray-50 dark:bg-gray-700/50">
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Loja</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Unidade</th>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Cidade</th>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
                   <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Ações</th>
@@ -261,11 +261,11 @@ import { NgClass } from '@angular/common';
             <form [formGroup]="collaboratorForm" (ngSubmit)="sendInvitation()">
               <div class="grid gap-6 sm:grid-cols-2 mb-6">
                 <div class="sm:col-span-2">
-                  <app-label>Ponto de Venda (Store) *</app-label>
+                  <app-label>Ponto de Venda (Unidade) *</app-label>
                   <app-select [value]="collaboratorForm.get('store_id')?.value"
                     (valueChange)="collaboratorForm.get('store_id')?.setValue($event)"
                     [options]="storeOptions"
-                    placeholder="Selecione a loja para este convite" />
+                    placeholder="Selecione a unidade para este convite" />
                 </div>
                 <div>
                   <app-label>Email do Usuário *</app-label>
@@ -357,7 +357,7 @@ import { NgClass } from '@angular/common';
                         }
                         @if ((storeUserGroups[st.id_code]?.collaborators?.length || 0) === 0) {
                         <tr>
-                          <td colspan="3" class="px-4 py-6 text-center text-gray-500 italic">Nenhum colaborador ativo nesta loja.</td>
+                          <td colspan="3" class="px-4 py-6 text-center text-gray-500 italic">Nenhum colaborador ativo nesta unidade.</td>
                         </tr>
                         }
                       </tbody>

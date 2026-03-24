@@ -203,7 +203,7 @@ export class AuthService {
 
     const headers = { 'Authorization': `Bearer ${token}` };
 
-    return this.http.get<UserMeResponse>(`${this.API_BASE_URL}/auth/me`, { headers })
+    return this.http.get<UserMeResponse>(`${this.API_BASE_URL}/auth/me?__nocache=1`, { headers })
       .pipe(
         tap((response: UserMeResponse) => {
           if (response.success && response.data) {
@@ -275,12 +275,28 @@ export class AuthService {
   hasModule(moduleSlug: string): boolean {
     const user = this.getCurrentUser();
     if (!user) return false;
-    // Master tem acesso a tudo
-    if (user.role === 'master') return true;
 
-    const has = user.modules?.some(m => m.slug === moduleSlug) ?? false;
-    // console.log(`AuthService.hasModule('${moduleSlug}') check for user '${user.name}': ${has}`);
-    return has;
+    // Master e Admin global têm acesso a tudo
+    if (user.role === 'master' || user.role === 'admin') return true;
+
+    // 1. Verificação Global (Módulos fixos no perfil)
+    const hasGlobal = user.modules?.some(m => m.slug === moduleSlug) ?? false;
+    if (hasGlobal) return true;
+
+    // 2. Verificação por Unidade Ativa 🏪🚀
+    const activeStore = this.storeContext.getActiveStore();
+    if (activeStore && user.storeMemberships) {
+      const membership = user.storeMemberships.find(m =>
+        m.store?.id_code === activeStore.id_code || m.store_id === activeStore.id
+      );
+
+      if (membership && membership.permissions) {
+        // Verifica se existe qualquer permissão que comece com o slug do módulo (ex: 'financial:read')
+        return membership.permissions.some((p: string) => p.startsWith(`${moduleSlug}:`));
+      }
+    }
+
+    return false;
   }
 
   private handleError = (error: HttpErrorResponse): Observable<never> => {

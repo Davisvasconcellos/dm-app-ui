@@ -96,7 +96,7 @@ export class SigninFormComponent implements OnInit {
           this.isLoading = false;
 
           // 1) Sempre priorizar returnUrl quando presente (sobrepõe regras de role)
-          const returnUrl = this.getReturnUrl();
+          const returnUrl = this.currentReturnUrl;
           if (returnUrl) {
             this.router.navigateByUrl(returnUrl);
             return;
@@ -142,7 +142,7 @@ export class SigninFormComponent implements OnInit {
             console.log('Dados do usuário atualizados (Google):', response);
             this.isLoading = false;
             // 1) Sempre priorizar returnUrl quando presente (sobrepõe regras de role)
-            const returnUrl = this.getReturnUrl();
+            const returnUrl = this.currentReturnUrl;
             if (returnUrl) {
               this.router.navigateByUrl(returnUrl);
               return;
