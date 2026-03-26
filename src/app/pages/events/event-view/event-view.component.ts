@@ -12,25 +12,25 @@ import { CardSettingsComponent, CardSettings } from '../../../shared/components/
 import { NotificationComponent } from '../../../shared/components/ui/notification/notification/notification.component';
 import { Guest } from '../../../shared/interfaces/guest.interface';
 import { TranslateModule } from '@ngx-translate/core';
-  import { EventService, ApiEvent, ApiGuest, CreateGuestBatchItem, GuestsStats, ApiResponseItem, AdminRespondentItem } from '../event.service';
+import { EventService, ApiEvent, ApiGuest, CreateGuestBatchItem, GuestsStats, ApiResponseItem, AdminRespondentItem } from '../event.service';
 import { ImageUploadService } from '../../../shared/services/image-upload.service';
 import { AuthService } from '../../../shared/services/auth.service';
 
-  interface TableRowData {
-    id: number;
-    user: { image: string | undefined; name: string };
-    email: string;
-    phone: string;
-    status: 'Confirmado' | 'Pendente' | 'Cancelado';
-    documentNumber?: string;
-    guestType?: string;
-    source?: string;
-    rsvp?: boolean;
-    rsvpAt?: string | null;
-    checkin?: boolean;
-    checkinAt?: string | null;
-    checkinMethod?: string;
-  }
+interface TableRowData {
+  id: number;
+  user: { image: string | undefined; name: string };
+  email: string;
+  phone: string;
+  status: 'Confirmado' | 'Pendente' | 'Cancelado';
+  documentNumber?: string;
+  guestType?: string;
+  source?: string;
+  rsvp?: boolean;
+  rsvpAt?: string | null;
+  checkin?: boolean;
+  checkinAt?: string | null;
+  checkinMethod?: string;
+}
 
 interface EventData {
   id: number;
@@ -88,16 +88,16 @@ interface RespondentRowData {
   templateUrl: './event-view.component.html',
   styleUrl: './event-view.component.css'
 })
-  export class EventViewComponent implements OnInit {
-    activeTab: string = 'kpi_convidados';
-    private eventIdCode?: string;
-    isEventLoading: boolean = true;
-    private imageFile?: File;
-    private imageDirty: boolean = false;
-    private bannerOriginalUrl?: string;
-    private cardImageFile?: File;
-    private cardImageDirty: boolean = false;
-    private cardBackgroundOriginalUrl?: string;
+export class EventViewComponent implements OnInit {
+  activeTab: string = 'kpi_convidados';
+  private eventIdCode?: string;
+  isEventLoading: boolean = true;
+  private imageFile?: File;
+  private imageDirty: boolean = false;
+  private bannerOriginalUrl?: string;
+  private cardImageFile?: File;
+  private cardImageDirty: boolean = false;
+  private cardBackgroundOriginalUrl?: string;
 
   event: EventData = {
     id: 1,
@@ -288,7 +288,7 @@ interface RespondentRowData {
     private envInjector: EnvironmentInjector,
     private imageUploadService: ImageUploadService,
     private authService: AuthService
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.route.paramMap.subscribe((pm) => {
@@ -1286,9 +1286,10 @@ interface RespondentRowData {
 
   private toIsoZ(localValue: string | undefined): string {
     if (!localValue) return '';
-    const parsed = this.parseLocalDate(localValue);
-    if (!parsed) return localValue;
-    return parsed.toISOString();
+    // Retorna a string local diretamente (ex: "2026-03-30T03:00")
+    // O input datetime-local já fornece o formato ISO local. 
+    // Adicionamos os segundos (:00) se necessário para compatibilidade.
+    return localValue.length === 16 ? `${localValue}:00` : localValue;
   }
 
   private parseLocalDate(value?: string): Date | null {
@@ -1417,12 +1418,12 @@ interface RespondentRowData {
                 }));
               // Após carregar perguntas em modo público, carregar respostas por pergunta (usa id_code)
               this.loadResponsesForQuestions(idCode);
-        },
-        error: (err) => {
-          const msg = (err?.error?.message || err?.message || 'Falha ao carregar perguntas públicas');
-          this.triggerToast('error', 'Erro ao carregar perguntas', msg);
-        }
-      });
+            },
+            error: (err) => {
+              const msg = (err?.error?.message || err?.message || 'Falha ao carregar perguntas públicas');
+              this.triggerToast('error', 'Erro ao carregar perguntas', msg);
+            }
+          });
         },
         error: (err) => {
           const msg = (err?.error?.message || err?.message || 'Falha ao listar eventos públicos');

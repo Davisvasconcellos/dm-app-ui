@@ -241,7 +241,7 @@ export class EventCreateComponent {
     this.saveError = '';
     if (!this.isDetailsValid()) {
       this.isSaving = false;
-      this.saveError = 'Preencha os campos obrigatórios: nome, descrição, datas e local.';
+      this.saveError = 'Preencha os campos obrigatórios: nome, descrição, datas, local e responsável.';
       return;
     }
     const name = (this.event.name || '').trim();
@@ -303,7 +303,7 @@ export class EventCreateComponent {
           if (this.imageFile && idCode) {
             const slugName = this.slugify(name);
             const folderPath = `events/${idCode}_${slugName}`;
-            
+
             const upload = await this.imageUploadService.uploadImage(
               this.imageFile,
               'event-banner',
@@ -350,8 +350,10 @@ export class EventCreateComponent {
 
   private toIsoZ(localValue: string | undefined): string {
     if (!localValue) return '';
-    const d = new Date(localValue);
-    return isNaN(d.getTime()) ? localValue : d.toISOString();
+    // Retorna a string local diretamente (ex: "2026-03-30T03:00")
+    // O input datetime-local já fornece o formato ISO local. 
+    // Adicionamos os segundos (:00) se necessário para compatibilidade.
+    return localValue.length === 16 ? `${localValue}:00` : localValue;
   }
 
   private normalizeBannerUrl(url: string): string {
@@ -374,7 +376,9 @@ export class EventCreateComponent {
     const startOk = !!(this.event.startDate && this.event.startDate.trim());
     const endOk = !!(this.event.endDate && this.event.endDate.trim());
     const locOk = !!(this.event.location && this.event.location.trim());
-    return nameOk && descOk && startOk && endOk && locOk;
+    const respNameOk = !!(this.event.responsibleName && this.event.responsibleName.trim());
+    const respEmailOk = !!(this.event.responsibleEmail && this.event.responsibleEmail.trim());
+    return nameOk && descOk && startOk && endOk && locOk && respNameOk && respEmailOk;
   }
 
   exportGuestList() {
@@ -463,25 +467,33 @@ export class EventCreateComponent {
     const c2 = this.cardSettings.secondaryColor || this.event.secondaryColor || '#1E40AF';
     return `linear-gradient(135deg, ${c1} 0%, ${c2} 100%)`;
   }
-  
+
 
   questions: QuestionItem[] = [
-    { id: 101, title: 'Qual foi sua experiência no evento? (texto aberto)', type: 'text', answers: [
-      { user: { id: 1, image: '/images/user/user-20.jpg', name: 'João Silva' }, value: 'Excelente, organização impecável!' },
-      { user: { id: 2, image: '/images/user/user-21.jpg', name: 'Maria Santos' }, value: 'Gostei muito, mas faltou água nos banheiros.' }
-    ] },
-    { id: 102, title: 'Qual atração você mais gostou? (múltipla escolha - uma resposta)', type: 'single_choice', answers: [
-      { user: { id: 3, image: '/images/user/user-22.jpg', name: 'Pedro Costa' }, value: 'Banda Sunrise' },
-      { user: { id: 4, image: '/images/user/user-23.jpg', name: 'Ana Oliveira' }, value: 'DJ Nightfall' }
-    ] },
-    { id: 103, title: 'Quais áreas você visitou? (múltipla escolha - múltiplas respostas)', type: 'multiple_choice', answers: [
-      { user: { id: 5, image: '/images/user/user-24.jpg', name: 'Carlos Ferreira' }, value: ['Palco Principal', 'Área VIP', 'Food Trucks'] },
-      { user: { id: 1, image: '/images/user/user-20.jpg', name: 'João Silva' }, value: ['Palco Secundário', 'Área VIP'] }
-    ] },
-    { id: 104, title: 'Você indicaria o evento para um amigo? (enquete)', type: 'poll', answers: [
-      { user: { id: 2, image: '/images/user/user-21.jpg', name: 'Maria Santos' }, value: 'Sim' },
-      { user: { id: 3, image: '/images/user/user-22.jpg', name: 'Pedro Costa' }, value: 'Não' }
-    ] }
+    {
+      id: 101, title: 'Qual foi sua experiência no evento? (texto aberto)', type: 'text', answers: [
+        { user: { id: 1, image: '/images/user/user-20.jpg', name: 'João Silva' }, value: 'Excelente, organização impecável!' },
+        { user: { id: 2, image: '/images/user/user-21.jpg', name: 'Maria Santos' }, value: 'Gostei muito, mas faltou água nos banheiros.' }
+      ]
+    },
+    {
+      id: 102, title: 'Qual atração você mais gostou? (múltipla escolha - uma resposta)', type: 'single_choice', answers: [
+        { user: { id: 3, image: '/images/user/user-22.jpg', name: 'Pedro Costa' }, value: 'Banda Sunrise' },
+        { user: { id: 4, image: '/images/user/user-23.jpg', name: 'Ana Oliveira' }, value: 'DJ Nightfall' }
+      ]
+    },
+    {
+      id: 103, title: 'Quais áreas você visitou? (múltipla escolha - múltiplas respostas)', type: 'multiple_choice', answers: [
+        { user: { id: 5, image: '/images/user/user-24.jpg', name: 'Carlos Ferreira' }, value: ['Palco Principal', 'Área VIP', 'Food Trucks'] },
+        { user: { id: 1, image: '/images/user/user-20.jpg', name: 'João Silva' }, value: ['Palco Secundário', 'Área VIP'] }
+      ]
+    },
+    {
+      id: 104, title: 'Você indicaria o evento para um amigo? (enquete)', type: 'poll', answers: [
+        { user: { id: 2, image: '/images/user/user-21.jpg', name: 'Maria Santos' }, value: 'Sim' },
+        { user: { id: 3, image: '/images/user/user-22.jpg', name: 'Pedro Costa' }, value: 'Não' }
+      ]
+    }
   ];
 
   private expandedQuestionIds = new Set<number>();
