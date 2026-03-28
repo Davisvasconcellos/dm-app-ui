@@ -194,7 +194,6 @@ export class ComissoesListComponent implements OnInit, AfterViewInit {
     }
   }
 
-  // Placeholder for batch payment
   paySelected() {
     if (this.selectedCommissions.size === 0) {
       this.toastService.triggerToast('warning', 'Nenhuma seleção', 'Selecione ao menos uma comissão para pagar.');
@@ -205,8 +204,41 @@ export class ComissoesListComponent implements OnInit, AfterViewInit {
       return;
     }
 
-    const count = this.selectedCommissions.size;
-    this.toastService.triggerToast('info', 'Em breve', `Pagamento em lote de ${count} comissões via ${this.selectedAccount.name} será implementado.`);
+    if (!this.selectedStore?.id_code) return;
+
+    this.isLoading = true;
+    const payload = {
+      commission_ids: Array.from(this.selectedCommissions),
+      bank_account_id: this.selectedAccount.id_code,
+      payment_method: 'bank_transfer'
+    };
+
+    this.financial.payCommissions(this.selectedStore.id_code, payload).subscribe({
+      next: (response) => {
+        this.isLoading = false;
+
+        let successMsg = `Comissões processadas com sucesso.`;
+        if (response.data) {
+          const { paid_count, not_found_count } = response.data;
+          successMsg = `${paid_count} comissão(ões) paga(s) via ${this.selectedAccount.name}.`;
+          if (not_found_count > 0) {
+            successMsg += ` (${not_found_count} não encontradas).`;
+          }
+        }
+
+        this.toastService.triggerToast('success', 'Pagamento Realizado', successMsg);
+
+        // Reload list and KPIs
+        this.selectedCommissions.clear();
+        this.loadCommissions();
+        this.loadBankAccounts(); // refresh bank balance just in case
+      },
+      error: (err) => {
+        console.error('Erro ao pagar comissões', err);
+        this.isLoading = false;
+        this.toastService.triggerToast('error', 'Erro no Pagamento', 'Houve um erro ao processar o pagamento das comissões.');
+      }
+    });
   }
 
   get selectedCommissionsTotal(): number {

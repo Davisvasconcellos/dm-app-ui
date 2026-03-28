@@ -342,4 +342,10 @@ export class FinancialService {
     const params: any = { store_id: storeId, ...filters };
     return this.http.get<any>(`${this.API_BASE_URL}/financial/commissions`, { headers: this.getHeaders(), params });
   }
+
+  payCommissions(storeId: string, payload: { commission_ids: string[], bank_account_id: string, paid_at?: string, payment_method?: string }): Observable<any> {
+    const params: any = { store_id: storeId };
+    return this.http.post<any>(`${this.API_BASE_URL}/financial/commissions/pay`, payload, { headers: this.getHeaders(), params });
+  }
 }
+
