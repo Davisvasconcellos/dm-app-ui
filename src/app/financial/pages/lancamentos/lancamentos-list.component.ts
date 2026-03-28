@@ -64,6 +64,9 @@ export class LancamentosListComponent implements OnInit {
   filteredPaymentMethods: any[] = [];
   selectedBankAccountBalance: number | null = null;
 
+  // Lista de vendedores carregada da API
+  salespeople: any[] = [];
+
   // Data Sources
   suppliers: any[] = [];
   customers: any[] = [];
@@ -291,8 +294,36 @@ export class LancamentosListComponent implements OnInit {
       payment_method: [null],
       bank_account_id: [null],
       attachment_url: [''],
-      effectivate: [false] // Control to effectivate provisioned transactions
+      effectivate: [false], // Control to effectivate provisioned transactions
+
+      // Comissões
+      has_commission: [false],
+      commission_seller_id: [null],
+      commission_percentage: [null],
+      commission_type: ['percentage'] // 'percentage' | 'fixed'
     });
+
+    // Listen to has_commission changes to update validators
+    this.transactionForm.get('has_commission')?.valueChanges.subscribe(hasComm => {
+      const sellerControl = this.transactionForm.get('commission_seller_id');
+      const percControl = this.transactionForm.get('commission_percentage');
+
+      if (hasComm) {
+        sellerControl?.setValidators(Validators.required);
+        this.updateCommissionValidators();
+      } else {
+        sellerControl?.clearValidators();
+        percControl?.clearValidators();
+        sellerControl?.setValue(null);
+        percControl?.setValue(null);
+      }
+      sellerControl?.updateValueAndValidity();
+      percControl?.updateValueAndValidity();
+    });
+
+    // Listen to commission_type or amount changes to update validators
+    this.transactionForm.get('commission_type')?.valueChanges.subscribe(() => this.updateCommissionValidators());
+    this.transactionForm.get('amount')?.valueChanges.subscribe(() => this.updateCommissionValidators());
 
     // Listen to type changes to update entities list
     this.transactionForm.get('type')?.valueChanges.subscribe(type => {
@@ -352,10 +383,6 @@ export class LancamentosListComponent implements OnInit {
         bankAccountControl?.setValidators(Validators.required);
       } else {
         bankAccountControl?.clearValidators();
-        // Don't clear value here if it's valid, only validators
-        if (!requiresBank && !currentAccId) {
-          // Keep existing logic if needed, but be careful not to conflict
-        }
       }
       bankAccountControl?.updateValueAndValidity();
     });
@@ -372,6 +399,34 @@ export class LancamentosListComponent implements OnInit {
         }
       }
     });
+  }
+
+  updateCommissionValidators() {
+    const hasComm = this.transactionForm.get('has_commission')?.value;
+    if (!hasComm) return;
+
+    const type = this.transactionForm.get('commission_type')?.value;
+    const amount = this.transactionForm.get('amount')?.value || 0;
+    const percControl = this.transactionForm.get('commission_percentage');
+
+    percControl?.clearValidators();
+    if (type === 'percentage') {
+      percControl?.setValidators([Validators.required, Validators.min(0.01), Validators.max(100)]);
+    } else {
+      percControl?.setValidators([Validators.required, Validators.min(0.01), Validators.max(amount)]);
+    }
+    percControl?.updateValueAndValidity();
+  }
+
+  get calculatedCommissionAmount(): number {
+    const value = this.transactionForm.get('commission_percentage')?.value || 0;
+    const type = this.transactionForm.get('commission_type')?.value;
+    const totalAmount = this.transactionForm.get('amount')?.value || 0;
+
+    if (type === 'percentage') {
+      return (totalAmount * value) / 100;
+    }
+    return value;
   }
 
   private loadParties() {
@@ -526,7 +581,11 @@ export class LancamentosListComponent implements OnInit {
           payment_method: null,
           bank_account_id: null,
           attachment_url: '',
-          effectivate: false
+          effectivate: false,
+          has_commission: false,
+          commission_seller_id: null,
+          commission_percentage: null,
+          commission_type: 'percentage'
         });
 
         this.filteredPaymentMethods = [...this.paymentMethods];
@@ -777,7 +836,11 @@ export class LancamentosListComponent implements OnInit {
       payment_method: isPaid ? raw.payment_method || null : null,
       bank_account_id: isPaid ? raw.bank_account_id || null : null,
       attachment_url: row.attachment_url || '',
-      effectivate: false
+      effectivate: false,
+      has_commission: !!raw.has_commission,
+      commission_seller_id: raw.commission_seller_id || null,
+      commission_type: raw.commission_type || 'percentage',
+      commission_percentage: (raw.commission_type === 'fixed' ? raw.commission_amount : raw.commission_rate) || null
     });
 
     this.updateEntitiesList(this.transactionForm.get('type')?.value || 'PAYABLE', false);
@@ -906,8 +969,27 @@ export class LancamentosListComponent implements OnInit {
         nf: formValue.nf,
         payment_method: formValue.payment_method,
         bank_account_id: formValue.bank_account_id,
-        attachment_url: this.evidenceFiles.length > 0 ? JSON.stringify(this.evidenceFiles.map(f => ({ url: f.url, filename: f.name }))) : (formValue.attachment_url || '')
+        attachment_url: this.evidenceFiles.length > 0 ? JSON.stringify(this.evidenceFiles.map(f => ({ url: f.url, filename: f.name }))) : (formValue.attachment_url || ''),
+        has_commission: formValue.has_commission,
+        commission_seller_id: formValue.has_commission ? formValue.commission_seller_id : null,
+        commission_rate: null,
+        commission_amount: null,
+        commission_type: formValue.has_commission ? formValue.commission_type : null
       };
+
+      if (formValue.has_commission) {
+        const type = formValue.commission_type;
+        const inputVal = formValue.commission_percentage || 0;
+        const totalAmount = formValue.amount || 0;
+
+        if (type === 'percentage') {
+          payload.commission_rate = inputVal;
+          payload.commission_amount = (totalAmount * inputVal) / 100;
+        } else {
+          payload.commission_amount = inputVal;
+          payload.commission_rate = totalAmount > 0 ? (inputVal / totalAmount) * 100 : 0;
+        }
+      }
 
       if (formValue.tag && Array.isArray(formValue.tag) && formValue.tag.length > 0) {
         payload.tags = formValue.tag;
@@ -1024,6 +1106,11 @@ export class LancamentosListComponent implements OnInit {
     this.financial.getTags(storeId).subscribe(data => {
       this.tags = data;
       this.tagOptions = data.map(t => ({ value: t.id || t.id_code || '', text: t.name }));
+    });
+
+    // Load Salespeople
+    this.financial.getParties(storeId, 'salesperson').subscribe(data => {
+      this.salespeople = data.map(p => ({ id: p.id_code, name: p.name }));
     });
   }
 

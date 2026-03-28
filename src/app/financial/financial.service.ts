@@ -337,4 +337,9 @@ export class FinancialService {
   //     { id: 'sb-002', date: new Date(), bank: 'Banco B', balance: 8200, notes: 'Pagamento de fornecedor' },
   //   ]);
   // }
+
+  getCommissions(storeId: string, filters?: { status?: string, commission_seller_id?: string, source_transaction_id_code?: string, page?: number, limit?: number }): Observable<any> {
+    const params: any = { store_id: storeId, ...filters };
+    return this.http.get<any>(`${this.API_BASE_URL}/financial/commissions`, { headers: this.getHeaders(), params });
+  }
 }
