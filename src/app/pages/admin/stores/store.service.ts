@@ -92,4 +92,9 @@ export class StoreService {
     const headers = { 'Authorization': `Bearer ${this.authService.getAuthToken()}` };
     return this.http.put(`${this.API_BASE_URL}/stores/${idCode}/schedule`, schedule, { headers });
   }
+
+  removeStoreMember(storeIdCode: string, memberIdCode: string): Observable<any> {
+    const headers = { 'Authorization': `Bearer ${this.authService.getAuthToken()}` };
+    return this.http.delete(`${this.API_BASE_URL}/stores/${storeIdCode}/members/${memberIdCode}`, { headers });
+  }
 }

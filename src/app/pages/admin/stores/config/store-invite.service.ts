@@ -15,6 +15,9 @@ export interface StoreInvite {
     created_at: string;
     user_exists?: boolean; // De resolve (público)
     invited_user_exists?: boolean; // De list (admin)
+    member_id_code?: string; // Deprecated
+    store_member_id_code?: string; // ID do vínculo real
+    store_member_status?: string;
     store?: {
         id_code: string;
         name: string;

@@ -1,8 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { StoreService, Store } from '../../../pages/admin/stores/store.service';
-import { LocalStorageService } from '../../../shared/services/local-storage.service';
+import { StoreContextService } from '../../../shared/services/store-context.service';
 import { FinancialService } from '../../financial.service';
 import { ViaCepService } from '../../../shared/services/viacep.service';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -47,8 +47,8 @@ export class FinancialSettingsComponent implements OnInit {
 
   banner_url: string = '';
   logo_url: string | null = null;
-  
-  private readonly STORE_KEY = 'selectedStore';
+
+  private storeContext = inject(StoreContextService);
   selectedStore: Store | null = null;
 
   categories: FinancialCategory[] = [];
@@ -107,7 +107,6 @@ export class FinancialSettingsComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private storeService: StoreService,
-    private localStorageService: LocalStorageService,
     private financialService: FinancialService,
     private viaCepService: ViaCepService,
     private translate: TranslateService,
@@ -159,43 +158,45 @@ export class FinancialSettingsComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.loadStoreData();
+    this.storeContext.activeStore$.subscribe(store => {
+      this.selectedStore = store as unknown as Store;
+      if (store?.id_code) {
+        this.fetchStoreById(store.id_code);
+        this.loadBankAccounts();
+        this.loadCategories();
+        this.loadCostCenters();
+        this.loadTags();
+      } else {
+        this.loadInitialStores();
+      }
+    });
   }
 
-  loadStoreData() {
+  loadInitialStores() {
     this.isLoading = true;
-    const selectedStore = this.localStorageService.getData<Store>(this.STORE_KEY);
-    this.selectedStore = selectedStore;
-    
-    if (selectedStore && selectedStore.id_code) {
-      this.fetchStoreById(selectedStore.id_code);
-      this.loadBankAccounts();
-      this.loadCategories();
-      this.loadCostCenters();
-      this.loadTags();
-      this.isLoading = false;
-    } else {
-      this.storeService.getStores().subscribe({
-        next: (stores) => {
-          if (stores && stores.length > 0) {
-            this.selectedStore = stores[0];
-            this.fetchStoreById(stores[0].id_code);
-            this.loadBankAccounts();
-            this.loadCategories();
-            this.loadCostCenters();
-            this.loadTags();
-          } else {
-            this.selectedStore = null;
-          }
-          this.isLoading = false;
-        },
-        error: (err) => {
-          console.error('Error fetching stores', err);
+    this.storeService.getStores().subscribe({
+      next: (stores) => {
+        if (stores && stores.length > 0) {
+          // If no active store is set but there are stores, we could set the first one,
+          // but usually it's handled by some layout component.
+          // For now, just show the first one if we are in settings.
+          this.selectedStore = stores[0];
+          this.fetchStoreById(stores[0].id_code);
+          this.loadBankAccounts();
+          this.loadCategories();
+          this.loadCostCenters();
+          this.loadTags();
+        } else {
           this.selectedStore = null;
-          this.isLoading = false;
         }
-      });
-    }
+        this.isLoading = false;
+      },
+      error: (err) => {
+        console.error('Error fetching stores', err);
+        this.selectedStore = null;
+        this.isLoading = false;
+      }
+    });
   }
 
   fetchStoreById(idCode: string) {
@@ -242,7 +243,7 @@ export class FinancialSettingsComponent implements OnInit {
   onCepBlur(event: any) {
     const cep = event.target.value;
     if (!cep) return;
-    
+
     const cleanCep = cep.replace(/\D/g, '');
     if (cleanCep.length !== 8) return;
 
@@ -264,7 +265,7 @@ export class FinancialSettingsComponent implements OnInit {
   onCnpjInput(event: any) {
     let value = event.target.value.replace(/\D/g, '');
     if (value.length > 14) value = value.slice(0, 14);
-    
+
     // Mask: 00.000.000/0000-00
     if (value.length > 12) {
       value = value.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2}).*/, '$1.$2.$3/$4-$5');
@@ -275,7 +276,7 @@ export class FinancialSettingsComponent implements OnInit {
     } else if (value.length > 2) {
       value = value.replace(/^(\d{2})(\d{0,3}).*/, '$1.$2');
     }
-    
+
     this.storeForm.get('cnpj')?.setValue(value, { emitEvent: false });
   }
 
@@ -327,14 +328,14 @@ export class FinancialSettingsComponent implements OnInit {
           const createdStore = response && response.data ? (response.data.store || response.data) : null;
           if (createdStore && createdStore.id_code) {
             this.selectedStore = createdStore;
-            this.localStorageService.saveData(this.STORE_KEY, createdStore);
+            this.storeContext.setActiveStore(createdStore as any);
             this.populateForm(createdStore);
             this.loadBankAccounts();
             this.loadCategories();
             this.loadCostCenters();
             this.loadTags();
           } else {
-            this.loadStoreData();
+            this.loadInitialStores();
           }
         },
         error: (err) => {
@@ -457,7 +458,7 @@ export class FinancialSettingsComponent implements OnInit {
 
     request$.subscribe({
       next: () => {
-        this.toastService.triggerToast('success', 'Sucesso', 
+        this.toastService.triggerToast('success', 'Sucesso',
           this.editingBankAccount ? 'Conta atualizada com sucesso.' : 'Conta criada com sucesso.');
         this.loadBankAccounts();
         this.cancelBankAccountForm();
@@ -495,12 +496,12 @@ export class FinancialSettingsComponent implements OnInit {
       }
     });
   }
-  
+
   cancelDeleteBankAccount() {
     this.isDeleteBankAccountModalOpen = false;
     this.bankAccountToDelete = null;
   }
-  
+
   // --- Categories Logic ---
 
   loadCategories() {
@@ -545,7 +546,7 @@ export class FinancialSettingsComponent implements OnInit {
 
     request$.subscribe({
       next: () => {
-        this.toastService.triggerToast('success', 'Sucesso', 
+        this.toastService.triggerToast('success', 'Sucesso',
           this.editingCategory ? 'Categoria atualizada.' : 'Categoria criada.');
         this.loadCategories();
         this.cancelCategoryForm();
@@ -639,7 +640,7 @@ export class FinancialSettingsComponent implements OnInit {
 
     request$.subscribe({
       next: () => {
-        this.toastService.triggerToast('success', 'Sucesso', 
+        this.toastService.triggerToast('success', 'Sucesso',
           this.editingCostCenter ? 'Centro de custo atualizado.' : 'Centro de custo criado.');
         this.loadCostCenters();
         this.cancelCostCenterForm();
@@ -733,7 +734,7 @@ export class FinancialSettingsComponent implements OnInit {
 
     request$.subscribe({
       next: () => {
-        this.toastService.triggerToast('success', 'Sucesso', 
+        this.toastService.triggerToast('success', 'Sucesso',
           this.editingTag ? 'Tag atualizada.' : 'Tag criada.');
         this.loadTags();
         this.cancelTagForm();

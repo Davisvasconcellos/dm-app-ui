@@ -1,9 +1,9 @@
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { FinancialService } from '../../financial.service';
 import { Recurrence } from '../../models/recurrence';
-import { LocalStorageService } from '../../../shared/services/local-storage.service';
+import { StoreContextService } from '../../../shared/services/store-context.service';
 import { Store } from '../../../pages/admin/stores/store.service';
 import { FinancialToastService } from '../../financial-toast.service';
 import { TranslateModule } from '@ngx-translate/core';
@@ -32,9 +32,9 @@ export class RecurrencesFormComponent implements OnInit {
   @Output() save = new EventEmitter<void>();
   @Output() cancel = new EventEmitter<void>();
 
+  private storeContext = inject(StoreContextService);
   form: FormGroup;
   selectedStore: Store | null = null;
-  STORE_KEY = 'selectedStore';
 
   // Options
   typeOptions = [
@@ -62,7 +62,6 @@ export class RecurrencesFormComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private financialService: FinancialService,
-    private localStorage: LocalStorageService,
     private toast: FinancialToastService
   ) {
     this.form = this.fb.group({
@@ -82,10 +81,12 @@ export class RecurrencesFormComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.selectedStore = this.localStorage.getData<Store>(this.STORE_KEY);
-    if (this.selectedStore?.id_code) {
-      this.loadAuxiliaryData();
-    }
+    this.storeContext.activeStore$.subscribe(store => {
+      this.selectedStore = store;
+      if (store?.id_code) {
+        this.loadAuxiliaryData();
+      }
+    });
 
     if (this.recurrence) {
       this.form.patchValue(this.recurrence);
@@ -136,7 +137,7 @@ export class RecurrencesFormComponent implements OnInit {
       cost_center_id: formValue.cost_center_id || null,
       end_date: formValue.has_end_date ? formValue.end_date : null
     };
-    
+
     // Remove UI-only fields
     delete payload.has_end_date;
 

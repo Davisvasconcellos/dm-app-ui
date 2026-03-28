@@ -1,8 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { StoreService, Store } from '../../../pages/admin/stores/store.service';
-import { LocalStorageService } from '../../../shared/services/local-storage.service';
+import { StoreContextService } from '../../../shared/services/store-context.service';
 import { FinancialService } from '../../financial.service';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { FinancialToastService } from '../../financial-toast.service';
@@ -38,12 +38,12 @@ type SortOrder = 'asc' | 'desc';
 export class FinancialPartiesComponent implements OnInit {
   partyForm: FormGroup;
   isSubmitting = false;
-  
+
   // CEP Lookup
   isLoadingCep = false;
   cepError = '';
 
-  private readonly STORE_KEY = 'selectedStore';
+  private storeContext = inject(StoreContextService);
   selectedStore: Store | null = null;
 
   parties: Party[] = [];
@@ -77,7 +77,6 @@ export class FinancialPartiesComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private storeService: StoreService,
-    private localStorageService: LocalStorageService,
     private financialService: FinancialService,
     private translate: TranslateService,
     private toastService: FinancialToastService,
@@ -106,25 +105,26 @@ export class FinancialPartiesComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.loadStoreData();
+    this.storeContext.activeStore$.subscribe(store => {
+      this.selectedStore = store as unknown as Store;
+      if (store?.id_code) {
+        this.loadParties();
+      } else {
+        this.loadInitialStores();
+      }
+    });
   }
 
-  loadStoreData() {
-    const selectedStore = this.localStorageService.getData<Store>(this.STORE_KEY);
-    this.selectedStore = selectedStore;
-    if (selectedStore && selectedStore.id_code) {
-      this.loadParties();
-    } else {
-      this.storeService.getStores().subscribe({
-        next: (stores) => {
-          if (stores && stores.length > 0) {
-            this.selectedStore = stores[0];
-            this.loadParties();
-          }
-        },
-        error: (err) => console.error('Error fetching stores', err)
-      });
-    }
+  loadInitialStores() {
+    this.storeService.getStores().subscribe({
+      next: (stores) => {
+        if (stores && stores.length > 0) {
+          this.selectedStore = stores[0];
+          this.loadParties();
+        }
+      },
+      error: (err) => console.error('Error fetching stores', err)
+    });
   }
 
   loadParties() {
@@ -158,7 +158,7 @@ export class FinancialPartiesComponent implements OnInit {
     // Filter by Search Term
     if (this.searchTerm) {
       const term = this.searchTerm.toLowerCase();
-      data = data.filter(item => 
+      data = data.filter(item =>
         item.name.toLowerCase().includes(term) ||
         (item.document && item.document.includes(term)) ||
         (item.email && item.email.toLowerCase().includes(term)) ||
@@ -195,13 +195,13 @@ export class FinancialPartiesComponent implements OnInit {
   updatePagination() {
     this.totalItems = this.filteredAndSortedData.length;
     this.totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
-    
+
     if (this.currentPage > this.totalPages && this.totalPages > 0) {
       this.currentPage = this.totalPages;
     } else if (this.currentPage < 1) {
       this.currentPage = 1;
     }
-    
+
     this.startIndex = (this.currentPage - 1) * this.itemsPerPage;
     this.endIndex = Math.min(this.startIndex + this.itemsPerPage, this.totalItems);
     this.currentData = this.filteredAndSortedData.slice(this.startIndex, this.endIndex);
@@ -298,7 +298,7 @@ export class FinancialPartiesComponent implements OnInit {
 
     request$.subscribe({
       next: () => {
-        this.toastService.triggerToast('success', 'Sucesso', 
+        this.toastService.triggerToast('success', 'Sucesso',
           this.editingParty ? 'Parceiro atualizado com sucesso.' : 'Parceiro criado com sucesso.');
         this.loadParties();
         this.cancelPartyForm();
@@ -316,14 +316,14 @@ export class FinancialPartiesComponent implements OnInit {
   onCepInput(event: any) {
     const input = event.target as HTMLInputElement;
     let cep = input.value.replace(/\D/g, '');
-    
+
     if (cep.length > 5) {
       cep = `${cep.slice(0, 5)}-${cep.slice(5, 8)}`;
     }
-    
+
     this.partyForm.patchValue({ zip_code: cep }, { emitEvent: false });
     this.cepError = '';
-    
+
     if (cep.replace(/\D/g, '').length === 8) {
       this.searchAddressByCep(cep);
     }
@@ -331,7 +331,7 @@ export class FinancialPartiesComponent implements OnInit {
 
   searchAddressByCep(cep: string) {
     const cleanCep = cep.replace(/\D/g, '');
-    
+
     if (!this.viaCepService.isValidCep(cleanCep)) {
       this.cepError = 'CEP inválido';
       return;
@@ -350,7 +350,7 @@ export class FinancialPartiesComponent implements OnInit {
           address_state: addressData.state,
           zip_code: this.viaCepService.formatCep(addressData.zipCode)
         });
-        
+
         this.disableAddressFields();
         this.isLoadingCep = false;
       },

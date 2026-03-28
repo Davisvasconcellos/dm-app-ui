@@ -38,6 +38,11 @@ export class HomeFinancialComponent implements OnInit {
     });
   }
 
+  get isAdmin(): boolean {
+    const role = this.currentUser?.role;
+    return role === 'admin' || role === 'master' || role === 'manager';
+  }
+
   private loadStores(): void {
     this.isLoadingStores = true;
     const user = this.authService.getCurrentUser();
@@ -76,8 +81,6 @@ export class HomeFinancialComponent implements OnInit {
       }
     });
   }
-
-
 
   openStoreModal(): void { this.showStoreModal = true; }
   closeStoreModal(): void { this.showStoreModal = false; }

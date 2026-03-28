@@ -34,65 +34,40 @@
       <div
         class="overflow-x-auto pb-2 lg:w-[260px] shrink-0 border-b border-gray-200 lg:border-b-0 lg:border-r lg:pr-8 dark:border-gray-800">
         <nav class="flex flex-row w-full lg:flex-col lg:space-y-1">
-          <button (click)="setActiveTab('establishment')"
-            [ngClass]="activeTab === 'establishment' ? 'text-primary bg-primary/10 dark:bg-primary/20' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/5'"
-            class="whitespace-nowrap lg:w-full rounded-lg px-4 py-3 text-left text-sm font-medium transition-colors">
-            Estabelecimento
-          </button>
-          <button (click)="setActiveTab('company')"
-            [ngClass]="activeTab === 'company' ? 'text-primary bg-primary/10 dark:bg-primary/20' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/5'"
-            class="whitespace-nowrap lg:w-full rounded-lg px-4 py-3 text-left text-sm font-medium transition-colors">
-            Dados da Empresa
-          </button>
-          <button (click)="setActiveTab('collaborators')"
-            [ngClass]="activeTab === 'collaborators' ? 'text-primary bg-primary/10 dark:bg-primary/20' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/5'"
-            class="whitespace-nowrap lg:w-full rounded-lg px-4 py-3 text-left text-sm font-medium transition-colors">
-            Colaboradores
-          </button>
-          <button (click)="setActiveTab('categories')"
-            [ngClass]="activeTab === 'categories' ? 'text-primary bg-primary/10 dark:bg-primary/20' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/5'"
-            class="whitespace-nowrap lg:w-full rounded-lg px-4 py-3 text-left text-sm font-medium transition-colors">
-            Categorias
-          </button>
-          <button (click)="setActiveTab('cost-centers')"
-            [ngClass]="activeTab === 'cost-centers' ? 'text-primary bg-primary/10 dark:bg-primary/20' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/5'"
-            class="whitespace-nowrap lg:w-full rounded-lg px-4 py-3 text-left text-sm font-medium transition-colors">
-            Centros de Custo
-          </button>
-          <button (click)="setActiveTab('tags')"
-            [ngClass]="activeTab === 'tags' ? 'text-primary bg-primary/10 dark:bg-primary/20' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/5'"
-            class="whitespace-nowrap lg:w-full rounded-lg px-4 py-3 text-left text-sm font-medium transition-colors">
-            Tags
-          </button>
-          <button (click)="setActiveTab('bank-accounts')"
-            [ngClass]="activeTab === 'bank-accounts' ? 'text-primary bg-primary/10 dark:bg-primary/20' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/5'"
-            class="whitespace-nowrap lg:w-full rounded-lg px-4 py-3 text-left text-sm font-medium transition-colors">
-            Contas Bancárias
-          </button>
-          <button (click)="setActiveTab('hours')"
-            [ngClass]="activeTab === 'hours' ? 'text-primary bg-primary/10 dark:bg-primary/20' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/5'"
-            class="flex items-center justify-between whitespace-nowrap lg:w-full rounded-lg px-4 py-3 text-left text-sm font-medium transition-colors">
-            <span>Horários</span>
+          @for (tab of tabs; track tab.id) {
+          <button (click)="!tab.soon ? setActiveTab(tab.id) : null"
+            [ngClass]="activeTab === tab.id ? 'text-primary bg-primary/10 dark:bg-primary/20' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/5'"
+            class="flex items-center justify-between whitespace-nowrap lg:w-full rounded-lg px-4 py-3 text-left text-sm font-medium transition-colors"
+            [disabled]="tab.soon">
+            <div class="flex items-center gap-2">
+              <span>{{ tab.label }}</span>
+              <!-- Validation Indicators -->
+              @if (!tab.soon && tab.required) {
+              @if (isTabValid(tab.id)) {
+              <span class="text-success-500" title="Preenchimento OK">
+                <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path>
+                </svg>
+              </span>
+              } @else {
+              <span class="text-warning-500 animate-pulse" title="Pendência de campos obrigatórios">
+                <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
+                  </path>
+                </svg>
+              </span>
+              }
+              }
+            </div>
+            @if (tab.soon) {
             <span
-              class="ml-2 px-1.5 py-0.5 text-[9px] bg-brand-100 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400 rounded uppercase font-bold shrink-0">em
-              breve</span>
+              class="ml-2 px-1.5 py-0.5 text-[9px] bg-brand-100 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400 rounded uppercase font-bold shrink-0">
+              em breve
+            </span>
+            }
           </button>
-          <button (click)="setActiveTab('payments')"
-            [ngClass]="activeTab === 'payments' ? 'text-primary bg-primary/10 dark:bg-primary/20' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/5'"
-            class="flex items-center justify-between whitespace-nowrap lg:w-full rounded-lg px-4 py-3 text-left text-sm font-medium transition-colors">
-            <span>Pagamentos</span>
-            <span
-              class="ml-2 px-1.5 py-0.5 text-[9px] bg-brand-100 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400 rounded uppercase font-bold shrink-0">em
-              breve</span>
-          </button>
-          <button (click)="setActiveTab('delivery')"
-            [ngClass]="activeTab === 'delivery' ? 'text-primary bg-primary/10 dark:bg-primary/20' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/5'"
-            class="flex items-center justify-between whitespace-nowrap lg:w-full rounded-lg px-4 py-3 text-left text-sm font-medium transition-colors">
-            <span>Delivery</span>
-            <span
-              class="ml-2 px-1.5 py-0.5 text-[9px] bg-brand-100 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400 rounded uppercase font-bold shrink-0">em
-              breve</span>
-          </button>
+          }
         </nav>
       </div>
 
@@ -174,17 +149,17 @@
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-3 mb-6">
           <div>
             <app-label>Facebook</app-label>
-            <input type="text" [(ngModel)]="facebook_handle" name="facebook_handle" placeholder="Ex: bardofranca"
+            <input type="text" [(ngModel)]="facebook_handle" name="facebook_handle" placeholder="Ex: /seufacebook"
               class="w-full rounded-lg border-[1.5px] border-gray-300 bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-gray-200 dark:border-gray-800 dark:bg-gray-800 dark:text-white dark:focus:border-primary">
           </div>
           <div>
             <app-label>Instagram</app-label>
-            <input type="text" [(ngModel)]="instagram_handle" name="instagram_handle" placeholder="Ex: @francabar"
+            <input type="text" [(ngModel)]="instagram_handle" name="instagram_handle" placeholder="Ex: @seuinstagram"
               class="w-full rounded-lg border-[1.5px] border-gray-300 bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-gray-200 dark:border-gray-800 dark:bg-gray-800 dark:text-white dark:focus:border-primary">
           </div>
           <div>
             <app-label>Site</app-label>
-            <input type="text" [(ngModel)]="website" name="website" placeholder="Ex: https://bardofranca.com.br"
+            <input type="text" [(ngModel)]="website" name="website" placeholder="Ex: https://seusite.com.br"
               class="w-full rounded-lg border-[1.5px] border-gray-300 bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-gray-200 dark:border-gray-800 dark:bg-gray-800 dark:text-white dark:focus:border-primary">
           </div>
         </div>
@@ -236,7 +211,7 @@
                     </td>
                     <td class="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <button (click)="confirmDeleteCollaborator(colab)"
-                        class="text-gray-500 hover:text-error-500 transition-colors">
+                        class="text-gray-500 hover:text-error-500 transition-colors" title="Excluir Colaborador">
                         <svg class="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
@@ -1263,10 +1238,10 @@
             class="rounded-lg border border-gray-300 bg-white px-6 py-2 text-sm font-medium text-gray-800 hover:bg-gray-100 dark:bg-gray-800 dark:text-white dark:border-gray-700 dark:hover:bg-gray-700">
             Cancelar
           </button>
-          <button type="button" (click)="onSave()"
-            [disabled]="(!cnpjReadonly && cnpjComplete && !cnpjValid) || isSubmitting"
+          <button type="button" (click)="isCreate && activeTab === 'establishment' ? nextTab() : onSave()"
+            [disabled]="isSubmitting || !isTabValid(activeTab) || (activeTab === 'company' && !isAllRequiredTabsValid)"
             class="rounded-lg bg-brand-500 px-6 py-2 text-sm font-medium text-white hover:bg-brand-600 disabled:opacity-60 disabled:cursor-not-allowed">
-            Salvar
+            {{ isCreate && activeTab === 'establishment' ? 'Avançar' : 'Salvar' }}
           </button>
         </div>
         }

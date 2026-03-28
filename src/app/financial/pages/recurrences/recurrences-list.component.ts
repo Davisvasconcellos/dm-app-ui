@@ -1,10 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { FinancialService } from '../../financial.service';
 import { Recurrence } from '../../models/recurrence';
-import { LocalStorageService } from '../../../shared/services/local-storage.service';
+import { StoreContextService } from '../../../shared/services/store-context.service';
 import { Store } from '../../../pages/admin/stores/store.service';
 import { ModalComponent } from '../../../shared/components/ui/modal/modal.component';
 import { RecurrencesFormComponent } from './recurrences-form.component';
@@ -27,7 +27,7 @@ import { FinancialToastService } from '../../financial-toast.service';
 export class RecurrencesListComponent implements OnInit {
   recurrences: Recurrence[] = [];
   selectedStore: Store | null = null;
-  STORE_KEY = 'selectedStore';
+  private storeContext = inject(StoreContextService);
 
   isFormVisible = false;
   editingRecurrence: Recurrence | null = null;
@@ -37,15 +37,18 @@ export class RecurrencesListComponent implements OnInit {
 
   constructor(
     private financialService: FinancialService,
-    private localStorage: LocalStorageService,
     private toast: FinancialToastService
-  ) {}
+  ) { }
 
   ngOnInit() {
-    this.selectedStore = this.localStorage.getData<Store>(this.STORE_KEY);
-    if (this.selectedStore?.id_code) {
-      this.loadRecurrences();
-    }
+    this.storeContext.activeStore$.subscribe(store => {
+      this.selectedStore = store;
+      if (store?.id_code) {
+        this.loadRecurrences();
+      } else {
+        this.recurrences = [];
+      }
+    });
   }
 
   loadRecurrences() {
@@ -89,7 +92,7 @@ export class RecurrencesListComponent implements OnInit {
     if (recurrence.status === 'finished') return;
 
     const newStatus = recurrence.status === 'active' ? 'paused' : 'active';
-    
+
     this.financialService.updateRecurrence(recurrence.id, { status: newStatus }).subscribe({
       next: () => {
         recurrence.status = newStatus;

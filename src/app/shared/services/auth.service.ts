@@ -276,11 +276,11 @@ export class AuthService {
     const user = this.getCurrentUser();
     if (!user) return false;
 
-    // Master e Admin global têm acesso a tudo
-    if (user.role === 'master' || user.role === 'admin') return true;
+    // Master tem acesso a tudo. Admin agora segue as regras de módulos/permissões.
+    if (user.role === 'master') return true;
 
     // 1. Verificação Global (Módulos fixos no perfil)
-    const hasGlobal = user.modules?.some(m => m.slug === moduleSlug) ?? false;
+    const hasGlobal = user.modules?.some(m => m.slug === moduleSlug && m.active !== false) ?? false;
     if (hasGlobal) return true;
 
     // 2. Verificação por Unidade Ativa 🏪🚀

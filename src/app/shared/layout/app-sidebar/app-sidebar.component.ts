@@ -386,6 +386,21 @@ export class AppSidebarComponent implements OnInit, OnDestroy {
       })
     );
 
+    // Watch for sidebar expansion to refresh menu heights (fixes the "double click" bug)
+    this.subscription.add(
+      combineLatest([this.isExpanded$, this.isMobileOpen$, this.isHovered$]).subscribe(() => {
+        if (this.openSubmenu) {
+          setTimeout(() => {
+            const el = document.getElementById(this.openSubmenu as string);
+            if (el) {
+              this.subMenuHeights[this.openSubmenu as string] = el.scrollHeight;
+              this.cdr.detectChanges();
+            }
+          }, 310); // Wait for sidebar transition (300ms)
+        }
+      })
+    );
+
     // If no user loaded yet, still compute base menu without finance
     this.applyRoleFilter();
   }

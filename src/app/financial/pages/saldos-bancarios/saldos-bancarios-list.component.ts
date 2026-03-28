@@ -1,4 +1,4 @@
-import { Component, CUSTOM_ELEMENTS_SCHEMA, ElementRef, OnInit, ViewChild, ChangeDetectorRef, NgZone } from '@angular/core';
+import { Component, CUSTOM_ELEMENTS_SCHEMA, ElementRef, OnInit, ViewChild, ChangeDetectorRef, NgZone, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -9,6 +9,8 @@ import { BadgeComponent } from '../../../shared/components/ui/badge/badge.compon
 import { DropdownComponent } from '../../../shared/components/ui/dropdown/dropdown.component';
 import { DropdownItemComponent } from '../../../shared/components/ui/dropdown/dropdown-item/dropdown-item.component';
 import { DatePickerComponent } from '../../../shared/components/form/date-picker/date-picker.component';
+import { StoreContextService } from '../../../shared/services/store-context.service';
+import { Store } from '../../../pages/admin/stores/store.service';
 
 import {
   NgApexchartsModule,
@@ -66,7 +68,7 @@ export class SaldosBancariosListComponent implements OnInit {
   selectedStore: any = null;
   selectedAccount: any = null;
   isLoadingTransactions = false;
-  private readonly STORE_KEY = 'selectedStore';
+  private storeContext = inject(StoreContextService);
 
   allData: Transaction[] = [];
   paginatedData: Transaction[] = [];
@@ -156,7 +158,15 @@ export class SaldosBancariosListComponent implements OnInit {
   ngOnInit() {
     // Initialize dates based on default interval
     this.onDateIntervalChange();
-    this.loadBankAccounts();
+    this.storeContext.activeStore$.subscribe(store => {
+      this.selectedStore = store as unknown as Store;
+      if (this.selectedStore?.id_code) {
+        this.loadBankAccounts();
+      } else {
+        this.bankAccounts = [];
+        this.allData = [];
+      }
+    });
   }
 
   openDeleteModal(row: Transaction) {
@@ -403,27 +413,23 @@ export class SaldosBancariosListComponent implements OnInit {
   }
 
   loadBankAccounts() {
-    const storedStore = localStorage.getItem(this.STORE_KEY);
-    if (storedStore) {
-      this.selectedStore = JSON.parse(storedStore);
-      if (this.selectedStore.id_code) {
-        this.financialService.getBankAccounts(this.selectedStore.id_code).subscribe({
-          next: (accounts) => {
-            this.ngZone.run(() => {
-              this.bankAccounts = accounts.map(account => ({
-                ...account,
-                balance: account.current_balance !== undefined ? account.current_balance : (account.balance !== undefined ? account.balance : parseFloat(account.initial_balance)),
-                img: '/images/brand/brand-04.svg'
-              }));
+    if (this.selectedStore?.id_code) {
+      this.financialService.getBankAccounts(this.selectedStore.id_code).subscribe({
+        next: (accounts) => {
+          this.ngZone.run(() => {
+            this.bankAccounts = accounts.map(account => ({
+              ...account,
+              balance: account.current_balance !== undefined ? account.current_balance : (account.balance !== undefined ? account.balance : parseFloat(account.initial_balance)),
+              img: '/images/brand/brand-04.svg'
+            }));
 
-              if (this.bankAccounts.length > 0) {
-                this.selectAccount(this.bankAccounts[0]);
-              }
-            });
-          },
-          error: (err) => console.error('Error fetching bank accounts', err)
-        });
-      }
+            if (this.bankAccounts.length > 0) {
+              this.selectAccount(this.bankAccounts[0]);
+            }
+          });
+        },
+        error: (err) => console.error('Error fetching bank accounts', err)
+      });
     }
   }
 

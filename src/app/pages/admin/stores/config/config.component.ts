@@ -59,6 +59,20 @@ export class ConfigComponent implements OnInit, AfterViewInit, OnDestroy {
   cnpjComplete: boolean = false;
   isSubmitting: boolean = false;
 
+  // Tab Navigation and Validation
+  tabs = [
+    { id: 'establishment', label: 'Estabelecimento', required: true },
+    { id: 'company', label: 'Dados da Empresa', required: true },
+    { id: 'collaborators', label: 'Colaboradores', required: false },
+    { id: 'categories', label: 'Categorias', required: false },
+    { id: 'cost-centers', label: 'Centros de Custo', required: false },
+    { id: 'tags', label: 'Tags', required: false },
+    { id: 'bank-accounts', label: 'Contas Bancárias', required: false },
+    { id: 'hours', label: 'Horários', required: false, soon: true },
+    { id: 'payments', label: 'Pagamentos', soon: true },
+    { id: 'delivery', label: 'Delivery', soon: true }
+  ];
+
   // Financial Injections
   private financialService = inject(FinancialService);
   private translate = inject(TranslateService);
@@ -692,14 +706,19 @@ export class ConfigComponent implements OnInit, AfterViewInit, OnDestroy {
         // Pendentes são aqueles que NÃO foram aceitos
         this.pendingInvites = allInvites.filter(i => i.status !== 'accepted');
 
-        // Colaboradores são os que já aceitaram
-        this.collaborators = allInvites.filter(i => i.status === 'accepted').map(i => ({
-          id: i.id_code,
-          name: i.invited_email.split('@')[0], // Fallback name
-          email: i.invited_email,
-          role: i.role,
-          permissions: i.permissions
-        }));
+        // Colaboradores são os que já aceitaram e estão ativos
+        this.collaborators = allInvites.filter(i => i.status === 'accepted' && i.store_member_status === 'active').map(i => {
+          const memberId = i.store_member_id_code || i.member_id_code;
+
+          return {
+            id: i.id_code,
+            member_id: memberId,
+            name: i.invited_email.split('@')[0], // Fallback name
+            email: i.invited_email,
+            role: i.role,
+            permissions: i.permissions
+          };
+        });
       },
       error: (err) => {
         console.error('Error loading invites', err);
@@ -799,6 +818,40 @@ export class ConfigComponent implements OnInit, AfterViewInit, OnDestroy {
     return new Date(date) < new Date();
   }
 
+  isTabValid(tabId: string): boolean {
+    if (tabId === 'establishment') {
+      const cap = parseInt(this.capacity);
+      return !!this.establishmentName && !isNaN(cap) && cap > 0 && !!this.establishmentType;
+    }
+    if (tabId === 'company') {
+      return !!this.companyName &&
+        !!this.cnpj && this.cnpjValid &&
+        !!this.phone &&
+        !!this.email && /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(this.email) &&
+        !!this.zip_code &&
+        !!this.address_street &&
+        !!this.address_number &&
+        !!this.address_neighborhood &&
+        !!this.address_city &&
+        !!this.address_state && this.address_state.length === 2;
+    }
+    return true;
+  }
+
+  get isAllRequiredTabsValid(): boolean {
+    return this.isTabValid('establishment') && this.isTabValid('company');
+  }
+
+  nextTab() {
+    const currentIndex = this.tabs.findIndex(t => t.id === this.activeTab);
+    if (currentIndex < this.tabs.length - 1) {
+      const next = this.tabs[currentIndex + 1];
+      if (!next.soon) {
+        this.setActiveTab(next.id);
+      }
+    }
+  }
+
   confirmDeleteCollaborator(collaborator: any) {
     this.collaboratorToDelete = collaborator;
     this.isDeleteCollaboratorModalOpen = true;
@@ -806,10 +859,35 @@ export class ConfigComponent implements OnInit, AfterViewInit, OnDestroy {
 
   deleteCollaborator() {
     if (!this.collaboratorToDelete) return;
-    this.collaborators = this.collaborators.filter(c => c.id !== this.collaboratorToDelete.id);
-    this.toast.triggerToast('success', 'Sucesso', 'Colaborador removido.');
-    this.isDeleteCollaboratorModalOpen = false;
-    this.collaboratorToDelete = null;
+
+    const storeId = this.route.snapshot.paramMap.get('id_code') ||
+      this.route.snapshot.paramMap.get('id') ||
+      this.localStorageService.getData<Store>(this.STORE_KEY)?.id_code;
+
+    if (!storeId) {
+      this.toast.triggerToast('error', 'Erro', 'ID da loja não encontrado.');
+      return;
+    }
+
+    if (!this.collaboratorToDelete.member_id) {
+      this.toast.triggerToast('error', 'Erro', 'ID do membro não encontrado para este colaborador.');
+      return;
+    }
+
+    this.isSubmitting = true;
+    this.storeService.removeStoreMember(storeId, this.collaboratorToDelete.member_id).subscribe({
+      next: () => {
+        this.collaborators = this.collaborators.filter(c => c.id !== this.collaboratorToDelete.id);
+        this.toast.triggerToast('success', 'Sucesso', 'Colaborador removido.');
+        this.isDeleteCollaboratorModalOpen = false;
+        this.collaboratorToDelete = null;
+        this.isSubmitting = false;
+      },
+      error: () => {
+        this.isSubmitting = false;
+        this.toast.triggerToast('error', 'Erro', 'Falha ao remover colaborador.');
+      }
+    });
   }
 
   cancelDeleteCollaborator() {
@@ -872,6 +950,12 @@ export class ConfigComponent implements OnInit, AfterViewInit, OnDestroy {
       this.toast.triggerToast('error', 'CNPJ inválido', 'Verifique o CNPJ informado.');
       return;
     }
+
+    if (!this.isAllRequiredTabsValid) {
+      this.toast.triggerToast('warning', 'Campos pendentes', 'Por favor, preencha todos os campos obrigatórios nas abas de Estabelecimento e Dados da Empresa.');
+      return;
+    }
+
     this.isSubmitting = true;
     const storeData: Partial<StoreDetails> = {
       name: this.establishmentName,

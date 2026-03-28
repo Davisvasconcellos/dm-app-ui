@@ -1,11 +1,11 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { FinancialService } from '../../financial.service';
 import { FinancialToastService } from '../../financial-toast.service';
 import { ContaPagar, StatusConta, TransactionsSummary } from '../../models/conta-pagar';
-import { LocalStorageService } from '../../../shared/services/local-storage.service';
+import { StoreContextService } from '../../../shared/services/store-context.service';
 import { Store } from '../../../pages/admin/stores/store.service';
 import { PopoverComponent } from '../../../shared/components/ui/popover/popover/popover.component';
 import { ModalComponent } from '../../../shared/components/ui/modal/modal.component';
@@ -63,7 +63,7 @@ export class LancamentosListComponent implements OnInit {
   filteredBankAccounts: any[] = [];
   filteredPaymentMethods: any[] = [];
   selectedBankAccountBalance: number | null = null;
-  
+
   // Data Sources
   suppliers: any[] = [];
   customers: any[] = [];
@@ -76,18 +76,18 @@ export class LancamentosListComponent implements OnInit {
   tags: any[] = [];
   tagOptions: { value: string; text: string }[] = [];
   entityOptions: Option[] = [];
-  
+
   allData: ContaPagar[] = [];
   paginatedData: ContaPagar[] = [];
-  
+
   itemsPerPage = 10;
   currentPage = 1;
   totalPages = 1;
   totalItems = 0;
-  
+
   sortKey: string | null = null;
   sortOrder: 'asc' | 'desc' = 'asc';
-  
+
   searchTerm: string = '';
 
   // Filtros
@@ -117,8 +117,8 @@ export class LancamentosListComponent implements OnInit {
   selectedEvidenceItems: { name: string; url?: string; type: 'image' | 'pdf' | 'file'; extension?: string }[] = [];
   isDeleteModalOpen = false;
   transactionToDelete: ContaPagar | null = null;
-  
-  private readonly STORE_KEY = 'selectedStore';
+
+  private storeContext = inject(StoreContextService);
   selectedStore: Store | null = null;
 
   summary: TransactionsSummary | null = null;
@@ -199,10 +199,9 @@ export class LancamentosListComponent implements OnInit {
   }
 
   constructor(
-    private financial: FinancialService, 
-    private fb: FormBuilder, 
+    private financial: FinancialService,
+    private fb: FormBuilder,
     private cdr: ChangeDetectorRef,
-    private localStorageService: LocalStorageService,
     private toastService: FinancialToastService,
     private uploadService: UploadService,
     private translate: TranslateService
@@ -230,7 +229,7 @@ export class LancamentosListComponent implements OnInit {
 
         // Load bank accounts
         this.loadBankAccounts();
-        
+
         // Atualiza paginação com os dados carregados
         this.updatePagination();
       },
@@ -255,9 +254,9 @@ export class LancamentosListComponent implements OnInit {
             balance: account.current_balance !== undefined ? account.current_balance : (account.balance !== undefined ? account.balance : parseFloat(account.initial_balance)),
             allowed_payment_methods: account.allowed_payment_methods
           }));
-          
+
           this.filteredBankAccounts = [...this.bankAccounts];
-          
+
           // Update balance if there's a selected account (e.g. during edit)
           const currentId = this.transactionForm.get('bank_account_id')?.value;
           if (currentId) {
@@ -334,7 +333,7 @@ export class LancamentosListComponent implements OnInit {
     this.transactionForm.get('payment_method')?.valueChanges.subscribe(method => {
       // Filter Bank Accounts based on selected method
       if (method) {
-        this.filteredBankAccounts = this.bankAccounts.filter(acc => 
+        this.filteredBankAccounts = this.bankAccounts.filter(acc =>
           acc.allowed_payment_methods?.includes(method)
         );
       } else {
@@ -355,7 +354,7 @@ export class LancamentosListComponent implements OnInit {
         bankAccountControl?.clearValidators();
         // Don't clear value here if it's valid, only validators
         if (!requiresBank && !currentAccId) {
-             // Keep existing logic if needed, but be careful not to conflict
+          // Keep existing logic if needed, but be careful not to conflict
         }
       }
       bankAccountControl?.updateValueAndValidity();
@@ -383,7 +382,7 @@ export class LancamentosListComponent implements OnInit {
         this.allParties = parties;
         this.suppliers = parties.filter(p => p.is_supplier);
         this.customers = parties.filter(p => p.is_customer);
-        
+
         // Update entities list if a type is already selected
         const currentType = this.transactionForm.get('type')?.value;
         if (currentType) {
@@ -501,7 +500,7 @@ export class LancamentosListComponent implements OnInit {
 
     if (this.isFormVisible) {
       this.loadBankAccounts(); // Refresh bank accounts to get latest data
-      
+
       if (this.transactionForm) {
         this.formMode = 'create';
         this.editingTransaction = null;
@@ -552,9 +551,9 @@ export class LancamentosListComponent implements OnInit {
     } else {
       this.entities = [];
     }
-    
+
     this.entityOptions = this.entities.map(e => ({ value: e.id, label: e.name, text: e.name }));
-    
+
     if (shouldClear) {
       // Clear entity selection when type changes
       this.transactionForm.patchValue({ party_id: '' });
@@ -650,9 +649,9 @@ export class LancamentosListComponent implements OnInit {
       const extensionMatch = extensionSource.split('.').pop() || '';
       const sanitizedExtension =
         extensionMatch &&
-        !extensionMatch.includes('/') &&
-        extensionMatch.length > 0 &&
-        extensionMatch.length <= 6
+          !extensionMatch.includes('/') &&
+          extensionMatch.length > 0 &&
+          extensionMatch.length <= 6
           ? extensionMatch.toUpperCase()
           : undefined;
 
@@ -716,8 +715,8 @@ export class LancamentosListComponent implements OnInit {
   }
 
   onSelectRowAction(event: MouseEvent, row: ContaPagar, mode: 'edit' | 'pay' | 'cancel' | 'delete') {
-    try { event.stopPropagation(); } catch {}
-    
+    try { event.stopPropagation(); } catch { }
+
     if (row.status === 'canceled') {
       this.toastService.triggerToast(
         'warning',
@@ -833,7 +832,7 @@ export class LancamentosListComponent implements OnInit {
       if (typeof window !== 'undefined') {
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
-    } catch {}
+    } catch { }
   }
 
   private deleteTransaction(row: ContaPagar) {
@@ -879,18 +878,18 @@ export class LancamentosListComponent implements OnInit {
 
       // Logic to handle provisioned status effectivation
       if (this.editingTransaction?.status === 'provisioned') {
-          if (formValue.effectivate || formValue.is_paid) {
-              // Efetivar: muda para pending ou paid
-              status = formValue.is_paid ? 'paid' : 'pending';
-          } else {
-              // Mantém provisioned se não efetivar
-              status = 'provisioned';
-          }
+        if (formValue.effectivate || formValue.is_paid) {
+          // Efetivar: muda para pending ou paid
+          status = formValue.is_paid ? 'paid' : 'pending';
+        } else {
+          // Mantém provisioned se não efetivar
+          status = 'provisioned';
+        }
       } else {
-          // Normal logic
-          if (status !== 'provisioned') {
-             status = formValue.is_paid ? 'paid' : 'pending';
-          }
+        // Normal logic
+        if (status !== 'provisioned') {
+          status = formValue.is_paid ? 'paid' : 'pending';
+        }
       }
 
       const payload: any = {
@@ -925,21 +924,21 @@ export class LancamentosListComponent implements OnInit {
 
       const request$ = isEditMode
         ? (() => {
-            const { due_date, ...updatePayload } = payload;
+          const { due_date, ...updatePayload } = payload;
 
-            if (this.formMode === 'cancel') {
-              const cancelPayload: any = {
-                is_paid: false,
-                status: 'canceled',
-                paid_at: null,
-                payment_method: null,
-                bank_account_id: null
-              };
-              return this.financial.updateTransaction(this.editingTransaction!.id_code, cancelPayload);
-            }
+          if (this.formMode === 'cancel') {
+            const cancelPayload: any = {
+              is_paid: false,
+              status: 'canceled',
+              paid_at: null,
+              payment_method: null,
+              bank_account_id: null
+            };
+            return this.financial.updateTransaction(this.editingTransaction!.id_code, cancelPayload);
+          }
 
-            return this.financial.updateTransaction(this.editingTransaction!.id_code, updatePayload);
-          })()
+          return this.financial.updateTransaction(this.editingTransaction!.id_code, updatePayload);
+        })()
         : this.financial.createTransaction(payload);
 
       request$.subscribe({
@@ -953,23 +952,23 @@ export class LancamentosListComponent implements OnInit {
 
           this.toggleForm();
           this.initForm();
-          
+
           if (this.selectedStore?.id_code) {
             this.loadTransactions();
           }
 
           if (wasCreate && this.evidenceFiles.length > 0) {
-             // Logic for evidence upload if needed
-             // For now we assume attachment_url in payload handles it or separate upload logic exists
-             // but since we stringified evidenceFiles into attachment_url, we might not need separate upload 
-             // unless using the specialized upload service. 
-             // Based on previous code, there was logic for uploadEvidenceFilesForTransaction
-             // I will restore that call if the method exists, or just rely on the payload for now if the method is missing.
-             // Looking at the read file, uploadEvidenceFilesForTransaction was NOT in the read output, 
-             // so I'll assume the JSON.stringify approach is the fallback or I need to implement it.
-             // However, the original code had it. Let's check if I can find it in the file.
+            // Logic for evidence upload if needed
+            // For now we assume attachment_url in payload handles it or separate upload logic exists
+            // but since we stringified evidenceFiles into attachment_url, we might not need separate upload 
+            // unless using the specialized upload service. 
+            // Based on previous code, there was logic for uploadEvidenceFilesForTransaction
+            // I will restore that call if the method exists, or just rely on the payload for now if the method is missing.
+            // Looking at the read file, uploadEvidenceFilesForTransaction was NOT in the read output, 
+            // so I'll assume the JSON.stringify approach is the fallback or I need to implement it.
+            // However, the original code had it. Let's check if I can find it in the file.
           }
-          
+
           this.toastService.triggerToast(
             'success',
             'Lançamento processado',
@@ -992,12 +991,17 @@ export class LancamentosListComponent implements OnInit {
 
   ngOnInit() {
     this.filteredPaymentMethods = [...this.paymentMethods];
-    this.selectedStore = this.localStorageService.getData<Store>(this.STORE_KEY);
-    if (this.selectedStore) {
-      this.loadTransactions();
-      this.loadParties();
-      this.loadAuxiliaryData();
-    }
+    this.storeContext.activeStore$.subscribe(store => {
+      this.selectedStore = store as unknown as Store;
+      if (this.selectedStore?.id_code) {
+        this.loadTransactions();
+        this.loadParties();
+        this.loadAuxiliaryData();
+      } else {
+        this.allData = [];
+        this.paginatedData = [];
+      }
+    });
   }
 
   private loadAuxiliaryData() {
@@ -1139,12 +1143,12 @@ export class LancamentosListComponent implements OnInit {
         row.type === 'PAYABLE'
           ? 'financial.transactions.type.payable'
           : row.type === 'RECEIVABLE'
-          ? 'financial.transactions.type.receivable'
-          : row.type === 'TRANSFER'
-          ? 'financial.transactions.type.transfer'
-          : row.type === 'ADJUSTMENT'
-          ? 'financial.transactions.type.adjustment'
-          : '';
+            ? 'financial.transactions.type.receivable'
+            : row.type === 'TRANSFER'
+              ? 'financial.transactions.type.transfer'
+              : row.type === 'ADJUSTMENT'
+                ? 'financial.transactions.type.adjustment'
+                : '';
 
       const typeLabel = typeLabelKey ? this.translate.instant(typeLabelKey) : '';
 
@@ -1260,7 +1264,7 @@ export class LancamentosListComponent implements OnInit {
     this.currentPage = page;
     this.updatePagination();
   }
-  
+
   onSearchChange() {
     this.updatePagination();
   }
@@ -1308,7 +1312,7 @@ export class LancamentosListComponent implements OnInit {
       return 0;
     });
   }
-  
+
   // Helpers for template
   get visiblePages(): number[] {
     const pages = [];
