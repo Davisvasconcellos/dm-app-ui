@@ -50,6 +50,23 @@ export class FinancialService {
     return this.http.patch(`${this.API_BASE_URL}/financial/transactions/${id}`, transactionData, { headers: this.getHeaders() });
   }
 
+  getTransactionById(id_code: string, options?: { store_id?: string }): Observable<ContaPagar> {
+    const params: any = {};
+    if (options?.store_id) {
+      params.store_id = options.store_id;
+    } else {
+      const activeStore = this.storeContext.getActiveStore();
+      if (activeStore?.id_code) params.store_id = activeStore.id_code;
+    }
+
+    return this.http.get<any>(`${this.API_BASE_URL}/financial/transactions/${id_code}`, {
+      headers: this.getHeaders(),
+      params
+    }).pipe(
+      map(response => response.data || response)
+    );
+  }
+
   // Mocked data
   getFornecedores(): Observable<Fornecedor[]> {
     return of([

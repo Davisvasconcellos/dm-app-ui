@@ -121,6 +121,25 @@ export class LancamentosListComponent implements OnInit {
   isDeleteModalOpen = false;
   transactionToDelete: ContaPagar | null = null;
 
+  isColumnMenuOpen = false;
+  visibleColumns = {
+    nf: true,
+    description: true,
+    category: true,
+    costCenter: true,
+    tags: true,
+    seller: true,
+    commission: true
+  };
+
+  toggleColumnMenu() {
+    this.isColumnMenuOpen = !this.isColumnMenuOpen;
+  }
+
+  toggleColumn(column: keyof typeof this.visibleColumns) {
+    this.visibleColumns[column] = !this.visibleColumns[column];
+  }
+
   private storeContext = inject(StoreContextService);
   selectedStore: Store | null = null;
 
@@ -757,6 +776,20 @@ export class LancamentosListComponent implements OnInit {
     this.deleteTransaction(row);
   }
 
+  abrirModalTransacao(sourceId: string) {
+    if (!sourceId) return;
+
+    this.financial.getTransactionById(sourceId, { store_id: this.selectedStore?.id_code }).subscribe({
+      next: (txn) => {
+        this.openEvidenceSidebar(txn);
+      },
+      error: (err) => {
+        console.error('Erro ao buscar transação original', err);
+        this.toastService.triggerToast('error', 'Ops!', 'Não foi possível carregar os dados da transação original.');
+      }
+    });
+  }
+
   canEdit(row: ContaPagar): boolean {
     return row.status !== 'paid' && row.status !== 'canceled';
   }
@@ -764,13 +797,19 @@ export class LancamentosListComponent implements OnInit {
   canPay(row: ContaPagar): boolean {
     return row.status !== 'paid' && row.status !== 'canceled';
   }
-
   canCancel(row: ContaPagar): boolean {
     return row.status !== 'canceled';
   }
 
   canDelete(row: ContaPagar): boolean {
     return row.status !== 'paid' && row.status !== 'canceled';
+  }
+
+  getSellerName(sellerId?: string): string {
+    if (!sellerId) return '-';
+    // fallback if backend sends party data nested or if we have it in allParties
+    const party = this.allParties.find(p => p.id_code === sellerId || p.id === sellerId);
+    return party ? party.name : 'Desconhecido';
   }
 
   onSelectRowAction(event: MouseEvent, row: ContaPagar, mode: 'edit' | 'pay' | 'cancel' | 'delete') {
@@ -838,9 +877,11 @@ export class LancamentosListComponent implements OnInit {
       attachment_url: row.attachment_url || '',
       effectivate: false,
       has_commission: !!raw.has_commission,
-      commission_seller_id: raw.commission_seller_id || null,
-      commission_type: raw.commission_type || 'percentage',
-      commission_percentage: (raw.commission_type === 'fixed' ? raw.commission_amount : raw.commission_rate) || null
+      commission_seller_id: row.commission?.commission_seller_id || raw.commission_seller_id || null,
+      commission_type: row.commission?.commission_type || raw.commission_type || 'percentage',
+      commission_percentage: raw.has_commission && row.commission ?
+        (row.commission.commission_type === 'fixed' ? row.commission.commission_amount : row.commission.commission_rate)
+        : ((raw.commission_type === 'fixed' ? raw.commission_amount : raw.commission_rate) || null)
     });
 
     this.updateEntitiesList(this.transactionForm.get('type')?.value || 'PAYABLE', false);
@@ -889,6 +930,13 @@ export class LancamentosListComponent implements OnInit {
     } else if (mode === 'edit') {
       // due_date cannot be changed via PATCH
       this.transactionForm.get('due_date')?.disable({ emitEvent: false });
+    }
+
+    if (raw.has_commission) {
+      this.transactionForm.get('has_commission')?.disable({ emitEvent: false });
+      this.transactionForm.get('commission_seller_id')?.disable({ emitEvent: false });
+      this.transactionForm.get('commission_type')?.disable({ emitEvent: false });
+      this.transactionForm.get('commission_percentage')?.disable({ emitEvent: false });
     }
 
     try {

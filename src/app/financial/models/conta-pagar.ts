@@ -20,10 +20,10 @@ export interface ContaPagar {
   status: StatusConta;
   category?: string;
   category_id?: string;
-  category_data?: { id: string; name: string; [key: string]: any };
+  category_data?: { id: string; name: string;[key: string]: any };
   cost_center?: string;
   cost_center_id?: string;
-  cost_center_data?: { id: string; name: string; [key: string]: any };
+  cost_center_data?: { id: string; name: string;[key: string]: any };
   created_by?: string;
   approved_by?: string;
   attachment_url?: string;
@@ -31,6 +31,12 @@ export interface ContaPagar {
   type?: 'PAYABLE' | 'RECEIVABLE' | 'TRANSFER' | 'ADJUSTMENT';
   tag?: string;
   tags?: { id: string; name: string; color: string }[];
+  commission_origin_metadata?: {
+    commission_id_code: string;
+    source_transaction_id_code: string;
+    original_amount: string | number;
+  };
+  commission?: any;
 }
 
 export interface TransactionsSummary {
