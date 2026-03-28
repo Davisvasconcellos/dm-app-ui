@@ -315,11 +315,11 @@ export class LancamentosListComponent implements OnInit {
       attachment_url: [''],
       effectivate: [false], // Control to effectivate provisioned transactions
 
-      // Comissões
       has_commission: [false],
       commission_seller_id: [null],
       commission_percentage: [null],
-      commission_type: ['percentage'] // 'percentage' | 'fixed'
+      commission_type: ['percentage'], // 'percentage' | 'fixed'
+      allow_advance_payment: [false]
     });
 
     // Listen to has_commission changes to update validators
@@ -604,7 +604,8 @@ export class LancamentosListComponent implements OnInit {
           has_commission: false,
           commission_seller_id: null,
           commission_percentage: null,
-          commission_type: 'percentage'
+          commission_type: 'percentage',
+          allow_advance_payment: false
         });
 
         this.filteredPaymentMethods = [...this.paymentMethods];
@@ -881,7 +882,8 @@ export class LancamentosListComponent implements OnInit {
       commission_type: row.commission?.commission_type || raw.commission_type || 'percentage',
       commission_percentage: raw.has_commission && row.commission ?
         (row.commission.commission_type === 'fixed' ? row.commission.commission_amount : row.commission.commission_rate)
-        : ((raw.commission_type === 'fixed' ? raw.commission_amount : raw.commission_rate) || null)
+        : ((raw.commission_type === 'fixed' ? raw.commission_amount : raw.commission_rate) || null),
+      allow_advance_payment: row.commission?.allow_advance_payment || false
     });
 
     this.updateEntitiesList(this.transactionForm.get('type')?.value || 'PAYABLE', false);
@@ -937,6 +939,7 @@ export class LancamentosListComponent implements OnInit {
       this.transactionForm.get('commission_seller_id')?.disable({ emitEvent: false });
       this.transactionForm.get('commission_type')?.disable({ emitEvent: false });
       this.transactionForm.get('commission_percentage')?.disable({ emitEvent: false });
+      this.transactionForm.get('allow_advance_payment')?.disable({ emitEvent: false });
     }
 
     try {
@@ -1022,7 +1025,8 @@ export class LancamentosListComponent implements OnInit {
         commission_seller_id: formValue.has_commission ? formValue.commission_seller_id : null,
         commission_rate: null,
         commission_amount: null,
-        commission_type: formValue.has_commission ? formValue.commission_type : null
+        commission_type: formValue.has_commission ? formValue.commission_type : null,
+        allow_advance_payment: formValue.has_commission ? !!formValue.allow_advance_payment : false
       };
 
       if (formValue.has_commission) {

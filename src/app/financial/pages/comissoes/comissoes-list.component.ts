@@ -160,14 +160,19 @@ export class ComissoesListComponent implements OnInit, AfterViewInit {
   }
 
   isAllSelected(): boolean {
-    return this.commissions.length > 0 && this.commissions.every(c => this.selectedCommissions.has(c.id_code));
+    const payable = this.commissions.filter(c => c.payable);
+    return payable.length > 0 && payable.every(c => this.selectedCommissions.has(c.id_code));
+  }
+
+  hasPayableCommissions(): boolean {
+    return this.commissions.some(c => c.payable);
   }
 
   toggleAll(event: any) {
     const checked = event.target.checked;
     if (checked) {
       this.commissions.forEach(c => {
-        if (c.status === 'pending') {
+        if (c.payable) {
           this.selectedCommissions.add(c.id_code);
         }
       });
@@ -219,10 +224,14 @@ export class ComissoesListComponent implements OnInit, AfterViewInit {
 
         let successMsg = `Comissões processadas com sucesso.`;
         if (response.data) {
-          const { paid_count, not_found_count } = response.data;
+          const { paid_count, not_found_count, skipped_count } = response.data;
           successMsg = `${paid_count} comissão(ões) paga(s) via ${this.selectedAccount.name}.`;
           if (not_found_count > 0) {
             successMsg += ` (${not_found_count} não encontradas).`;
+          }
+          if (skipped_count > 0) {
+            this.toastService.triggerToast('warning', 'Comissões não elegíveis',
+              `${skipped_count} comissão(ões) não paga(s): a transação de origem ainda não foi quitada.`);
           }
         }
 

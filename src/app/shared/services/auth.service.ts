@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { BehaviorSubject, Observable, throwError, of, timeout, finalize } from 'rxjs';
-import { catchError, tap } from 'rxjs/operators';
+import { catchError, tap, shareReplay } from 'rxjs/operators';
 import { LocalStorageService } from './local-storage.service';
 import { Router } from '@angular/router';
 import { environment } from '../../../environments/environment';
@@ -194,6 +194,9 @@ export class AuthService {
     return this.currentUserSubject.value;
   }
 
+  // Request cache for parallel execution
+  private pendingAuthMeRequest$: Observable<UserMeResponse> | null = null;
+
   // Buscar dados atualizados do usuário logado
   getUserMe(): Observable<UserMeResponse> {
     const token = this.getAuthToken();
@@ -201,22 +204,33 @@ export class AuthService {
       return throwError(() => new Error('Token não encontrado'));
     }
 
-    const headers = { 'Authorization': `Bearer ${token}` };
+    if (!this.pendingAuthMeRequest$) {
+      const headers = { 'Authorization': `Bearer ${token}` };
 
-    return this.http.get<UserMeResponse>(`${this.API_BASE_URL}/auth/me?__nocache=1`, { headers })
-      .pipe(
-        tap((response: UserMeResponse) => {
-          if (response.success && response.data) {
-            // Mapear os dados da API para o formato esperado pelos componentes
-            const mappedUser = this.mapApiUserToUser(response.data.user);
+      this.pendingAuthMeRequest$ = this.http.get<UserMeResponse>(`${this.API_BASE_URL}/auth/me?__nocache=1`, { headers })
+        .pipe(
+          tap((response: UserMeResponse) => {
+            if (response.success && response.data) {
+              // Mapear os dados da API para o formato esperado pelos componentes
+              const mappedUser = this.mapApiUserToUser(response.data.user);
 
-            // Atualizar o usuário atual no localStorage e no BehaviorSubject
-            this.localStorageService.setCurrentUser(mappedUser);
-            this.currentUserSubject.next(mappedUser);
-          }
-        }),
-        catchError(this.handleError)
-      );
+              // Atualizar o usuário atual no localStorage e no BehaviorSubject
+              this.localStorageService.setCurrentUser(mappedUser);
+              this.currentUserSubject.next(mappedUser);
+            }
+          }),
+          catchError((err) => {
+            this.pendingAuthMeRequest$ = null;
+            return this.handleError(err);
+          }),
+          shareReplay(1),
+          finalize(() => {
+            this.pendingAuthMeRequest$ = null;
+          })
+        );
+    }
+
+    return this.pendingAuthMeRequest$;
   }
 
   // Atualizar dados do usuário

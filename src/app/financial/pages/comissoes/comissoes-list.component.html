@@ -194,7 +194,8 @@
           <tr class="border-b border-gray-200 dark:border-gray-800">
             <th class="p-4 text-left w-10">
               <input type="checkbox" (change)="toggleAll($event)" [checked]="isAllSelected()"
-                class="w-4 h-4 text-brand-500 border-gray-300 rounded focus:ring-brand-500">
+                [disabled]="!hasPayableCommissions()"
+                class="w-4 h-4 text-brand-500 border-gray-300 rounded focus:ring-brand-500 disabled:opacity-30">
             </th>
             <th class="p-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider dark:text-gray-400">
               Vendedor</th>
@@ -217,7 +218,7 @@
 
             <td class="p-4">
               <input type="checkbox" [checked]="selectedCommissions.has(comm.id_code)"
-                (change)="toggleSelection(comm.id_code)" [disabled]="comm.status !== 'pending'"
+                (change)="toggleSelection(comm.id_code)" [disabled]="!comm.payable"
                 class="w-4 h-4 text-brand-500 border-gray-300 rounded focus:ring-brand-500 disabled:opacity-30">
             </td>
 

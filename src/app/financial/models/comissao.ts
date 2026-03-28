@@ -7,6 +7,8 @@ export interface Commission {
   commission_rate: number | string;
   commission_amount: number | string;
   status: 'pending' | 'paid' | 'canceled';
+  allow_advance_payment?: boolean;
+  payable?: boolean;
   paid_transaction_id_code?: string | null;
   paid_bank_account_id?: string | null;
   paid_at?: string | null;
