@@ -1,33 +1,478 @@
-<div class="grid grid-cols-12 gap-4 md:gap-6">
-  <div class="col-span-12">
-    <app-analytics-metrics />
-  </div>
-  <div class="col-span-12">
-    <app-analytics-bar-chart />
-  </div>
-  <div class="col-span-12 xl:col-span-7">
-    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
-      <app-top-channel />
-      <app-top-pages />
+<div class="space-y-6">
+  <div class="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 dark:border-gray-800 dark:bg-white/[0.03]">
+    <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div class="flex flex-wrap items-center gap-2">
+        @for (s of stores; track $index) {
+          <button type="button"
+                  (click)="toggleStore(s.id_code)"
+                  [disabled]="isLoading"
+                  [ngClass]="isStoreSelected(s.id_code)
+                    ? 'border-brand-300 bg-brand-100 text-brand-800 dark:border-brand-500 dark:bg-brand-500 dark:text-white'
+                    : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-white/[0.03]'"
+                  class="inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-xs font-medium disabled:opacity-60 disabled:cursor-not-allowed">
+            @if (isStoreSelected(s.id_code)) {
+              <span class="inline-flex h-4 w-4 items-center justify-center rounded bg-brand-600 text-white dark:bg-white/20">
+                <svg viewBox="0 0 20 20" fill="currentColor" class="h-3.5 w-3.5">
+                  <path fill-rule="evenodd" d="M16.704 5.29a1 1 0 010 1.415l-7.2 7.2a1 1 0 01-1.415 0l-3.6-3.6a1 1 0 011.414-1.415l2.893 2.893 6.493-6.493a1 1 0 011.415 0z" clip-rule="evenodd"></path>
+                </svg>
+              </span>
+            }
+            <span>{{ s.name }}</span>
+          </button>
+        }
+      </div>
+      <div class="flex items-center gap-2">
+        <div class="flex items-center rounded-lg border border-gray-300 bg-white p-0.5 text-xs font-medium text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300">
+          <button type="button" (click)="setDateMode('cash')" [disabled]="isLoading"
+                  [ngClass]="date_mode === 'cash' ? 'bg-brand-100 text-brand-800 dark:bg-brand-500 dark:text-white' : 'text-gray-700 dark:text-gray-300'"
+                  class="rounded-md px-3 py-1.5 disabled:opacity-60 disabled:cursor-not-allowed">
+            Caixa
+          </button>
+          <button type="button" (click)="setDateMode('competence')" [disabled]="isLoading"
+                  [ngClass]="date_mode === 'competence' ? 'bg-brand-100 text-brand-800 dark:bg-brand-500 dark:text-white' : 'text-gray-700 dark:text-gray-300'"
+                  class="rounded-md px-3 py-1.5 disabled:opacity-60 disabled:cursor-not-allowed">
+            Competência
+          </button>
+        </div>
+        <div class="relative inline-block">
+          <button
+            type="button"
+            (click)="togglePeriodDropdown()"
+            [disabled]="isLoading"
+            class="dropdown-toggle inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-60 disabled:cursor-not-allowed dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-white/[0.03]"
+          >
+            {{ getSelectedPeriodLabel() }}
+            <svg class="h-4 w-4 duration-200 ease-in-out stroke-current" [ngClass]="{ 'rotate-180': isPeriodDropdownOpen }" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M4.79199 7.396L10.0003 12.6043L15.2087 7.396" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </button>
+
+          <app-dropdown
+            [isOpen]="isPeriodDropdownOpen"
+            (close)="closePeriodDropdown()"
+            className="absolute right-0 top-full z-40 mt-2 w-[200px] rounded-2xl border border-gray-200 bg-white p-2 shadow-theme-lg dark:border-gray-800 dark:bg-[#1E2635]"
+          >
+            <ul class="flex flex-col gap-1">
+              @for (p of periods; track $index) {
+                <li>
+                  <app-dropdown-item
+                    (click)="selectPeriodFromDropdown(p)"
+                    className="flex items-center justify-between rounded-lg px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-white/5"
+                  >
+                    <span>{{ p === 'custom' ? 'Custom' : p + ' dias' }}</span>
+                    @if (selectedPeriod === p) {
+                      <span class="inline-flex h-4 w-4 items-center justify-center rounded bg-brand-600 text-white">
+                        <svg viewBox="0 0 20 20" fill="currentColor" class="h-3.5 w-3.5">
+                          <path fill-rule="evenodd" d="M16.704 5.29a1 1 0 010 1.415l-7.2 7.2a1 1 0 01-1.415 0l-3.6-3.6a1 1 0 011.414-1.415l2.893 2.893 6.493-6.493a1 1 0 011.415 0z" clip-rule="evenodd"></path>
+                        </svg>
+                      </span>
+                    }
+                  </app-dropdown-item>
+                </li>
+              }
+            </ul>
+          </app-dropdown>
+        </div>
+
+        @if (selectedPeriod === 'custom') {
+          <div class="flex items-center gap-2">
+            <div class="w-36">
+              <app-date-picker
+                id="faStartDate"
+                [label]="undefined"
+                placeholder="Início"
+                dateFormat="Y-m-d"
+                [defaultDate]="start_date"
+                [maxDate]="end_date"
+                (dateChange)="onStartPickerChange($event)"
+              />
+            </div>
+            <span class="text-xs text-gray-500">até</span>
+            <div class="w-36">
+              <app-date-picker
+                id="faEndDate"
+                [label]="undefined"
+                placeholder="Fim"
+                dateFormat="Y-m-d"
+                [defaultDate]="end_date"
+                [minDate]="start_date"
+                (dateChange)="onEndPickerChange($event)"
+              />
+            </div>
+            <button type="button" (click)="applyCustomRange()" [disabled]="isLoading" class="rounded-lg bg-brand-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-brand-600 disabled:opacity-60 disabled:cursor-not-allowed">Aplicar</button>
+          </div>
+        }
+      </div>
     </div>
   </div>
-  <div class="col-span-12 xl:col-span-5">
-    <app-active-users-chart />
+
+  <div class="grid grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-6">
+    <div class="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-white/[0.03]">
+      <p class="text-xs text-gray-500 dark:text-gray-400">Total Recebido</p>
+      <h3 class="mt-1 text-2xl font-semibold text-gray-900 dark:text-white">{{ kpis.total_received | currency:'BRL' }}</h3>
+      @if (compare_to_previous) {
+        <p class="mt-1 text-xs" [ngClass]="getDeltaSign('total_received') === 'up' ? 'text-emerald-600' : (getDeltaSign('total_received') === 'down' ? 'text-red-500' : 'text-gray-500 dark:text-gray-400')">
+          {{ formatDeltaPct('total_received') }} ({{ getDelta('total_received') || 0 | currency:'BRL' }})
+        </p>
+      }
+    </div>
+    <div class="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-white/[0.03]">
+      <p class="text-xs text-gray-500 dark:text-gray-400">Total Pago</p>
+      <h3 class="mt-1 text-2xl font-semibold text-gray-900 dark:text-white">{{ kpis.total_paid | currency:'BRL' }}</h3>
+      @if (compare_to_previous) {
+        <p class="mt-1 text-xs" [ngClass]="getDeltaSign('total_paid') === 'up' ? 'text-emerald-600' : (getDeltaSign('total_paid') === 'down' ? 'text-red-500' : 'text-gray-500 dark:text-gray-400')">
+          {{ formatDeltaPct('total_paid') }} ({{ getDelta('total_paid') || 0 | currency:'BRL' }})
+        </p>
+      }
+    </div>
+    <div class="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-white/[0.03]">
+      <p class="text-xs text-gray-500 dark:text-gray-400">Saldo do período</p>
+      <h3 class="mt-1 text-2xl font-semibold" [class.text-emerald-600]="kpis.balance>=0" [class.text-red-500]="kpis.balance<0">{{ kpis.balance | currency:'BRL' }}</h3>
+      @if (compare_to_previous) {
+        <p class="mt-1 text-xs" [ngClass]="getDeltaSign('balance') === 'up' ? 'text-emerald-600' : (getDeltaSign('balance') === 'down' ? 'text-red-500' : 'text-gray-500 dark:text-gray-400')">
+          {{ formatDeltaPct('balance') }} ({{ getDelta('balance') || 0 | currency:'BRL' }})
+        </p>
+      }
+    </div>
+    <div class="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-white/[0.03]">
+      <p class="text-xs text-gray-500 dark:text-gray-400">A Receber</p>
+      <h3 class="mt-1 text-2xl font-semibold text-gray-900 dark:text-white">{{ kpis.receivable_open | currency:'BRL' }}</h3>
+      @if (compare_to_previous) {
+        <p class="mt-1 text-xs" [ngClass]="getDeltaSign('receivable_open') === 'up' ? 'text-emerald-600' : (getDeltaSign('receivable_open') === 'down' ? 'text-red-500' : 'text-gray-500 dark:text-gray-400')">
+          {{ formatDeltaPct('receivable_open') }} ({{ getDelta('receivable_open') || 0 | currency:'BRL' }})
+        </p>
+      }
+    </div>
+    <div class="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-white/[0.03]">
+      <p class="text-xs text-gray-500 dark:text-gray-400">A Pagar</p>
+      <h3 class="mt-1 text-2xl font-semibold text-gray-900 dark:text-white">{{ kpis.payable_open | currency:'BRL' }}</h3>
+      @if (compare_to_previous) {
+        <p class="mt-1 text-xs" [ngClass]="getDeltaSign('payable_open') === 'up' ? 'text-emerald-600' : (getDeltaSign('payable_open') === 'down' ? 'text-red-500' : 'text-gray-500 dark:text-gray-400')">
+          {{ formatDeltaPct('payable_open') }} ({{ getDelta('payable_open') || 0 | currency:'BRL' }})
+        </p>
+      }
+    </div>
+    <div class="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-white/[0.03]">
+      <p class="text-xs text-gray-500 dark:text-gray-400">Overdue Total</p>
+      <h3 class="mt-1 text-2xl font-semibold text-gray-900 dark:text-white">{{ kpis.overdue_total | currency:'BRL' }}</h3>
+      @if (compare_to_previous) {
+        <p class="mt-1 text-xs" [ngClass]="getDeltaSign('overdue_total') === 'up' ? 'text-emerald-600' : (getDeltaSign('overdue_total') === 'down' ? 'text-red-500' : 'text-gray-500 dark:text-gray-400')">
+          {{ formatDeltaPct('overdue_total') }} ({{ getDelta('overdue_total') || 0 | currency:'BRL' }})
+        </p>
+      }
+    </div>
   </div>
 
-  <div class="col-span-12 xl:col-span-7">
-    <app-acquisition-channel-chart />
+  <div class="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 dark:border-gray-800 dark:bg-white/[0.03]">
+    <div class="mb-4 flex items-center justify-between gap-4">
+      <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Previsto x Realizado</h4>
+      <span class="text-xs text-gray-500 dark:text-gray-400">{{ date_mode === 'cash' ? 'Caixa' : 'Competência' }}</span>
+    </div>
+    <apx-chart
+      [series]="chartSeries"
+      [chart]="chartOptions.chart"
+      [dataLabels]="chartOptions.dataLabels"
+      [stroke]="chartOptions.stroke"
+      [xaxis]="chartOptions.xaxis"
+      [yaxis]="chartOptions.yaxis"
+      [tooltip]="chartOptions.tooltip"
+      [grid]="chartOptions.grid"
+      [legend]="chartOptions.legend">
+    </apx-chart>
   </div>
 
-  <div class="col-span-12 xl:col-span-5">
-    <app-session-chart />
+  <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+    <div class="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 dark:border-gray-800 dark:bg-white/[0.03] lg:col-span-2">
+      <h4 class="mb-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Top Categorias (Despesas)</h4>
+      <div class="overflow-x-auto">
+        <table class="min-w-full text-sm">
+          <thead class="text-left text-xs text-gray-500 dark:text-gray-400">
+          <tr>
+            <th class="pb-2">Categoria</th>
+            <th class="pb-2 text-right">Total Pago</th>
+          </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-200 dark:divide-gray-800">
+          @for (row of top_expense_categories.slice(0,10); track $index) {
+            <tr>
+              <td class="py-2 text-gray-800 dark:text-white">{{ row.category_name || '—' }}</td>
+              <td class="py-2 text-right text-gray-900 dark:text-white">{{ row.total_paid | currency:'BRL' }}</td>
+            </tr>
+          }
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 dark:border-gray-800 dark:bg-white/[0.03]">
+      <h4 class="mb-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Top Clientes (Receitas)</h4>
+      <div class="overflow-x-auto">
+        <table class="min-w-full text-sm">
+          <thead class="text-left text-xs text-gray-500 dark:text-gray-400">
+          <tr>
+            <th class="pb-2">Cliente</th>
+            <th class="pb-2 text-right">Total Recebido</th>
+          </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-200 dark:divide-gray-800">
+          @for (row of top_customers.slice(0,10); track $index) {
+            <tr>
+              <td class="py-2 text-gray-800 dark:text-white">{{ row.party_name || '—' }}</td>
+              <td class="py-2 text-right text-gray-900 dark:text-white">{{ row.total_received | currency:'BRL' }}</td>
+            </tr>
+          }
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
 
-  <div class="col-span-12 xl:col-span-5">
-    <app-demographic-card />
+  @if (cost_centers.length > 0) {
+  <div class="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 dark:border-gray-800 dark:bg-white/[0.03]">
+    <h4 class="mb-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Centros de Custo</h4>
+    <div class="overflow-x-auto">
+      <table class="min-w-full text-sm">
+        <thead class="text-left text-xs text-gray-500 dark:text-gray-400">
+        <tr>
+          <th class="pb-2">Centro</th>
+          <th class="pb-2 text-right">Recebido</th>
+          <th class="pb-2 text-right">Pago</th>
+          <th class="pb-2 text-right">Net</th>
+        </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200 dark:divide-gray-800">
+        @for (cc of cost_centers; track $index) {
+          <tr (click)="selectCostCenter(cc)" class="cursor-pointer hover:bg-gray-50 dark:hover:bg-white/[0.03]" [ngClass]="selectedCostCenter?.cost_center_id === cc.cost_center_id ? 'bg-brand-50 dark:bg-white/[0.03]' : ''">
+            <td class="py-2 text-gray-800 dark:text-white">{{ cc.cost_center_name || 'Sem centro de custo' }}</td>
+            <td class="py-2 text-right text-gray-900 dark:text-white">{{ cc.totals.received | currency:'BRL' }}</td>
+            <td class="py-2 text-right text-gray-900 dark:text-white">{{ cc.totals.paid | currency:'BRL' }}</td>
+            <td class="py-2 text-right font-medium" [class.text-emerald-600]="cc.totals.net>=0" [class.text-red-500]="cc.totals.net<0">
+              {{ cc.totals.net | currency:'BRL' }}
+            </td>
+          </tr>
+        }
+        </tbody>
+      </table>
+    </div>
+    @if (selectedCostCenter) {
+      <div class="mt-5 rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-white/[0.03]">
+        <div class="mb-3 flex items-center justify-between gap-4">
+          <h5 class="text-sm font-semibold text-gray-700 dark:text-gray-300">{{ selectedCostCenter.cost_center_name || 'Sem centro de custo' }} · Categorias</h5>
+          <span class="text-xs text-gray-500 dark:text-gray-400">Drilldown</span>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="min-w-full text-sm">
+            <thead class="text-left text-xs text-gray-500 dark:text-gray-400">
+            <tr>
+              <th class="pb-2">Categoria</th>
+              <th class="pb-2 text-right">Recebido</th>
+              <th class="pb-2 text-right">Pago</th>
+              <th class="pb-2 text-right">Net</th>
+            </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200 dark:divide-gray-800">
+            @for (cat of selectedCostCenter.categories; track $index) {
+              <tr>
+                <td class="py-2 text-gray-800 dark:text-white">{{ cat.category_name || 'Sem categoria' }}</td>
+                <td class="py-2 text-right text-gray-900 dark:text-white">{{ cat.totals.received | currency:'BRL' }}</td>
+                <td class="py-2 text-right text-gray-900 dark:text-white">{{ cat.totals.paid | currency:'BRL' }}</td>
+                <td class="py-2 text-right font-medium" [class.text-emerald-600]="cat.totals.net>=0" [class.text-red-500]="cat.totals.net<0">{{ cat.totals.net | currency:'BRL' }}</td>
+              </tr>
+            }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    }
+  </div>
+  }
+
+  <div class="grid grid-cols-12 gap-6">
+    <div class="col-span-12 rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 dark:border-gray-800 dark:bg-white/[0.03] lg:col-span-3">
+      <h4 class="mb-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Métodos de pagamento</h4>
+      <div class="max-w-full overflow-x-auto custom-scrollbar">
+        <div class="-ml-5 min-w-[700px] xl:min-w-full pl-2">
+          <apx-chart
+            [series]="paymentMethodsSeries"
+            [chart]="paymentMethodsChart"
+            [plotOptions]="paymentMethodsPlotOptions"
+            [colors]="paymentMethodsColors"
+            [dataLabels]="paymentMethodsDataLabels"
+            [xaxis]="paymentMethodsXaxis"
+            [yaxis]="paymentMethodsYaxis"
+            [legend]="paymentMethodsLegend"
+            [grid]="paymentMethodsGrid"
+            [fill]="paymentMethodsFill"
+            [tooltip]="paymentMethodsTooltip"
+          ></apx-chart>
+        </div>
+      </div>
+    </div>
+    <div class="col-span-12 rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 dark:border-gray-800 dark:bg-white/[0.03] lg:col-span-6">
+      <h4 class="mb-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Tags</h4>
+      <div class="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-white/[0.03]">
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <h5 class="text-sm font-semibold text-gray-800 dark:text-white/90">Cobertura de tags</h5>
+            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              {{ tags?.totals?.tagged_count ?? 0 }}/{{ tags?.totals?.total_count ?? 0 }} itens com tag
+            </p>
+          </div>
+        </div>
+        <div class="relative mt-3">
+          <div class="max-h-[220px]" id="chartDarkStyle">
+            <apx-chart
+              [series]="tagsCoverageSeries"
+              [chart]="tagsCoverageChart"
+              [plotOptions]="tagsCoveragePlotOptions"
+              [fill]="tagsCoverageFill"
+              [stroke]="tagsCoverageStroke"
+              [labels]="tagsCoverageLabels"
+              [colors]="tagsCoverageColors"
+            ></apx-chart>
+          </div>
+          <span class="absolute left-1/2 top-full -translate-x-1/2 -translate-y-[85%] rounded-full bg-brand-50 px-3 py-1 text-xs font-medium text-brand-600 dark:bg-brand-500/15 dark:text-brand-400">
+            {{ tags?.totals?.tagged_count ?? 0 }} tagg./{{ tags?.totals?.total_count ?? 0 }}
+          </span>
+        </div>
+        <div class="mt-6 flex items-center justify-between gap-4 text-xs text-gray-500 dark:text-gray-400">
+          <span>Sem tag: {{ tags?.totals?.untagged_count ?? 0 }} itens</span>
+          <span>{{ tags?.untagged?.total_amount ?? 0 | currency:'BRL' }}</span>
+        </div>
+      </div>
+    </div>
+    <div class="col-span-12 rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 dark:border-gray-800 dark:bg-white/[0.03] lg:col-span-3">
+      <h4 class="mb-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Distribuição de tags</h4>
+      <apx-chart
+        [series]="tagsRadarSeries"
+        [chart]="tagsRadarChart"
+        [dataLabels]="tagsRadarDataLabels"
+        [plotOptions]="tagsRadarPlotOptions"
+        [colors]="tagsRadarColors"
+        [markers]="tagsRadarMarkers"
+        [tooltip]="tagsRadarTooltip"
+        [xaxis]="tagsRadarXaxis"
+        [yaxis]="tagsRadarYaxis"
+      ></apx-chart>
+    </div>
   </div>
 
-  <div class="col-span-12 xl:col-span-7">
-    <app-recent-analytics-order />
+  <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+    <div class="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 dark:border-gray-800 dark:bg-white/[0.03]">
+      <h4 class="mb-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Cash Management por conta</h4>
+      <apx-chart [series]="bankAccountSeries" [chart]="bankAccountOptions.chart" [xaxis]="bankAccountOptions.xaxis" [dataLabels]="bankAccountOptions.dataLabels" [tooltip]="bankAccountOptions.tooltip" [grid]="bankAccountOptions.grid" [legend]="bankAccountOptions.legend"></apx-chart>
+    </div>
+    <div class="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 dark:border-gray-800 dark:bg-white/[0.03]">
+      <div class="mb-4 flex items-center justify-between gap-4">
+        <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Forecast recorrências</h4>
+        <span class="text-xs text-gray-500 dark:text-gray-400">{{ forecast_recurrences?.totals?.net ?? 0 | currency:'BRL' }}</span>
+      </div>
+      @if (forecast_recurrences?.monthly?.length) {
+        <apx-chart [series]="forecastSeries" [chart]="forecastOptions.chart" [xaxis]="forecastOptions.xaxis" [dataLabels]="forecastOptions.dataLabels" [tooltip]="forecastOptions.tooltip" [grid]="forecastOptions.grid" [legend]="forecastOptions.legend"></apx-chart>
+      } @else {
+        <div class="grid place-items-center rounded-xl border border-dashed border-gray-300 p-10 text-sm text-gray-500 dark:border-gray-700 dark:text-gray-400">Sem dados de forecast no período.</div>
+      }
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+    <div class="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 dark:border-gray-800 dark:bg-white/[0.03]">
+      <h4 class="mb-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Comissões</h4>
+      <div class="grid grid-cols-2 gap-4">
+        <div class="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-white/[0.03]">
+          <p class="text-xs text-gray-500 dark:text-gray-400">Pendentes</p>
+          <h3 class="mt-1 text-xl font-semibold text-gray-900 dark:text-white">{{ commissions.pending_amount | currency:'BRL' }}</h3>
+          <p class="text-xs text-gray-500 dark:text-gray-400">{{ commissions.pending_count }} itens</p>
+        </div>
+        <div class="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-white/[0.03]">
+          <p class="text-xs text-gray-500 dark:text-gray-400">Pagas</p>
+          <h3 class="mt-1 text-xl font-semibold text-gray-900 dark:text-white">{{ commissions.paid_amount | currency:'BRL' }}</h3>
+          <p class="text-xs text-gray-500 dark:text-gray-400">{{ commissions.paid_count }} itens</p>
+        </div>
+      </div>
+      @if (commission_inconsistencies && (commission_inconsistencies.counts.missing_source_transaction > 0 || commission_inconsistencies.counts.source_transaction_not_paid > 0)) {
+        <div class="mt-4 rounded-xl border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-900/40 dark:bg-yellow-900/10">
+          <div class="flex items-center justify-between gap-4">
+            <div>
+              <h5 class="text-sm font-semibold text-yellow-900 dark:text-yellow-200">Inconsistências de comissão</h5>
+              <p class="text-xs text-yellow-800/80 dark:text-yellow-200/80">
+                Amostra até {{ commission_inconsistencies.sample_limit }} itens.
+              </p>
+            </div>
+            <div class="flex items-center gap-2 text-xs">
+              <span class="rounded-full bg-yellow-200 px-2 py-1 font-medium text-yellow-900 dark:bg-yellow-900/40 dark:text-yellow-100">
+                Sem origem: {{ commission_inconsistencies.counts.missing_source_transaction }}
+              </span>
+              <span class="rounded-full bg-yellow-200 px-2 py-1 font-medium text-yellow-900 dark:bg-yellow-900/40 dark:text-yellow-100">
+                Origem não paga: {{ commission_inconsistencies.counts.source_transaction_not_paid }}
+              </span>
+            </div>
+          </div>
+
+          <div class="mt-3 overflow-x-auto">
+            <div class="max-h-56 overflow-y-auto">
+            <table class="min-w-full table-fixed text-sm">
+              <thead class="sticky top-0 bg-yellow-50 text-left text-xs text-yellow-900/70 dark:bg-yellow-900/10 dark:text-yellow-100/70">
+              <tr>
+                <th class="w-1/3 px-2 py-2">Vendedor</th>
+                <th class="w-1/3 px-2 py-2 border-l border-yellow-200/60 dark:border-yellow-900/30">Status</th>
+                <th class="w-1/6 px-2 py-2 text-right border-l border-yellow-200/60 dark:border-yellow-900/30">Valor</th>
+                <th class="w-1/6 px-2 py-2 border-l border-yellow-200/60 dark:border-yellow-900/30">Pago em</th>
+              </tr>
+              </thead>
+              <tbody class="divide-y divide-yellow-200/60 dark:divide-yellow-900/30">
+              @for (it of commission_inconsistencies.items; track $index) {
+                <tr>
+                  <td class="px-2 py-2 text-yellow-900/80 dark:text-yellow-100/80">{{ it.seller?.name || '—' }}</td>
+                  <td class="px-2 py-2 border-l border-yellow-200/60 dark:border-yellow-900/30">
+                    <div class="flex flex-wrap gap-1">
+                      @for (iss of it.issues; track $index) {
+                        <span class="rounded bg-yellow-200 px-2 py-0.5 text-[11px] font-medium text-yellow-900 dark:bg-yellow-900/40 dark:text-yellow-100">{{ iss }}</span>
+                      }
+                    </div>
+                  </td>
+                  <td class="px-2 py-2 text-right text-yellow-900 dark:text-yellow-100 border-l border-yellow-200/60 dark:border-yellow-900/30 whitespace-nowrap">{{ it.commission_amount | currency:'BRL' }}</td>
+                  <td class="px-2 py-2 text-yellow-900/80 dark:text-yellow-100/80 border-l border-yellow-200/60 dark:border-yellow-900/30 whitespace-nowrap">{{ it.paid_at || '—' }}</td>
+                </tr>
+              }
+              </tbody>
+            </table>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+    <div class="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 dark:border-gray-800 dark:bg-white/[0.03]">
+      <h4 class="mb-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Próximos Vencimentos (7 dias)</h4>
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div>
+          <h5 class="mb-2 text-xs font-medium text-gray-500 dark:text-gray-400">A Receber</h5>
+          <ul class="space-y-2">
+            @for (item of upcoming.receivable.slice(0,10); track $index) {
+              <li class="flex items-center justify-between rounded-lg border border-gray-200 p-2 text-sm dark:border-gray-800">
+                <div class="truncate">
+                  <p class="truncate text-gray-800 dark:text-white">{{ item.description }}</p>
+                  <p class="text-xs text-gray-500 dark:text-gray-400">{{ item.due_date }}</p>
+                </div>
+                <span class="font-medium text-emerald-600">{{ item.amount | currency:'BRL' }}</span>
+              </li>
+            }
+          </ul>
+        </div>
+        <div>
+          <h5 class="mb-2 text-xs font-medium text-gray-500 dark:text-gray-400">A Pagar</h5>
+          <ul class="space-y-2">
+            @for (item of upcoming.payable.slice(0,10); track $index) {
+              <li class="flex items-center justify-between rounded-lg border border-gray-200 p-2 text-sm dark:border-gray-800">
+                <div class="truncate">
+                  <p class="truncate text-gray-800 dark:text-white">{{ item.description }}</p>
+                  <p class="text-xs text-gray-500 dark:text-gray-400">{{ item.due_date }}</p>
+                </div>
+                <span class="font-medium text-red-500">{{ item.amount | currency:'BRL' }}</span>
+              </li>
+            }
+          </ul>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
