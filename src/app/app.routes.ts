@@ -341,6 +341,11 @@ export const routes: Routes = [
             loadComponent: () => import('./pages/master/modules-manager/modules-manager.component').then(m => m.ModulesManagerComponent),
             title: 'Gerenciamento de Módulos'
           },
+          {
+            path: 'user-management',
+            redirectTo: 'modules',
+            pathMatch: 'full'
+          },
           { path: '', redirectTo: 'home', pathMatch: 'full' }
         ]
       },

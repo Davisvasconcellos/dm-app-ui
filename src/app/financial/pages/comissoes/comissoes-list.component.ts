@@ -152,6 +152,8 @@ export class ComissoesListComponent implements OnInit, AfterViewInit {
   }
 
   toggleSelection(commId: string) {
+    const comm = this.commissions.find(c => c.id_code === commId);
+    if (!comm || !this.isSelectableCommission(comm)) return;
     if (this.selectedCommissions.has(commId)) {
       this.selectedCommissions.delete(commId);
     } else {
@@ -159,20 +161,25 @@ export class ComissoesListComponent implements OnInit, AfterViewInit {
     }
   }
 
+  isSelectableCommission(comm: Commission): boolean {
+    const status = (comm as any)?.status;
+    return !!comm.payable && status !== 'paid' && status !== 'canceled';
+  }
+
   isAllSelected(): boolean {
-    const payable = this.commissions.filter(c => c.payable);
-    return payable.length > 0 && payable.every(c => this.selectedCommissions.has(c.id_code));
+    const selectable = this.commissions.filter(c => this.isSelectableCommission(c));
+    return selectable.length > 0 && selectable.every(c => this.selectedCommissions.has(c.id_code));
   }
 
   hasPayableCommissions(): boolean {
-    return this.commissions.some(c => c.payable);
+    return this.commissions.some(c => this.isSelectableCommission(c));
   }
 
   toggleAll(event: any) {
     const checked = event.target.checked;
     if (checked) {
       this.commissions.forEach(c => {
-        if (c.payable) {
+        if (this.isSelectableCommission(c)) {
           this.selectedCommissions.add(c.id_code);
         }
       });
@@ -252,7 +259,7 @@ export class ComissoesListComponent implements OnInit, AfterViewInit {
 
   get selectedCommissionsTotal(): number {
     return this.commissions
-      .filter(c => this.selectedCommissions.has(c.id_code))
+      .filter(c => this.selectedCommissions.has(c.id_code) && this.isSelectableCommission(c))
       .reduce((acc, c) => acc + (Number(c.commission_amount) || 0), 0);
   }
 

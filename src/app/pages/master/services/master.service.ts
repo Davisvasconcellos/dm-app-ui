@@ -22,4 +22,8 @@ export class MasterService {
   updateUserModules(userIdOrCode: string | number, moduleIds: string[]): Observable<any> {
     return this.http.put(`${this.API_BASE_URL}/users/${userIdOrCode}`, { module_ids: moduleIds });
   }
+
+  updateUserRole(userIdOrCode: string | number, role: string): Observable<any> {
+    return this.http.put(`${this.API_BASE_URL}/users/${userIdOrCode}`, { role });
+  }
 }

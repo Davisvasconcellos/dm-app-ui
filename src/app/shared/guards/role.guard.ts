@@ -10,6 +10,7 @@ import { AuthService } from '../services/auth.service';
 export class RoleGuard implements CanActivate {
 
   constructor(
+    // eslint-disable-next-line @angular-eslint/prefer-inject
     private authService: AuthService,
     private router: Router
   ) {}
@@ -20,7 +21,7 @@ export class RoleGuard implements CanActivate {
   ): Observable<boolean> | Promise<boolean> | boolean {
     // Suporta ambas as chaves: 'roles' e 'expectedRoles'
     const requiredRoles = (route.data['roles'] || route.data['expectedRoles']) as string[];
-    
+
     if (!requiredRoles || requiredRoles.length === 0) {
       return true;
     }
@@ -55,7 +56,7 @@ export class RoleGuard implements CanActivate {
         });
 
         const hasRequiredRole = allowedSet.has(normalizedRole);
-        
+
         if (!hasRequiredRole) {
           // Redireciona para página apropriada baseada no role do usuário
           this.redirectToUserHome(user.role);
@@ -68,7 +69,7 @@ export class RoleGuard implements CanActivate {
   }
 
   private redirectToUserHome(role: string): void {
-    const roleRoutes: { [key: string]: string } = {
+    const roleRoutes: Record<string, string> = {
       admin: '/admin/home',
       master: '/pub/master',
       manager: '/events/home-default',

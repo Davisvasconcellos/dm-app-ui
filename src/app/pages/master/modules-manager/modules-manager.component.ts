@@ -16,6 +16,8 @@ export class ModulesManagerComponent implements OnInit {
   modules: any[] = [];
   loading = false;
   searchTerm: string = '';
+  roleOptions = ['master', 'admin', 'manager', 'waiter', 'customer', 'user'];
+  updatingByUserId = new Set<string>();
 
   constructor(private masterService: MasterService) {}
 
@@ -55,7 +57,7 @@ export class ModulesManagerComponent implements OnInit {
           this.users = [];
           console.warn('Formato de resposta de usuários inesperado', result.users);
         }
-        
+
         this.filterUsers();
         this.loading = false;
       },
@@ -72,16 +74,62 @@ export class ModulesManagerComponent implements OnInit {
       return;
     }
     const term = this.searchTerm.toLowerCase();
-    this.filteredUsers = this.users.filter(user => 
-      user.name?.toLowerCase().includes(term) || 
+    this.filteredUsers = this.users.filter(user =>
+      user.name?.toLowerCase().includes(term) ||
       user.email?.toLowerCase().includes(term) ||
       user.role?.toLowerCase().includes(term)
     );
   }
 
+  get displayModules(): any[] {
+    return [...(this.modules || [])].sort((a: any, b: any) =>
+      String(a?.name || '').localeCompare(String(b?.name || ''), 'pt-BR')
+    );
+  }
+
+  getUserKey(user: any): string {
+    return String(user?.id_code || user?.id || '');
+  }
+
+  isUpdating(user: any): boolean {
+    const key = this.getUserKey(user);
+    if (!key) return false;
+    return this.updatingByUserId.has(key);
+  }
+
+  canEditModules(user: any): boolean {
+    return user?.role === 'admin';
+  }
+
+  onRoleChange(user: any, nextRole: string): void {
+    const key = this.getUserKey(user);
+    if (!key) return;
+    const prevRole = String(user?.role || '');
+    if (prevRole === nextRole) return;
+
+    this.updatingByUserId.add(key);
+    user.role = nextRole;
+
+    this.masterService.updateUserRole(key, nextRole).subscribe({
+      next: () => {
+        this.updatingByUserId.delete(key);
+      },
+      error: (err) => {
+        console.error('Erro ao atualizar role', err);
+        user.role = prevRole;
+        this.updatingByUserId.delete(key);
+        alert('Erro ao atualizar role');
+      }
+    });
+  }
+
   toggleModule(user: any, module: any, event: any) {
+    if (!this.canEditModules(user)) {
+      event.target.checked = this.hasModule(user, module.id_code);
+      return;
+    }
     const isChecked = event.target.checked;
-    
+
     if (!user.modules) user.modules = [];
 
     // Mapeia para IDs (agora UUIDs/id_code) para enviar ao backend
@@ -114,7 +162,7 @@ export class ModulesManagerComponent implements OnInit {
       }
     });
   }
-  
+
   hasModule(user: any, moduleIdCode: string): boolean {
     return user.modules?.some((m: any) => m.id_code === moduleIdCode);
   }
