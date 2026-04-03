@@ -18,6 +18,7 @@ import { FinancialService } from '../../../../financial/financial.service';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { InputFieldComponent } from '../../../../shared/components/form/input/input-field.component';
 import { SelectComponent } from '../../../../shared/components/form/select/select.component';
+import { PublicStoresService } from '../../../../shared/services/public-stores.service';
 import { ButtonComponent } from '../../../../shared/components/ui/button/button.component';
 import { CheckboxComponent } from '../../../../shared/components/form/input/checkbox.component';
 import { ModalComponent } from '../../../../shared/components/ui/modal/modal.component';
@@ -149,6 +150,10 @@ export class ConfigComponent implements OnInit, AfterViewInit, OnDestroy {
   private readonly STORE_KEY = 'selectedStore';
 
   establishmentName: string = '';
+  storeSlug: string = '';
+  slugStatus: 'idle' | 'checking' | 'available' | 'unavailable' | 'reserved' = 'idle';
+  slugReason: string | null = null;
+  private slugTimer: any = null;
   capacity: string = '';
   establishmentType: string = '';
   banner_url: string = '';
@@ -241,6 +246,7 @@ export class ConfigComponent implements OnInit, AfterViewInit, OnDestroy {
   private toast = inject(ToastService);
   private storeService = inject(StoreService);
   private orgService = inject(OrganizationService);
+  private publicStores = inject(PublicStoresService);
   private pendingLogoFile: File | null = null;
   private pendingBannerFile: File | null = null;
 
@@ -897,6 +903,7 @@ export class ConfigComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private populateForm(data: StoreDetails): void {
     this.establishmentName = data.name || '';
+    this.storeSlug = data.slug || '';
     this.capacity = data.capacity?.toString() || '';
     this.establishmentType = data.type || '';
     this.banner_url = data.banner_url || '';
@@ -929,6 +936,41 @@ export class ConfigComponent implements OnInit, AfterViewInit, OnDestroy {
     this.longitude = data.longitude?.toString() || '-43.1729';
   }
 
+  onSlugChange(value: string): void {
+    this.storeSlug = value;
+    this.slugReason = null;
+    if (this.slugTimer) clearTimeout(this.slugTimer);
+
+    const slug = String(value || '').trim();
+    if (!slug) {
+      this.slugStatus = 'idle';
+      return;
+    }
+
+    this.slugStatus = 'checking';
+    this.slugTimer = setTimeout(() => {
+      this.publicStores.checkSlug(slug).subscribe({
+        next: (resp) => {
+          const data = resp?.data;
+          if (!data) {
+            this.slugStatus = 'idle';
+            return;
+          }
+          if (data.available) {
+            this.slugStatus = 'available';
+            this.slugReason = null;
+          } else {
+            this.slugStatus = data.reason === 'reserved' ? 'reserved' : 'unavailable';
+            this.slugReason = data.reason || null;
+          }
+        },
+        error: () => {
+          this.slugStatus = 'idle';
+        }
+      });
+    }, 500);
+  }
+
   setActiveTab(tab: string): void {
     this.activeTab = tab;
     if (tab === 'company') {
@@ -959,6 +1001,7 @@ export class ConfigComponent implements OnInit, AfterViewInit, OnDestroy {
     this.isSubmitting = true;
     const storeData: Partial<StoreDetails> = {
       name: this.establishmentName,
+      slug: this.storeSlug || undefined,
       email: this.email,
       cnpj: this.cnpj.replace(/\D/g, ''),
       instagram_handle: this.instagram_handle,

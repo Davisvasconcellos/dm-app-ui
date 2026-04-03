@@ -9,6 +9,7 @@ export interface StoreDetails {
   name: string;
   email: string;
   cnpj: string;
+  slug?: string;
   logo_url: string;
   instagram_handle: string;
   facebook_handle: string;

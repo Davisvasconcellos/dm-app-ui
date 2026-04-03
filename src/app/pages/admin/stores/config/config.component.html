@@ -81,6 +81,24 @@
             placeholder="Digite o nome do estabelecimento"
             class="w-full rounded-lg border-[1.5px] border-gray-300 bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-gray-200 dark:border-gray-800 dark:bg-gray-800 dark:text-white dark:focus:border-primary">
         </div>
+        <div class="mb-4.5">
+          <app-label>Slug / URL</app-label>
+          <input type="text" [(ngModel)]="storeSlug" (ngModelChange)="onSlugChange($event)" name="storeSlug"
+            placeholder="cliente-a"
+            class="w-full rounded-lg border-[1.5px] border-gray-300 bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-gray-200 dark:border-gray-800 dark:bg-gray-800 dark:text-white dark:focus:border-primary">
+          <div class="mt-1 flex items-center justify-between gap-3 text-xs">
+            <span class="text-gray-500 dark:text-gray-400">https://{{ storeSlug || 'sua-loja' }}.app.dmedia.com.br</span>
+            @if (slugStatus === 'checking') {
+              <span class="text-gray-500 dark:text-gray-400">Verificando...</span>
+            } @else if (slugStatus === 'available') {
+              <span class="text-emerald-600">Disponível</span>
+            } @else if (slugStatus === 'reserved') {
+              <span class="text-red-600">Indisponível (reservado)</span>
+            } @else if (slugStatus === 'unavailable') {
+              <span class="text-red-600">Indisponível</span>
+            }
+          </div>
+        </div>
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 mb-4.5">
           <div>
             <app-label>Capacidade <span class="text-error-500">*</span></app-label>

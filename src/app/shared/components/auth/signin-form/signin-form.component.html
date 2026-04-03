@@ -7,18 +7,31 @@
         </div>
       }
 
+      @if (storeScopeError) {
+        <div class="p-4 mb-5 text-sm text-red-700 bg-red-100 border border-red-300 rounded-lg dark:bg-red-900/20 dark:text-red-400 dark:border-red-800">
+          {{ storeScopeError }}
+        </div>
+      }
+
       <div class="mb-5 sm:mb-8">
+        @if (storeScope?.logo_url) {
+          <img [src]="storeScope?.logo_url" class="h-12 mb-3 object-contain mx-auto" alt="Logo da loja">
+        }
         <h1 class="mb-2 font-semibold text-gray-800 text-title-sm dark:text-white/90 sm:text-title-md">
           Sign In
         </h1>
         <p class="text-sm text-gray-500 dark:text-gray-400">
-          Enter your email and password to sign in!
+          @if (storeScope?.name) {
+            Loja: {{ storeScope?.name }}
+          } @else {
+            Enter your email and password to sign in!
+          }
         </p>
       </div>
 
       <!-- OAuth Buttons -->
       <div class="grid grid-cols-1 gap-3 sm:grid-cols-1 sm:gap-5">
-        <button (click)="loginWithGoogle()" [disabled]="isLoading" class="inline-flex items-center justify-center gap-3 py-3 text-sm font-normal text-gray-700 transition-colors bg-gray-100 rounded-lg px-7 hover:bg-gray-200 hover:text-gray-800 dark:bg-white/5 dark:text-white/90 dark:hover:bg-white/10">
+        <button (click)="loginWithGoogle()" [disabled]="isLoading || !!storeScopeError" class="inline-flex items-center justify-center gap-3 py-3 text-sm font-normal text-gray-700 transition-colors bg-gray-100 rounded-lg px-7 hover:bg-gray-200 hover:text-gray-800 dark:bg-white/5 dark:text-white/90 dark:hover:bg-white/10 disabled:opacity-60 disabled:cursor-not-allowed">
           <svg
             width="20"
             height="20"
@@ -48,7 +61,7 @@
       </div>
 
       <!-- Divider -->
-      
+
       <div class="relative py-3 sm:py-5">
         <div class="absolute inset-0 flex items-center">
           <div class="w-full border-t border-gray-200 dark:border-gray-800"></div>
@@ -59,7 +72,7 @@
           </span>
         </div>
       </div>
-     
+
 
       <!-- Form -->
       <form (ngSubmit)="onSignIn()" class="space-y-6">
@@ -127,7 +140,7 @@
           type="submit"
           className="w-full"
           size="sm"
-          [disabled]="isLoading"
+          [disabled]="isLoading || !!storeScopeError"
         >
           @if (isLoading) {
             <svg class="w-4 h-4 mr-2 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -155,4 +168,3 @@
       </div>
     </div>
   </div>
-

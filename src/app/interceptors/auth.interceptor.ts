@@ -3,11 +3,16 @@ import { HttpEvent, HttpHandler, HttpInterceptor, HttpRequest, HttpErrorResponse
 import { Observable, catchError, throwError } from 'rxjs';
 import { LocalStorageService } from '../shared/services/local-storage.service';
 import { Router } from '@angular/router';
+import { AppContextService } from '../shared/services/app-context.service';
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
   private redirecting = false;
-  constructor(private localStorageService: LocalStorageService, private injector: Injector) {}
+  constructor(
+    private localStorageService: LocalStorageService,
+    private appContext: AppContextService,
+    private injector: Injector
+  ) {}
 
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     const token = this.localStorageService.getAuthToken();
@@ -15,7 +20,15 @@ export class AuthInterceptor implements HttpInterceptor {
     // Check if the request is for an external domain that shouldn't receive our API token
     const isExternalApi = req.url.includes('api.discogs.com') || req.url.includes('viacep.com.br') || req.url.includes('/discogs-api');
 
-    const cloned = (token && !isExternalApi) ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } }) : req;
+    const tenant = this.appContext.getTenant();
+    const context = this.appContext.getContext();
+
+    const headers: Record<string, string> = {};
+    if (token && !isExternalApi) headers['Authorization'] = `Bearer ${token}`;
+    if (tenant && !isExternalApi) headers['X-Tenant'] = tenant;
+    if (!isExternalApi) headers['X-App-Context'] = context;
+
+    const cloned = Object.keys(headers).length ? req.clone({ setHeaders: headers }) : req;
 
     return next.handle(cloned).pipe(
       catchError((err: HttpErrorResponse) => {

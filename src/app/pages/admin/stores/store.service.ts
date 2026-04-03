@@ -12,6 +12,7 @@ export interface Store {
   logo_url: string | null;
   banner_url?: string | null;
   city?: string | null;
+  slug?: string | null;
 }
 
 export interface StoresResponse {
@@ -25,6 +26,7 @@ export interface CreateStoreDto {
   name: string;
   email: string;
   cnpj: string;
+  slug?: string;
   logo_url?: string;
   instagram_handle?: string;
   facebook_handle?: string;

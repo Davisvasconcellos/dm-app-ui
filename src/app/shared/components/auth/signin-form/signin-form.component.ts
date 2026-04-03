@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { LabelComponent } from '../../form/label/label.component';
 import { CheckboxComponent } from '../../form/input/checkbox.component';
 import { ButtonComponent } from '../../ui/button/button.component';
@@ -9,6 +9,9 @@ import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../services/auth.service';
 import { getAuth, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { switchMap } from 'rxjs/operators';
+import { AppContextService } from '../../../services/app-context.service';
+import { PublicStoresService } from '../../../services/public-stores.service';
+import { StoreContextService, Store } from '../../../services/store-context.service';
 
 @Component({
   selector: 'app-signin-form',
@@ -25,6 +28,12 @@ import { switchMap } from 'rxjs/operators';
   styles: ``
 })
 export class SigninFormComponent implements OnInit {
+  private authService = inject(AuthService);
+  private appContext = inject(AppContextService);
+  private publicStores = inject(PublicStoresService);
+  private storeContext = inject(StoreContextService);
+  private router = inject(Router);
+  private route = inject(ActivatedRoute);
 
   showPassword = false;
   isChecked = false;
@@ -38,14 +47,12 @@ export class SigninFormComponent implements OnInit {
 
   email = '';
   password = '';
-
-  constructor(
-    private authService: AuthService,
-    private router: Router,
-    private route: ActivatedRoute
-  ) { }
+  storeScope: Store | null = null;
+  storeScopeError = '';
+  scopeLoading = false;
 
   ngOnInit(): void {
+    this.resolveScopeFromHostname();
     this.route.queryParamMap.subscribe((params) => {
       const returnUrl = params.get('returnUrl');
       const flow = params.get('flow');
@@ -69,11 +76,48 @@ export class SigninFormComponent implements OnInit {
     });
   }
 
+  private resolveScopeFromHostname(): void {
+    const tenant = this.appContext.getTenant();
+    if (!tenant) return;
+    this.scopeLoading = true;
+    this.storeScopeError = '';
+
+    this.publicStores.resolve({ subdomain: tenant }).subscribe({
+      next: (resp) => {
+        const store = resp?.data?.store;
+        const org = resp?.data?.organization;
+        if (!store?.id_code) {
+          this.storeScope = null;
+          this.storeScopeError = 'Loja não encontrada.';
+          this.scopeLoading = false;
+          return;
+        }
+        this.storeScope = {
+          id_code: store.id_code,
+          id: 0,
+          name: store.name,
+          logo_url: store.logo_url,
+          banner_url: store.banner_url,
+          organization: org ? { id_code: org.id_code, name: org.name, logo_url: org.logo_url } : undefined
+        };
+        this.storeContext.setActiveStore(this.storeScope);
+        this.scopeLoading = false;
+      },
+      error: (err) => {
+        this.storeScope = null;
+        this.storeContext.setActiveStore(null);
+        this.storeScopeError = err?.error?.message || 'Loja não encontrada.';
+        this.scopeLoading = false;
+      },
+    });
+  }
+
   togglePasswordVisibility() {
     this.showPassword = !this.showPassword;
   }
 
   onSignIn() {
+    if (this.storeScopeError) return;
     if (!this.email || !this.password) {
       this.errorMessage = 'Por favor, preencha todos os campos obrigatórios.';
       return;
@@ -122,6 +166,7 @@ export class SigninFormComponent implements OnInit {
   }
 
   async loginWithGoogle() {
+    if (this.storeScopeError) return;
     this.isLoading = true;
     this.errorMessage = '';
     try {
