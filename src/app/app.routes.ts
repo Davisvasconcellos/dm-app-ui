@@ -113,8 +113,82 @@ import { RoleGuard } from './shared/guards/role.guard';
 import { GuestGuard } from './shared/guards/guest.guard';
 import { AutoCheckinGuard } from './shared/guards/auto-checkin.guard';
 import { AdminOrgGuard } from './shared/guards/admin-org.guard';
+import { eventsHostGuard } from './shared/guards/events-host.guard';
+import { EventsLayoutComponent } from './shared/layout/events-layout/events-layout.component';
 
 export const routes: Routes = [
+  {
+    path: '',
+    canMatch: [eventsHostGuard],
+    children: [
+      {
+        path: '',
+        component: EventsLayoutComponent,
+        children: [
+          {
+            path: '',
+            loadComponent: () => import('./pages/events/events-landing/events-landing.component').then(m => m.EventsLandingComponent),
+            title: 'Events'
+          },
+          {
+            path: 'self-checkin',
+            loadComponent: () => import('./pages/events/self-checkin/self-checkin.component').then(m => m.SelfCheckinComponent),
+            canActivate: [AuthGuard],
+            title: 'Self-checkin'
+          },
+          {
+            path: 'tickets/reserve/:id_code',
+            loadComponent: () => import('./pages/events/tickets-reserve/tickets-reserve.component').then(m => m.TicketsReserveComponent),
+            canActivate: [AuthGuard],
+            title: 'Reservar ingresso'
+          },
+          {
+            path: 'profile-qr',
+            component: ProfileQrComponent,
+            canActivate: [AuthGuard],
+            title: 'Perfil'
+          },
+          {
+            path: 'events/home-default',
+            canActivate: [AuthGuard],
+            loadComponent: () => import('./pages/events/home-default/home-default.component').then(m => m.HomeDefaultComponent),
+            title: 'Home'
+          }
+        ]
+      },
+      {
+        path: 'login',
+        component: SignInComponent,
+        canActivate: [GuestGuard],
+        title: 'Events - Login'
+      },
+      { path: 'signin', redirectTo: 'login', pathMatch: 'full' },
+      {
+        path: 'signout',
+        component: SignoutComponent,
+        title: 'Events - Logout'
+      },
+      {
+        path: 'events/checkin/:id_code',
+        loadComponent: () => import('./pages/events/checkin/checkin.component').then(m => m.CheckinComponent),
+        canActivate: [AuthGuard],
+        title: 'Check-in do Evento'
+      },
+      {
+        path: 'events/answer-plain/:id_code',
+        loadComponent: () => import('./pages/events/questionnaire/questionnaire.component').then(m => m.QuestionnaireComponent),
+        canActivate: [AuthGuard, AutoCheckinGuard],
+        title: 'Responder Perguntas (Sem layout)'
+      },
+      {
+        path: 'events/home-guest-v2/:id_code',
+        loadComponent: () => import('./pages/events/home-guest-v2/home-guest-v2.component').then(m => m.HomeGuestV2Component),
+        canActivate: [AutoCheckinGuard],
+        title: 'Home do Convidado V2'
+      },
+      { path: '**', redirectTo: '' }
+    ]
+  },
   // Force check-in to render without any layout wrappers
   {
     path: 'events/checkin/:id_code',
@@ -764,6 +838,11 @@ export const routes: Routes = [
         path: 'events/playlist/:id_code',
         loadComponent: () => import('./pages/events/playlist/playlist.component').then(m => m.PlaylistComponent),
         title: 'Playlist (Telão)'
+      },
+      {
+        path: 'events/prompter/:id_code',
+        loadComponent: () => import('./pages/events/prompter/prompter.component').then(m => m.PrompterComponent),
+        title: 'Prompter'
       },
       {
         path: 'invite/accept',

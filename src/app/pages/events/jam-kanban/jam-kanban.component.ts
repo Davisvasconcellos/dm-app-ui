@@ -557,6 +557,12 @@ export class JamKanbanComponent implements OnInit, OnDestroy {
     window.open(url, '_blank', 'noopener,noreferrer');
   }
 
+  openPrompterWindow(): void {
+    if (!this.selectedEventIdCode) return;
+    const url = `/events/prompter/${this.selectedEventIdCode}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+  }
+
   handleTaskDrop(data: { event: DndDropEvent, status: string }) {
     const { event, status } = data;
     const task = event.data as Task;

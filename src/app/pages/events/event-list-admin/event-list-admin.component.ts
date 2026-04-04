@@ -7,6 +7,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { EventService, EventListItem } from '../event.service';
 import { Router } from '@angular/router';
 import { ToastService } from '../../../shared/services/toast.service';
+import { AppContextService } from '../../../shared/services/app-context.service';
 
 export interface EventLink {
   text: string;
@@ -38,17 +39,19 @@ export class EventListAdminComponent implements OnInit {
   loadError: string | null = null;
 
   // Filtering
-  statusFilter: 'active' | 'paused' | 'canceled' = 'active';
+  statusFilter: 'active' | 'draft' | 'paused' | 'canceled' = 'active';
   activeCount = 0;
+  draftCount = 0;
   pausedCount = 0;
   canceledCount = 0;
 
   // Confirmation Modals State
   isConfirmModalOpen = false;
-  confirmModalType: 'pause' | 'cancel' | 'delete' | 'resume' | null = null;
+  confirmModalType: 'pause' | 'cancel' | 'delete' | 'resume' | 'publish' | null = null;
   selectedEventForAction: Event | null = null;
 
   private toast = inject(ToastService);
+  private appContext = inject(AppContextService);
 
   constructor(private eventService: EventService, private router: Router) {}
 
@@ -74,20 +77,23 @@ export class EventListAdminComponent implements OnInit {
     });
   }
 
-  setFilter(filter: 'active' | 'paused' | 'canceled') {
+  setFilter(filter: 'active' | 'draft' | 'paused' | 'canceled') {
     this.statusFilter = filter;
     this.applyFilter();
   }
 
   private applyFilter() {
     // Calcular contadores
-    this.activeCount = this.events.filter(e => !e.status || e.status === 'published' || e.status === 'draft').length;
+    this.activeCount = this.events.filter(e => e.status === 'published').length;
+    this.draftCount = this.events.filter(e => !e.status || e.status === 'draft').length;
     this.pausedCount = this.events.filter(e => e.status === 'paused').length;
     this.canceledCount = this.events.filter(e => e.status === 'canceled').length;
 
     // Filtrar lista
     if (this.statusFilter === 'active') {
-      this.filteredEvents = this.events.filter(e => !e.status || e.status === 'published' || e.status === 'draft');
+      this.filteredEvents = this.events.filter(e => e.status === 'published');
+    } else if (this.statusFilter === 'draft') {
+      this.filteredEvents = this.events.filter(e => !e.status || e.status === 'draft');
     } else {
       this.filteredEvents = this.events.filter(e => e.status === this.statusFilter);
     }
@@ -120,6 +126,12 @@ export class EventListAdminComponent implements OnInit {
   onResumeEvent(event: Event) {
     this.selectedEventForAction = event;
     this.confirmModalType = 'resume';
+    this.isConfirmModalOpen = true;
+  }
+
+  onPublishEvent(event: Event) {
+    this.selectedEventForAction = event;
+    this.confirmModalType = 'publish';
     this.isConfirmModalOpen = true;
   }
 
@@ -187,6 +199,16 @@ export class EventListAdminComponent implements OnInit {
           }
         });
         break;
+      case 'publish':
+        this.eventService.updateEventStatus(eventId, 'published').subscribe(success => {
+          if (success) {
+            this.toast.triggerToast('success', 'Sucesso', 'Evento publicado.');
+            this.loadEvents();
+          } else {
+            this.toast.triggerToast('error', 'Erro', 'Falha ao publicar evento.');
+          }
+        });
+        break;
       case 'delete':
         this.eventService.deleteEvent(eventId).subscribe(success => {
           if (success) {
@@ -210,7 +232,7 @@ export class EventListAdminComponent implements OnInit {
         return;
       }
 
-      const origin = typeof window !== 'undefined' && window.location ? window.location.origin : '';
+      const origin = this.appContext.getEventsOrigin() || (typeof window !== 'undefined' && window.location ? window.location.origin : '');
 
       const primaryLinks: EventLink[] = [
         // {

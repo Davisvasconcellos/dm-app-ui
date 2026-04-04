@@ -7,7 +7,8 @@ import { DiscogsService, DiscogsResult } from '../../../shared/services/discogs.
 import { AuthService } from '../../../shared/services/auth.service';
 import { ToastService } from '../../../shared/services/toast.service';
 import { ModalComponent } from '../../../shared/components/ui/modal/modal.component';
-import { Subject, debounceTime, distinctUntilChanged, switchMap, takeUntil } from 'rxjs';
+import { ThemeService } from '../../../shared/services/theme.service';
+import { Subject, Subscription, debounceTime, distinctUntilChanged, switchMap, takeUntil } from 'rxjs';
 
 interface Friend { id: string; name: string; avatar: string }
 
@@ -31,8 +32,11 @@ export class MusicSuggestionsListComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private fb = inject(FormBuilder);
   private toastService = inject(ToastService);
+  private themeService = inject(ThemeService);
+  private themeSub: Subscription | null = null;
 
   @Input() eventId = '';
+  currentTheme: 'light' | 'dark' = (localStorage.getItem('theme') as any) === 'dark' ? 'dark' : 'light';
   mySuggestions: MusicSuggestion[] = [];
   invitesForMe: MusicSuggestion[] = [];
   acceptedSuggestions: MusicSuggestion[] = [];
@@ -69,6 +73,8 @@ export class MusicSuggestionsListComponent implements OnInit, OnDestroy {
   selectedMusic: DiscogsResult | null = null;
   isSearchingMusic = false;
 
+  private submittingSuggestionIds = new Set<string>();
+
   private searchSubject = new Subject<string>();
   private destroy$ = new Subject<void>();
 
@@ -82,6 +88,9 @@ export class MusicSuggestionsListComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.themeSub = this.themeService.theme$.subscribe((t) => {
+      this.currentTheme = t;
+    });
     if (this.eventId) {
       this.suggestionService.loadSuggestions(this.eventId).subscribe();
     }
@@ -160,6 +169,7 @@ export class MusicSuggestionsListComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
+    if (this.themeSub) this.themeSub.unsubscribe();
     this.destroy$.next();
     this.destroy$.complete();
   }
@@ -272,8 +282,32 @@ export class MusicSuggestionsListComponent implements OnInit, OnDestroy {
       };
 
       this.suggestionService.addSuggestion(payload).subscribe({
-        next: () => {
-          this.toastService.triggerToast('success', 'Sugestão criada', 'Sua sugestão foi criada com sucesso.');
+        next: (created) => {
+          const shouldAutoSubmit = this.canSubmitSuggestion(created);
+          if (shouldAutoSubmit) {
+            const id = created.id_code || created.id;
+            const key = String(id);
+            this.submittingSuggestionIds.add(key);
+            this.patchSuggestionStatus(key, 'SUBMITTED');
+            this.suggestionService.submitSuggestion(id).subscribe({
+              next: () => {
+                this.submittingSuggestionIds.delete(key);
+                this.patchSuggestionStatus(key, 'SUBMITTED');
+                if (this.eventId) this.suggestionService.loadSuggestions(this.eventId).subscribe();
+                this.toastService.triggerToast('success', 'Sugestão enviada', 'Sua sugestão foi enviada para aprovação.');
+                this.toggleCreate();
+              },
+              error: (err) => {
+                this.submittingSuggestionIds.delete(key);
+                this.patchSuggestionStatus(key, 'DRAFT');
+                this.toastService.triggerToast('error', 'Erro ao enviar', err?.message || 'Não foi possível enviar a sugestão.');
+                this.toggleCreate();
+              }
+            });
+            return;
+          }
+
+          this.toastService.triggerToast('success', 'Sugestão criada', 'Sua sugestão foi criada e enviada para convidados.');
           this.toggleCreate();
         },
         error: (err) => this.toastService.triggerToast('error', 'Erro ao criar', err.message || 'Não foi possível criar a sugestão.')
@@ -290,7 +324,12 @@ export class MusicSuggestionsListComponent implements OnInit, OnDestroy {
   }
 
   getSuggestionStatus(s: MusicSuggestion): { labelKey: string, class: string } {
-    if (s.status === 'APPROVED') return { labelKey: 'events.guestV2.suggestions.status.approved', class: 'bg-green-500/20 text-green-500' };
+    if (s.status === 'APPROVED') {
+      return {
+        labelKey: 'events.guestV2.suggestions.status.approved',
+        class: this.currentTheme === 'dark' ? 'bg-green-500/20 text-green-500' : 'bg-green-100 text-green-700'
+      };
+    }
     if (s.status === 'REJECTED') return { labelKey: 'events.guestV2.suggestions.status.rejected', class: 'bg-red-500/20 text-red-500' };
     if (s.status === 'SUBMITTED') return { labelKey: 'events.guestV2.suggestions.status.submitted', class: 'bg-blue-500/20 text-blue-500' };
 
@@ -309,6 +348,11 @@ export class MusicSuggestionsListComponent implements OnInit, OnDestroy {
     const hasPending = s.participants.some(p => p.status === 'PENDING');
     if (hasPending) return 'border-t-indigo-500';
     return 'border-t-yellow-500';
+  }
+
+  getSuggestionAccentClass(s: MusicSuggestion): string {
+    if (this.currentTheme === 'light') return 'border-l-purple-500';
+    return this.getSuggestionBorderClass(s);
   }
 
   getInviteSender(suggestion: MusicSuggestion): Participant | null {
@@ -432,14 +476,22 @@ export class MusicSuggestionsListComponent implements OnInit, OnDestroy {
       return;
     }
     const id = s.id_code || s.id;
+    const key = String(id);
+    if (this.submittingSuggestionIds.has(key)) return;
+    this.submittingSuggestionIds.add(key);
+    this.patchSuggestionStatus(key, 'SUBMITTED');
     this.suggestionService.submitSuggestion(id).subscribe({
       next: () => {
+        this.submittingSuggestionIds.delete(key);
         this.toastService.triggerToast('success', 'Sugestão enviada', 'Sugestão enviada! A banda irá analisar.');
-        if (s) {
-          s.status = 'SUBMITTED';
-        }
+        this.patchSuggestionStatus(key, 'SUBMITTED');
+        if (this.eventId) this.suggestionService.loadSuggestions(this.eventId).subscribe();
       },
-      error: (err) => this.toastService.triggerToast('error', 'Erro ao enviar', err.message || 'Não foi possível enviar a sugestão.')
+      error: (err) => {
+        this.submittingSuggestionIds.delete(key);
+        this.patchSuggestionStatus(key, 'DRAFT');
+        this.toastService.triggerToast('error', 'Erro ao enviar', err.message || 'Não foi possível enviar a sugestão.');
+      }
     });
   }
 
@@ -510,6 +562,23 @@ export class MusicSuggestionsListComponent implements OnInit, OnDestroy {
   canSubmitSuggestion(s: MusicSuggestion): boolean {
     const invitees = (s?.participants || []).filter(p => !p.is_creator);
     return invitees.every(p => p.status === 'ACCEPTED');
+  }
+
+  isSubmittingSuggestion(s: MusicSuggestion): boolean {
+    const key = String(s?.id_code || s?.id || '');
+    if (!key) return false;
+    return this.submittingSuggestionIds.has(key);
+  }
+
+  private patchSuggestionStatus(idOrCode: string, status: any): void {
+    const key = String(idOrCode);
+    const update = (arr: MusicSuggestion[]) => {
+      const found = arr.find((x) => String(x.id_code || x.id) === key);
+      if (found) found.status = status;
+    };
+    update(this.mySuggestions);
+    update(this.acceptedSuggestions);
+    update(this.invitesForMe);
   }
 
   acceptInvite(suggestionId: string) {

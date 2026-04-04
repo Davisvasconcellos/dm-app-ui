@@ -28,6 +28,25 @@
     </button>
 
     <button
+      (click)="setFilter('draft')"
+      [class.bg-white]="statusFilter === 'draft'"
+      [class.dark:bg-gray-700]="statusFilter === 'draft'"
+      [class.shadow-sm]="statusFilter === 'draft'"
+      [class.text-purple-600]="statusFilter === 'draft'"
+      [class.dark:text-purple-400]="statusFilter === 'draft'"
+      [class.text-gray-500]="statusFilter !== 'draft'"
+      class="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-all">
+      <span>Rascunhos</span>
+      <span class="px-2 py-0.5 rounded-full text-xs"
+        [class.bg-purple-100]="statusFilter === 'draft'"
+        [class.text-purple-600]="statusFilter === 'draft'"
+        [class.bg-gray-100]="statusFilter !== 'draft'"
+        [class.text-gray-600]="statusFilter !== 'draft'">
+        {{ draftCount }}
+      </span>
+    </button>
+
+    <button
       (click)="setFilter('paused')"
       [class.bg-white]="statusFilter === 'paused'"
       [class.dark:bg-gray-700]="statusFilter === 'paused'"
@@ -82,6 +101,7 @@
         (editEvent)="onEditEvent(event)"
         (pauseEvent)="onPauseEvent(event)"
         (resumeEvent)="onResumeEvent(event)"
+        (publishEvent)="onPublishEvent(event)"
         (cancelEvent)="onCancelEvent(event)"
         (deleteEvent)="onDeleteEvent(event)"
       ></app-event-card>
@@ -111,12 +131,14 @@
            [ngClass]="{
              'bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-500': confirmModalType === 'pause',
              'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-500': confirmModalType === 'resume',
+             'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-500': confirmModalType === 'publish',
              'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400': confirmModalType === 'cancel',
              'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-500': confirmModalType === 'delete'
            }">
         <span class="[&>svg]:h-6 [&>svg]:w-6">
           <svg *ngIf="confirmModalType === 'pause'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="10" y1="15" x2="10" y2="9"></line><line x1="14" y1="15" x2="14" y2="9"></line></svg>
           <svg *ngIf="confirmModalType === 'resume'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+          <svg *ngIf="confirmModalType === 'publish'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"></path><path d="M22 2L15 22l-4-9-9-4 20-7z"></path></svg>
           <svg *ngIf="confirmModalType === 'cancel'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></svg>
           <svg *ngIf="confirmModalType === 'delete'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="currentColor">
             <path fill-rule="evenodd" clip-rule="evenodd" d="M9.62684 11.7496C9.04105 11.1638 9.04105 10.2141 9.62684 9.6283C10.2126 9.04252 11.1624 9.04252 11.7482 9.6283L18.9985 16.8786L26.2485 9.62851C26.8343 9.04273 27.7841 9.04273 28.3699 9.62851C28.9556 10.2143 28.9556 11.164 28.3699 11.7498L21.1198 18.9999L28.3699 26.25C28.9556 26.8358 28.9556 27.7855 28.3699 28.3713C27.7841 28.9571 26.8343 28.9571 26.2485 28.3713L18.9985 21.1212L11.7482 28.3715C11.1624 28.9573 10.2126 28.9573 9.62684 28.3715C9.04105 27.7857 9.04105 26.836 9.62684 26.2502L16.8771 18.9999L9.62684 11.7496Z" fill=""/>
@@ -128,6 +150,7 @@
         <ng-container [ngSwitch]="confirmModalType">
           <span *ngSwitchCase="'pause'">Pausar Evento?</span>
           <span *ngSwitchCase="'resume'">Retomar Evento?</span>
+          <span *ngSwitchCase="'publish'">Publicar Evento?</span>
           <span *ngSwitchCase="'cancel'">Cancelar Evento?</span>
           <span *ngSwitchCase="'delete'">Excluir Evento?</span>
         </ng-container>
@@ -136,6 +159,7 @@
         <ng-container [ngSwitch]="confirmModalType">
           <span *ngSwitchCase="'pause'">O evento ficará indisponível temporariamente para os participantes.</span>
           <span *ngSwitchCase="'resume'">O evento voltará a ficar visível e aceitará interações normalmente.</span>
+          <span *ngSwitchCase="'publish'">O evento ficará disponível publicamente e aceitará reservas de ingresso.</span>
           <span *ngSwitchCase="'cancel'">O evento será cancelado e os participantes notificados.</span>
           <span *ngSwitchCase="'delete'">Esta ação não pode ser desfeita. Todos os dados serão perdidos.</span>
         </ng-container>
@@ -156,6 +180,7 @@
           [ngClass]="{
              'bg-orange-600 hover:bg-orange-500': confirmModalType === 'pause',
              'bg-green-600 hover:bg-green-500': confirmModalType === 'resume',
+             'bg-emerald-600 hover:bg-emerald-500': confirmModalType === 'publish',
              'bg-gray-600 hover:bg-gray-500': confirmModalType === 'cancel',
              'bg-red-600 hover:bg-red-500': confirmModalType === 'delete'
           }"

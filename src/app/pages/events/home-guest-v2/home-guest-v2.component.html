@@ -1,4 +1,4 @@
-<div class="relative w-full h-screen overflow-hidden flex flex-col bg-[#050505]">
+<div class="relative w-full h-screen overflow-hidden flex flex-col" [ngClass]="currentTheme === 'dark' ? 'bg-[#050505]' : 'bg-white'">
 
   <!-- Main Content Area -->
   <div class="relative flex-grow flex flex-row overflow-hidden z-20">
@@ -6,13 +6,17 @@
 
       <!-- DASHBOARD VIEW -->
       @if (viewMode === 'dashboard') {
-      <div @fadeIn class="w-full h-full flex flex-col bg-[#050505]">
+      <div @fadeIn class="w-full h-full flex flex-col" [ngClass]="currentTheme === 'dark' ? 'bg-[#050505]' : 'bg-white'">
         <!-- Header -->
         <header
-          class="flex-none flex justify-between items-center px-4 py-6 md:px-10 md:py-8 border-b border-white/5 bg-[#050505] z-10">
+          class="flex-none flex justify-between items-center px-4 py-6 md:px-10 md:py-8 border-b z-50"
+          [ngClass]="currentTheme === 'dark' ? 'border-white/5 bg-[#050505]' : 'border-gray-200 bg-white'"
+        >
           <div>
             <h1
-              class="text-white font-oswald font-black italic text-xl md:text-3xl tracking-tighter uppercase leading-none">
+              class="font-oswald font-black italic text-xl md:text-3xl tracking-tighter uppercase leading-none"
+              [ngClass]="currentTheme === 'dark' ? 'text-white' : 'text-gray-900'"
+            >
               JAM <span class="text-blue-600">DASHBOARD</span>
             </h1>
             <p class="text-gray-500 text-[10px] font-bold tracking-[0.2em] uppercase mt-1">
@@ -20,11 +24,11 @@
             </p>
           </div>
 
-          <div class="relative border-l border-white/10 pl-6">
+          <div class="relative border-l pl-6" [ngClass]="currentTheme === 'dark' ? 'border-white/10' : 'border-gray-200'">
             <button (click)="toggleProfileMenu()"
               class="flex items-center gap-4 hover:opacity-80 transition-opacity focus:outline-none">
               <div class="text-right">
-                <p class="text-white font-oswald font-bold text-xs uppercase italic">{{ getFirstName(currentUser?.name)
+                <p class="font-oswald font-bold text-xs uppercase italic" [ngClass]="currentTheme === 'dark' ? 'text-white' : 'text-gray-900'">{{ getFirstName(currentUser?.name)
                   || 'Convidado' }}</p>
                 <p class="text-blue-500 font-black text-[8px] uppercase tracking-widest">{{
                   'events.guestV2.dashboard.participant' | translate }}</p>
@@ -40,7 +44,11 @@
             <!-- Dropdown Menu -->
             @if (isProfileMenuOpen) {
             <div
-              class="absolute top-full right-0 mt-4 w-56 bg-[#0a0a0a] border border-white/10 rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.8)] z-50 overflow-hidden backdrop-blur-xl ring-1 ring-white/5">
+              class="absolute top-full right-0 mt-4 w-56 border rounded-2xl z-50 overflow-hidden backdrop-blur-xl ring-1"
+              [ngClass]="currentTheme === 'dark'
+                ? 'bg-[#0a0a0a] border-white/10 shadow-[0_10px_40px_rgba(0,0,0,0.8)] ring-white/5'
+                : 'bg-white border-gray-200 shadow-[0_10px_30px_rgba(0,0,0,0.12)] ring-black/5'"
+            >
 
               <!-- Language Section -->
               <div class="p-4">
@@ -49,7 +57,9 @@
                   @for (lang of languages; track lang.code) {
                   <button (click)="changeLanguage(lang.code)"
                     class="w-full flex items-center gap-3 p-2.5 rounded-xl transition-all group"
-                    [ngClass]="currentLang === lang.code ? 'bg-blue-600/10 border border-blue-500/20' : 'hover:bg-white/5 border border-transparent'">
+                    [ngClass]="currentLang === lang.code
+                      ? 'bg-blue-600/10 border border-blue-500/20'
+                      : (currentTheme === 'dark' ? 'hover:bg-white/5 border border-transparent' : 'hover:bg-gray-100 border border-transparent')">
 
                     <div class="w-6 h-6 rounded-full overflow-hidden shadow-sm shrink-0 relative">
                       <img [src]="lang.flag" class="w-full h-full object-cover" alt="">
@@ -60,7 +70,9 @@
                     </div>
 
                     <span class="font-oswald text-xs uppercase tracking-wider flex-grow text-left"
-                      [ngClass]="currentLang === lang.code ? 'text-blue-400 font-bold' : 'text-gray-300 group-hover:text-white'">
+                      [ngClass]="currentLang === lang.code
+                        ? 'text-blue-400 font-bold'
+                        : (currentTheme === 'dark' ? 'text-gray-300 group-hover:text-white' : 'text-gray-700 group-hover:text-gray-900')">
                       {{ lang.label }}
                     </span>
 
@@ -70,6 +82,43 @@
                   </button>
                   }
                 </div>
+                <div class="my-3 border-t" [ngClass]="currentTheme === 'dark' ? 'border-white/10' : 'border-gray-200'"></div>
+
+                <p class="text-gray-500 text-[9px] uppercase tracking-[0.2em] font-bold mb-3 pl-1">Tema / Theme</p>
+                <div class="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    (click)="setTheme('light')"
+                    class="px-3 py-2 rounded-xl border text-[10px] font-bold uppercase tracking-wider transition-all"
+                    [ngClass]="currentTheme === 'light'
+                      ? 'bg-blue-600/10 border-blue-500/20 text-blue-600'
+                      : 'border-white/10 text-gray-300 hover:bg-white/5'"
+                  >
+                    Claro
+                  </button>
+                  <button
+                    type="button"
+                    (click)="setTheme('dark')"
+                    class="px-3 py-2 rounded-xl border text-[10px] font-bold uppercase tracking-wider transition-all"
+                    [ngClass]="currentTheme === 'dark'
+                      ? 'bg-blue-600/10 border-blue-500/20 text-blue-400'
+                      : 'border-gray-200 text-gray-700 hover:bg-gray-100'"
+                  >
+                    Escuro
+                  </button>
+                </div>
+
+                <div class="my-3 border-t" [ngClass]="currentTheme === 'dark' ? 'border-white/10' : 'border-gray-200'"></div>
+                <button
+                  type="button"
+                  (click)="exitEvent()"
+                  class="w-full flex items-center gap-3 p-2.5 rounded-xl transition-all border border-transparent hover:bg-red-500/10 hover:border-red-500/20 group"
+                >
+                  <span class="font-oswald text-xs uppercase tracking-wider flex-grow text-left"
+                    [ngClass]="currentTheme === 'dark' ? 'text-gray-300 group-hover:text-red-300' : 'text-gray-700 group-hover:text-red-600'">
+                    Sair do evento
+                  </span>
+                </button>
               </div>
             </div>
             }
@@ -88,8 +137,12 @@
 
             <!-- 1 - NO PALCO AGORA -->
             <section
-              class="relative bg-emerald-900/20 rounded-3xl px-2 py-6 md:p-6 border border-emerald-500/30 shadow-[0_0_50px_rgba(16,185,129,0.05)] mb-10">
-              <div class="flex justify-between items-end mb-6 border-b border-emerald-500/30 pb-2">
+              class="relative rounded-3xl px-2 py-6 md:p-6 mb-10"
+              [ngClass]="currentTheme === 'dark'
+                ? 'bg-emerald-900/20 border border-emerald-500/30 shadow-[0_0_50px_rgba(16,185,129,0.05)]'
+                : 'bg-white border border-black/5 shadow-[0_4px_20px_rgba(0,0,0,0.05)]'"
+            >
+              <div class="flex justify-between items-end mb-6 border-b pb-2" [ngClass]="currentTheme === 'dark' ? 'border-emerald-500/30' : 'border-black/5'">
                 <!-- Header Left (Visible only if song exists) -->
                 <div class="flex items-center gap-3">
                   @if (currentSong) {
@@ -97,45 +150,67 @@
                     class="w-2 h-2 md:w-3 md:h-3 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_15px_#10b981]"></span>
                   }
                   @if (!currentSong) {
-                  <span class="w-2 h-2 md:w-3 md:h-3 bg-gray-500 rounded-full opacity-50"></span>
+                  <span class="w-2 h-2 md:w-3 md:h-3 rounded-full opacity-50" [ngClass]="currentTheme === 'dark' ? 'bg-gray-500' : 'bg-gray-400'"></span>
                   }
                   <h2
-                    class="text-emerald-500 font-oswald font-black italic text-2xl md:text-3xl uppercase tracking-tighter leading-none">
+                    class="font-oswald font-black italic text-2xl md:text-3xl uppercase tracking-tighter leading-none"
+                    [ngClass]="currentTheme === 'dark' ? 'text-emerald-500' : 'text-emerald-600'"
+                  >
                     {{ 'events.guestV2.dashboard.onStage' | translate }}</h2>
                 </div>
 
                 <!-- Refresh Button (Always Visible) -->
                 <button (click)="loadJams()"
-                  class="group flex items-center gap-2 px-3 py-1.5 bg-blue-600/10 hover:bg-blue-600/20 border border-blue-500/20 hover:border-blue-500/40 rounded-full transition-all active:scale-95 mb-1">
-                  <svg class="w-3 h-3 text-blue-500 group-hover:rotate-180 transition-transform duration-500"
+                  class="group flex items-center gap-2 px-3 py-1.5 border rounded-full transition-all active:scale-95 mb-1"
+                  [ngClass]="currentTheme === 'dark'
+                    ? 'bg-blue-600/10 hover:bg-blue-600/20 border-blue-500/20 hover:border-blue-500/40'
+                    : 'bg-white hover:bg-gray-50 border-black/10 hover:border-black/20 shadow-sm'"
+                >
+                  <svg class="w-3 h-3 group-hover:rotate-180 transition-transform duration-500"
+                    [ngClass]="currentTheme === 'dark' ? 'text-blue-500' : 'text-blue-600'"
                     fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                       d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                   </svg>
-                  <span class="text-blue-500 font-bold text-[9px] uppercase tracking-widest">{{
+                  <span class="font-bold text-[9px] uppercase tracking-widest" [ngClass]="currentTheme === 'dark' ? 'text-blue-500' : 'text-blue-600'">{{
                     'events.guestV2.dashboard.refresh' | translate }}</span>
                 </button>
               </div>
 
               @if (currentSong) {
               <div
-                class="bg-[#121212] rounded-xl px-2 py-6 md:p-6 border-l-[6px] border-emerald-500 shadow-2xl relative overflow-hidden">
+                role="button"
+                tabindex="0"
+                (click)="onStageCardClick()"
+                class="rounded-xl px-2 py-6 md:p-6 border-l-[6px] border-emerald-500 shadow-2xl relative overflow-hidden transition-transform active:scale-[0.99]"
+                [ngClass]="(currentTheme === 'dark' ? 'bg-[#121212]' : 'bg-white border border-black/5 shadow-[0_4px_20px_rgba(0,0,0,0.05)]') + (canOpenCurrentLyrics ? ' cursor-pointer' : '')"
+              >
                 <div class="relative z-10">
                   <h3
-                    class="text-white font-oswald font-black italic text-3xl md:text-4xl uppercase tracking-tighter leading-tight">
+                    class="font-oswald font-black italic text-3xl md:text-4xl uppercase tracking-tighter leading-tight"
+                    [ngClass]="currentTheme === 'dark' ? 'text-white' : 'text-gray-900'"
+                  >
                     {{ currentSong.title }}
                   </h3>
-                  <p class="text-gray-500 font-bold uppercase text-xs tracking-widest mt-1">{{ currentSong.artist }}</p>
+                  <p class="font-bold uppercase text-xs tracking-widest mt-1" [ngClass]="currentTheme === 'dark' ? 'text-gray-500' : 'text-gray-600'">{{ currentSong.artist }}</p>
                 </div>
+                @if (currentSongHasLyrics) {
+                  <div class="absolute bottom-3 right-3 z-20 rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-widest"
+                    [ngClass]="currentTheme === 'dark' ? 'bg-white/5 border-white/10 text-white/80' : 'bg-black/5 border-black/10 text-gray-800'">
+                    TAP TO LYRICS
+                  </div>
+                }
               </div>
               } @else {
               <div
-                class="bg-[#121212]/50 rounded-xl px-2 py-6 md:p-6 border-l-[6px] border-emerald-500/30 shadow-none relative overflow-hidden">
+                class="rounded-xl px-2 py-6 md:p-6 border-l-[6px] shadow-none relative overflow-hidden"
+                [ngClass]="currentTheme === 'dark' ? 'bg-[#121212]/50 border-emerald-500/30' : 'bg-white border border-black/5 shadow-[0_4px_20px_rgba(0,0,0,0.05)]'"
+              >
                 <div class="relative z-10 flex flex-col items-center justify-center text-center py-4">
-                  <h3 class="text-emerald-500/50 font-oswald font-bold italic text-xl uppercase tracking-widest">
+                  <h3 class="font-oswald font-bold italic text-xl uppercase tracking-widest" [ngClass]="currentTheme === 'dark' ? 'text-emerald-500/50' : 'text-emerald-700'">
                     {{ 'events.guestV2.playlist.stageFree' | translate }}
                   </h3>
-                  <p class="text-gray-600 text-xs uppercase tracking-widest mt-2">{{
+                  <p class="text-xs uppercase tracking-widest mt-2" [ngClass]="currentTheme === 'dark' ? 'text-gray-600' : 'text-gray-700'">{{
                     'events.guestV2.playlist.noMusicPlaying' | translate }}</p>
                 </div>
               </div>
@@ -144,15 +219,25 @@
 
             <!-- 2 - MINHA ESCALAÇÃO -->
             <section
-              class="relative bg-yellow-900/20 rounded-3xl px-2 py-6 md:p-6 border border-yellow-500/30 shadow-[0_0_50px_rgba(234,179,8,0.05)] mb-10">
+              class="relative rounded-3xl px-2 py-6 md:p-6 mb-10"
+              [ngClass]="currentTheme === 'dark'
+                ? 'bg-yellow-900/20 border border-yellow-500/30 shadow-[0_0_50px_rgba(234,179,8,0.05)]'
+                : 'bg-white border border-black/5 border-l-4 border-l-amber-500 shadow-[0_4px_20px_rgba(0,0,0,0.05)]'"
+            >
               <h2
-                class="text-yellow-500 font-oswald font-black italic text-2xl md:text-3xl uppercase tracking-tighter mb-6 border-b border-yellow-500/30 pb-2 pl-5 md:pl-6">
+                class="font-oswald font-black italic text-2xl md:text-3xl uppercase tracking-tighter mb-6 border-b pb-2 pl-5 md:pl-6"
+                [ngClass]="currentTheme === 'dark' ? 'text-yellow-500 border-yellow-500/30' : 'text-amber-500 border-black/5'"
+              >
                 {{ 'events.guestV2.dashboard.myJams' | translate }}</h2>
               <div class="space-y-4" [@listAnimation]="userQueue.length">
                 @if (userQueue.length > 0) {
                 @for (song of userQueue; track song.id; let i = $index) {
                 <div
-                  class="bg-[#121212] rounded-2xl p-3 flex items-center gap-4 border border-white/5 group hover:border-yellow-500/20 transition-all shadow-lg overflow-hidden">
+                  class="rounded-2xl p-3 flex items-center gap-4 border group transition-all shadow-lg overflow-hidden"
+                  [ngClass]="currentTheme === 'dark'
+                    ? 'bg-[#121212] border-white/5 hover:border-yellow-500/20'
+                    : 'bg-white border-black/5 hover:border-black/10 shadow-[0_4px_16px_rgba(0,0,0,0.04)] hover:shadow-[0_6px_24px_rgba(0,0,0,0.06)]'"
+                >
 
                   <div class="flex items-stretch shrink-0 gap-1.5">
                     <div
@@ -171,11 +256,15 @@
                   <div class="flex-grow min-w-0 ml-1">
                     <div class="flex flex-col">
                       <h4
-                        class="text-white font-oswald font-black italic text-lg md:text-3xl truncate uppercase leading-none tracking-tighter mb-1.5 group-hover:text-yellow-500 transition-colors">
+                        class="font-oswald font-black italic text-lg md:text-3xl truncate uppercase leading-none tracking-tighter mb-1.5 transition-colors"
+                        [ngClass]="currentTheme === 'dark' ? 'text-white group-hover:text-yellow-500' : 'text-gray-900 group-hover:text-amber-600'"
+                      >
                         {{ song.title }}
                       </h4>
                       <p
-                        class="text-yellow-500 font-oswald font-bold text-[10px] md:text-sm uppercase tracking-[0.15em] italic">
+                        class="font-oswald font-bold text-[10px] md:text-sm uppercase tracking-[0.15em] italic"
+                        [ngClass]="currentTheme === 'dark' ? 'text-yellow-500' : 'text-gray-700'"
+                      >
                         {{ song.artist }}
                       </p>
                     </div>
@@ -184,15 +273,17 @@
                   <div class="hidden sm:flex gap-1.5 pr-4 shrink-0">
                     @for (dot of [1,2,3]; track dot) {
                     <div class="w-2 h-2 rounded-full"
-                      [ngClass]="dot <= 2 ? 'bg-yellow-500/60 shadow-[0_0_8px_rgba(234,179,8,0.3)]' : 'bg-white/5'">
+                      [ngClass]="dot <= 2
+                        ? 'bg-amber-500/60 shadow-[0_0_8px_rgba(245,158,11,0.25)]'
+                        : (currentTheme === 'dark' ? 'bg-white/5' : 'bg-gray-200')">
                     </div>
                     }
                   </div>
                 </div>
                 }
                 } @else {
-                <div class="border-2 border-dashed border-white/5 rounded-2xl p-10 text-center">
-                  <p class="text-gray-600 font-oswald uppercase italic tracking-widest text-sm">{{
+                <div class="border-2 border-dashed rounded-2xl p-10 text-center" [ngClass]="currentTheme === 'dark' ? 'border-white/5' : 'border-black/10 bg-white shadow-[0_4px_16px_rgba(0,0,0,0.03)]'">
+                  <p class="font-oswald uppercase italic tracking-widest text-sm" [ngClass]="currentTheme === 'dark' ? 'text-gray-600' : 'text-gray-700'">{{
                     'events.guestV2.dashboard.emptyQueueMessage' | translate }}</p>
                 </div>
                 }
@@ -202,15 +293,23 @@
             <!-- CONVITES (INVITES) -->
             @if (invitesForMe.length > 0) {
             <section
-              class="relative bg-purple-900/20 rounded-3xl px-2 py-6 md:p-6 border border-purple-500/30 shadow-[0_0_50px_rgba(168,85,247,0.05)] mb-10">
+              class="relative rounded-3xl px-2 py-6 md:p-6 mb-10"
+              [ngClass]="currentTheme === 'dark'
+                ? 'bg-purple-900/20 border border-purple-500/30 shadow-[0_0_50px_rgba(168,85,247,0.05)]'
+                : 'bg-white border border-black/5 border-l-4 border-l-purple-500 shadow-[0_4px_20px_rgba(0,0,0,0.05)]'"
+            >
               <h2
-                class="text-purple-500 font-oswald font-black italic text-2xl md:text-3xl uppercase tracking-tighter mb-6 border-b border-purple-500/30 pb-2 pl-5 md:pl-6">
+                class="font-oswald font-black italic text-2xl md:text-3xl uppercase tracking-tighter mb-6 border-b pb-2 pl-5 md:pl-6"
+                [ngClass]="currentTheme === 'dark' ? 'text-purple-500 border-purple-500/30' : 'text-purple-600 border-black/5'"
+              >
                 {{ 'events.guestV2.invites.title' | translate }} ({{ invitesForMe.length }})
               </h2>
               <div class="space-y-4">
                 @for (invite of invitesForMe; track invite.id) {
                 <div
-                  class="bg-[#121212] rounded-2xl p-4 border border-white/5 shadow-lg relative overflow-hidden group">
+                  class="rounded-2xl p-4 border shadow-lg relative overflow-hidden group"
+                  [ngClass]="currentTheme === 'dark' ? 'bg-[#121212] border-white/5' : 'bg-white border-gray-200'"
+                >
                   <!-- Glow effect -->
                   <div
                     class="absolute -right-10 -top-10 w-32 h-32 bg-purple-500/20 rounded-full blur-3xl group-hover:bg-purple-500/30 transition-all">
@@ -226,7 +325,7 @@
                           (error)="onImageError($event)"
                           class="w-4 h-4 rounded-full object-cover border border-purple-500/30"
                           [alt]="getInviter(invite)?.name || 'Avatar'">
-                        <span class="text-purple-300 text-[10px] font-bold uppercase tracking-wider">
+                        <span class="text-[10px] font-bold uppercase tracking-wider" [ngClass]="currentTheme === 'dark' ? 'text-purple-300' : 'text-purple-700'">
                           {{ getFirstName(getInviter(invite)?.name) | titlecase }}
                         </span>
                       </div>
@@ -237,17 +336,21 @@
                         <!-- Instrument Icon -->
                         <div
                           class="w-14 h-14 md:w-16 md:h-16 flex items-center justify-center bg-purple-500/10 border border-purple-500/30 text-purple-400 rounded-xl shrink-0 shadow-[inset_0_0_10px_rgba(168,85,247,0.2)]">
+                          <div [ngClass]="currentTheme === 'dark' ? 'text-purple-400' : 'text-purple-700'">
                           <ng-container [ngTemplateOutlet]="instrumentIcon"
                             [ngTemplateOutletContext]="{ type: getInstrumentType(getMyInviteInstrument(invite)) }"></ng-container>
+                          </div>
                         </div>
 
                         <!-- Info (No Badge) -->
                         <div>
                           <h3
-                            class="text-white font-oswald font-black italic text-xl md:text-2xl uppercase tracking-tighter leading-none mb-1">
+                            class="font-oswald font-black italic text-xl md:text-2xl uppercase tracking-tighter leading-none mb-1"
+                            [ngClass]="currentTheme === 'dark' ? 'text-white' : 'text-gray-900'"
+                          >
                             {{ invite.song_name }}
                           </h3>
-                          <p class="text-gray-400 font-bold uppercase text-xs tracking-widest">{{ invite.artist_name }}
+                          <p class="font-bold uppercase text-xs tracking-widest" [ngClass]="currentTheme === 'dark' ? 'text-gray-400' : 'text-gray-600'">{{ invite.artist_name }}
                           </p>
                         </div>
                       </div>
@@ -256,7 +359,11 @@
                       <div class="flex items-center gap-3 w-full md:w-auto mt-2 md:mt-0 pl-18 md:pl-0">
                         @if (!isAccepted(invite)) {
                         <button (click)="openRejectModal(invite)" [disabled]="isProcessingInvite[invite.id]"
-                          class="flex-1 md:flex-none px-4 py-2.5 rounded-xl border border-white/10 text-gray-400 hover:text-white hover:bg-white/5 text-xs font-bold uppercase tracking-wider transition-all">
+                          class="flex-1 md:flex-none px-4 py-2.5 rounded-xl border text-xs font-bold uppercase tracking-wider transition-all"
+                          [ngClass]="currentTheme === 'dark'
+                            ? 'border-white/10 text-gray-400 hover:text-white hover:bg-white/5'
+                            : 'border-gray-300 text-gray-700 hover:text-gray-900 hover:bg-gray-100'"
+                        >
                           {{ 'events.guestV2.invites.reject' | translate }}
                         </button>
                         <button (click)="acceptInvite(invite)" [disabled]="isProcessingInvite[invite.id]"
@@ -269,7 +376,11 @@
                         </button>
                         } @else {
                         <div
-                          class="flex-1 md:flex-none px-6 py-2.5 rounded-xl bg-green-500/20 border border-green-500/30 text-green-400 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2">
+                          class="flex-1 md:flex-none px-6 py-2.5 rounded-xl border text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2"
+                          [ngClass]="currentTheme === 'dark'
+                            ? 'bg-green-500/20 border-green-500/30 text-green-400'
+                            : 'bg-green-50 border-green-200 text-green-700'"
+                        >
                           <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24"
                             fill="currentColor">
                             <path
@@ -291,33 +402,43 @@
 
             <!-- 3 - DISPONÍVEIS -->
             <section
-              class="relative bg-blue-900/20 rounded-3xl px-2 py-6 md:p-6 border border-blue-500/30 shadow-[0_0_50px_rgba(59,130,246,0.05)]">
-              <div class="flex justify-between items-end mb-6 border-b border-blue-500/30 pb-2">
+              class="relative rounded-3xl px-2 py-6 md:p-6"
+              [ngClass]="currentTheme === 'dark'
+                ? 'bg-blue-900/20 border border-blue-500/30 shadow-[0_0_50px_rgba(59,130,246,0.05)]'
+                : 'bg-white border border-black/5 shadow-[0_4px_20px_rgba(0,0,0,0.05)]'"
+            >
+              <div class="flex justify-between items-end mb-6 border-b pb-2" [ngClass]="currentTheme === 'dark' ? 'border-blue-500/30' : 'border-black/5'">
                 <h2
-                  class="text-blue-500 font-oswald font-black italic text-2xl md:text-3xl uppercase tracking-tighter leading-none pl-5 md:pl-6">
+                  class="font-oswald font-black italic text-2xl md:text-3xl uppercase tracking-tighter leading-none pl-5 md:pl-6"
+                  [ngClass]="currentTheme === 'dark' ? 'text-blue-500' : 'text-blue-500'"
+                >
                   {{ 'events.guestV2.dashboard.openToJam' | translate }}</h2>
               </div>
               <div class="grid grid-cols-1 gap-4" [@listAnimation]="plannedSongs.length">
                 @for (song of plannedSongs; track song.id) {
                 <div
-                  class="bg-[#121212] border border-white/5 rounded-xl overflow-hidden shadow-xl transition-all group relative"
-                  [ngClass]="myStatusMap[song.id] === 'pending' ? 'border-t-4 border-t-yellow-500' : 'border-t-4 border-t-blue-500'">
+                  class="rounded-xl overflow-hidden transition-all group relative"
+                  [ngClass]="currentTheme === 'dark'
+                    ? ('bg-[#121212] border border-white/5 shadow-xl ' + (myStatusMap[song.id] === 'pending' ? 'border-t-4 border-t-yellow-500' : 'border-t-4 border-t-blue-500'))
+                    : ('bg-white border border-black/5 shadow-[0_4px_20px_rgba(0,0,0,0.05)] border-l-4 ' + (myStatusMap[song.id] === 'pending' ? 'border-l-amber-500' : 'border-l-blue-500'))">
 
                   <div class="px-4 py-5 md:p-6">
                     <div class="flex justify-between items-start mb-4">
                       <div class="flex-grow min-w-0 pr-4">
                         <h3
-                          class="text-white font-oswald font-black text-lg md:text-3xl uppercase tracking-tighter leading-none mb-1 group-hover:text-blue-400 transition-colors truncate">
+                          class="font-oswald font-black text-lg md:text-3xl uppercase tracking-tighter leading-none mb-1 transition-colors truncate"
+                          [ngClass]="currentTheme === 'dark' ? 'text-white group-hover:text-blue-400' : 'text-gray-900 group-hover:text-blue-700'"
+                        >
                           {{ song.title }}
                         </h3>
-                        <p class="text-gray-400 text-[10px] md:text-xs font-bold uppercase tracking-widest">{{
+                        <p class="text-[10px] md:text-xs font-bold uppercase tracking-widest" [ngClass]="currentTheme === 'dark' ? 'text-gray-400' : 'text-gray-600'">{{
                           song.artist }}</p>
                       </div>
                     </div>
 
                     <div class="flex items-end justify-between flex-wrap gap-4">
                       <div class="flex-1 min-w-0 overflow-hidden">
-                        <div class="flex gap-2 md:gap-3 overflow-x-auto pb-2 custom-scrollbar-thin snap-x">
+                        <div class="flex gap-2 md:gap-3 overflow-x-auto overflow-y-visible pt-2 pb-2 custom-scrollbar-thin snap-x">
                           @for (bucket of getInstrumentBuckets(song); track bucket.instrument) {
                           <ng-container>
                             <button (click)="toggleRequest(song, bucket)"
@@ -325,18 +446,21 @@
                               class="relative shrink-0 w-12 h-12 md:w-14 md:h-14 flex items-center justify-center border rounded-lg transition-all duration-300 snap-start disabled:opacity-75 disabled:cursor-not-allowed"
                               [ngClass]="isRequested(song.id, bucket.instrument)
                                     ? 'bg-blue-600/20 border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.3)]'
-                                    : 'bg-white/5 border-white/10 hover:border-white/30'">
+                                    : (currentTheme === 'dark' ? 'bg-white/5 border-white/10 hover:border-white/30' : 'bg-gray-100 border-gray-200 hover:border-gray-300')">
 
                               <div
-                                [ngClass]="isRequested(song.id, bucket.instrument) ? 'text-blue-400' : 'text-gray-400'">
+                                [ngClass]="isRequested(song.id, bucket.instrument)
+                                  ? (currentTheme === 'dark' ? 'text-blue-400' : 'text-blue-700')
+                                  : (currentTheme === 'dark' ? 'text-gray-400' : 'text-gray-600')">
                                 <ng-container [ngTemplateOutlet]="instrumentIcon"
                                   [ngTemplateOutletContext]="{ type: getInstrumentType(bucket.instrument) }"></ng-container>
                               </div>
 
                               @if (bucket.slots > 0) {
                               <div
-                                class="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full flex items-center justify-center border border-[#121212] transition-colors"
-                                [ngClass]="isRequested(song.id, bucket.instrument) ? 'bg-blue-600 text-white' : 'bg-gray-600 text-white/90'">
+                                class="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full flex items-center justify-center border transition-colors"
+                                [ngClass]="(currentTheme === 'dark' ? 'border-[#121212]' : 'border-white')
+                                  + ' ' + (isRequested(song.id, bucket.instrument) ? 'bg-blue-600 text-white' : 'bg-gray-600 text-white/90')">
                                 <span class="text-[10px] font-black leading-none">{{ bucket.remaining }}</span>
                               </div>
                               }
@@ -382,7 +506,7 @@
 
 
 
-                    <div class="mt-5 w-full h-[1px] bg-white/5"></div>
+                    <div class="mt-5 w-full h-[1px]" [ngClass]="currentTheme === 'dark' ? 'bg-white/5' : 'bg-black/5'"></div>
                   </div>
                 </div>
                 }
@@ -411,32 +535,38 @@
 
   <!-- Bottom Nav -->
   @if (!isStandalone) {
-  <nav class="relative z-[60] h-20 w-full bg-black border-t-2 border-white/10 flex items-stretch shrink-0">
+  <nav
+    class="relative z-[60] h-20 w-full border-t-2 flex items-stretch shrink-0"
+    [ngClass]="currentTheme === 'dark' ? 'bg-black border-white/10' : 'bg-white border-black/5'"
+  >
     <button (click)="viewMode = 'dashboard'"
-      class="flex-1 flex items-center justify-center border-r border-white/5 hover:bg-white/5 transition-colors group"
-      [ngClass]="viewMode === 'dashboard' ? 'bg-blue-600/10' : ''">
+      class="flex-1 flex items-center justify-center border-r transition-colors group"
+      [ngClass]="(currentTheme === 'dark' ? 'border-white/5 hover:bg-white/5' : 'border-black/5 hover:bg-black/5')
+        + (viewMode === 'dashboard' ? ' bg-blue-600/10' : '')">
       <div class="flex flex-col items-center">
-        <span class="text-white font-oswald font-black italic text-2xl md:text-3xl leading-none">D</span>
+        <span class="font-oswald font-black italic text-2xl md:text-3xl leading-none" [ngClass]="currentTheme === 'dark' ? 'text-white' : 'text-gray-900'">D</span>
         <span
           class="text-blue-500 font-oswald font-bold text-[9px] uppercase tracking-[0.2em] mt-1 opacity-60 group-hover:opacity-100">{{
           'events.guestV2.nav.dashboard' | translate }}</span>
       </div>
     </button>
     <button (click)="viewMode = 'suggestions'"
-      class="flex-1 flex items-center justify-center border-r border-white/5 hover:bg-white/5 transition-colors group"
-      [ngClass]="viewMode === 'suggestions' ? 'bg-purple-600/10' : ''">
+      class="flex-1 flex items-center justify-center border-r transition-colors group"
+      [ngClass]="(currentTheme === 'dark' ? 'border-white/5 hover:bg-white/5' : 'border-black/5 hover:bg-black/5')
+        + (viewMode === 'suggestions' ? ' bg-purple-600/10' : '')">
       <div class="flex flex-col items-center">
-        <span class="text-white font-oswald font-black italic text-2xl md:text-3xl leading-none">+</span>
+        <span class="font-oswald font-black italic text-2xl md:text-3xl leading-none" [ngClass]="currentTheme === 'dark' ? 'text-white' : 'text-gray-900'">+</span>
         <span
           class="text-purple-500 font-oswald font-bold text-[9px] uppercase tracking-[0.2em] mt-1 opacity-60 group-hover:opacity-100">{{
           'events.guestV2.nav.suggestions' | translate }}</span>
       </div>
     </button>
     <button (click)="viewMode = 'playlist'"
-      class="flex-1 flex items-center justify-center hover:bg-white/5 transition-colors group"
-      [ngClass]="viewMode === 'playlist' ? 'bg-blue-600/10' : ''">
+      class="flex-1 flex items-center justify-center transition-colors group"
+      [ngClass]="(currentTheme === 'dark' ? 'hover:bg-white/5' : 'hover:bg-black/5')
+        + (viewMode === 'playlist' ? ' bg-blue-600/10' : '')">
       <div class="flex flex-col items-center">
-        <span class="text-white font-oswald font-black italic text-2xl md:text-3xl leading-none">P</span>
+        <span class="font-oswald font-black italic text-2xl md:text-3xl leading-none" [ngClass]="currentTheme === 'dark' ? 'text-white' : 'text-gray-900'">P</span>
         <span
           class="text-blue-500 font-oswald font-bold text-[9px] uppercase tracking-[0.2em] mt-1 opacity-60 group-hover:opacity-100">{{
           'events.guestV2.nav.playlist' | translate }}</span>
@@ -444,6 +574,91 @@
     </button>
   </nav>
   }
+
+  <div class="fixed inset-0 z-[80] transition"
+    [class.pointer-events-none]="!isLyricsSheetOpen">
+    <div class="absolute inset-0 bg-black/60 transition-opacity duration-300"
+      [class.opacity-0]="!isLyricsSheetOpen"
+      (click)="closeLyricsSheet()"></div>
+    <div class="absolute inset-x-0 bottom-0 transition-transform duration-300 ease-out"
+      [class.translate-y-full]="!isLyricsSheetOpen">
+      <div class="max-h-[85vh] rounded-t-3xl border overflow-hidden"
+        [ngClass]="currentTheme === 'dark' ? 'bg-[#0a0a0a] border-white/10' : 'bg-white border-black/10'">
+        <div class="flex items-center justify-between gap-4 px-5 py-4 border-b"
+          [ngClass]="currentTheme === 'dark' ? 'border-white/10' : 'border-black/10'">
+          <div class="min-w-0">
+            <div class="text-xs font-black uppercase tracking-widest"
+              [ngClass]="currentTheme === 'dark' ? 'text-gray-400' : 'text-gray-600'">Letra</div>
+            <div class="mt-1 font-oswald font-black italic text-lg uppercase tracking-tighter truncate"
+              [ngClass]="currentTheme === 'dark' ? 'text-white' : 'text-gray-900'">
+              {{ lyricsSheetSong?.title || '' }}
+            </div>
+            <div class="text-[10px] font-bold uppercase tracking-widest truncate"
+              [ngClass]="currentTheme === 'dark' ? 'text-gray-500' : 'text-gray-600'">
+              {{ lyricsSheetSong?.artist || '' }}
+            </div>
+          </div>
+          <button type="button" (click)="closeLyricsSheet()"
+            class="shrink-0 rounded-xl border px-3 py-2 text-xs font-bold uppercase tracking-widest"
+            [ngClass]="currentTheme === 'dark' ? 'border-white/10 bg-white/5 text-white' : 'border-black/10 bg-black/5 text-gray-900'">
+            Fechar
+          </button>
+        </div>
+
+        <div class="px-5 py-4">
+          <div class="rounded-2xl border overflow-hidden"
+            [ngClass]="currentTheme === 'dark' ? 'border-white/10 bg-black/40' : 'border-black/10 bg-white'">
+            <div #lyricsSheetScroll class="max-h-[52vh] overflow-y-auto px-4 py-4"
+              (scroll)="onLyricsSheetUserScroll()"
+              (wheel)="onLyricsSheetUserScroll()"
+              (touchstart)="onLyricsSheetUserScroll()"
+              (touchmove)="onLyricsSheetUserScroll()">
+              @if (isLyricsSheetLoading) {
+                <div class="text-sm" [ngClass]="currentTheme === 'dark' ? 'text-gray-300' : 'text-gray-700'">Carregando letra...</div>
+              } @else if (lyricsSheetErrorMessage) {
+                <div class="text-sm text-yellow-500">{{ lyricsSheetErrorMessage }}</div>
+              } @else if (!lyricsSheetText) {
+                <div class="text-sm" [ngClass]="currentTheme === 'dark' ? 'text-gray-300' : 'text-gray-700'">Sem letra cadastrada.</div>
+              } @else {
+                <pre class="whitespace-pre-wrap font-mono leading-relaxed"
+                  [style.fontSize.px]="lyricsSheetFontSizePx"
+                  [ngClass]="currentTheme === 'dark' ? 'text-gray-100' : 'text-gray-900'">{{ lyricsSheetText }}</pre>
+              }
+            </div>
+          </div>
+
+          <div class="mt-4 rounded-2xl border px-4 py-3 flex flex-wrap items-center gap-4"
+            [ngClass]="currentTheme === 'dark' ? 'border-white/10 bg-black/40' : 'border-black/10 bg-white'">
+            <div class="flex items-center gap-2">
+              <button type="button" (click)="decreaseLyricsFont()"
+                class="h-9 w-9 rounded-xl border flex items-center justify-center font-black"
+                [ngClass]="currentTheme === 'dark' ? 'border-white/10 bg-white/5 text-white' : 'border-black/10 bg-black/5 text-gray-900'">-</button>
+              <button type="button" (click)="increaseLyricsFont()"
+                class="h-9 w-9 rounded-xl border flex items-center justify-center font-black"
+                [ngClass]="currentTheme === 'dark' ? 'border-white/10 bg-white/5 text-white' : 'border-black/10 bg-black/5 text-gray-900'">+</button>
+              <div class="text-xs font-semibold uppercase tracking-wider"
+                [ngClass]="currentTheme === 'dark' ? 'text-gray-300' : 'text-gray-700'">
+                Fonte {{ lyricsSheetFontSizePx }}px
+              </div>
+            </div>
+
+            <div class="flex-1 min-w-[220px] flex items-center gap-3">
+              <div class="text-xs font-semibold uppercase tracking-wider"
+                [ngClass]="currentTheme === 'dark' ? 'text-gray-300' : 'text-gray-700'">
+                Velocidade
+              </div>
+              <input type="range" min="0" max="10" step="1" [value]="lyricsSheetSpeed" (input)="setLyricsSpeed($any($event.target).value)"
+                class="w-full accent-red-600" />
+              <div class="w-8 text-right text-xs font-semibold tabular-nums"
+                [ngClass]="currentTheme === 'dark' ? 'text-gray-300' : 'text-gray-700'">
+                {{ lyricsSheetSpeed }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
 </div>
 

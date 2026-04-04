@@ -48,5 +48,23 @@ export class AppContextService {
 
     return null;
   }
-}
 
+  getEventsOrigin(): string {
+    if (typeof window === 'undefined' || !window.location) return '';
+    const protocol = window.location.protocol || 'https:';
+    const port = window.location.port ? `:${window.location.port}` : '';
+    const hostname = (window.location.hostname || '').toLowerCase();
+    if (!hostname) return '';
+    if (hostname.startsWith('events.')) return `${protocol}//${hostname}${port}`;
+
+    const parts = hostname.split('.').filter(Boolean);
+    const baseParts = (() => {
+      if (hostname === 'localhost' || parts[parts.length - 1] === 'localhost') return ['localhost'];
+      const lastTwo = parts.slice(-2).join('.');
+      if (lastTwo === 'com.br' && parts.length >= 3) return parts.slice(-3);
+      return parts.slice(-2);
+    })();
+
+    return `${protocol}//events.${baseParts.join('.')}${port}`;
+  }
+}

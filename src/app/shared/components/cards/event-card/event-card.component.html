@@ -1,24 +1,32 @@
 <app-card>
   <div class="flex flex-col h-full rounded-xl transition-all duration-300"
        [ngClass]="{
-         'border-l-4 border-l-orange-500 bg-orange-50/50 dark:bg-orange-900/10': status === 'paused',
-         'border-l-4 border-l-gray-500 bg-gray-50/50 dark:bg-gray-800/30 opacity-75': status === 'canceled',
-         'border-l-4 border-l-transparent': status !== 'paused' && status !== 'canceled'
+         'border-l-4 border-l-orange-500 bg-orange-50/50 dark:bg-orange-900/10': normalizedStatus === 'paused',
+         'border-l-4 border-l-gray-500 bg-gray-50/50 dark:bg-gray-800/30 opacity-75': normalizedStatus === 'canceled',
+         'border-l-4 border-l-purple-500 bg-purple-50/50 dark:bg-purple-900/10': normalizedStatus === 'draft',
+         'border-l-4 border-l-emerald-500 bg-emerald-50/30 dark:bg-emerald-900/10': normalizedStatus === 'published',
+         'border-l-4 border-l-transparent': normalizedStatus !== 'paused' && normalizedStatus !== 'canceled' && normalizedStatus !== 'draft' && normalizedStatus !== 'published'
        }">
     <div class="mb-2 overflow-hidden rounded-lg relative">
       <img
         [src]="image || '/images/cards/card-01.png'"
         alt="card"
         class="overflow-hidden rounded-lg w-full object-cover h-48 cursor-pointer"
-        [class.grayscale]="status === 'canceled'"
+        [class.grayscale]="normalizedStatus === 'canceled'"
         (click)="onEditClick()"
       />
       <!-- Status Badge Overlay -->
-      <div *ngIf="status === 'paused'" class="absolute top-2 right-2 bg-orange-500 text-white text-xs font-bold px-2 py-1 rounded shadow-lg uppercase tracking-wider">
+      <div *ngIf="normalizedStatus === 'paused'" class="absolute top-2 right-2 bg-orange-500 text-white text-xs font-bold px-2 py-1 rounded shadow-lg uppercase tracking-wider">
         Pausado
       </div>
-      <div *ngIf="status === 'canceled'" class="absolute top-2 right-2 bg-gray-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg uppercase tracking-wider">
+      <div *ngIf="normalizedStatus === 'canceled'" class="absolute top-2 right-2 bg-gray-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg uppercase tracking-wider">
         Cancelado
+      </div>
+      <div *ngIf="normalizedStatus === 'draft'" class="absolute top-2 right-2 bg-purple-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg uppercase tracking-wider">
+        Rascunho
+      </div>
+      <div *ngIf="normalizedStatus === 'published'" class="absolute top-2 right-2 bg-emerald-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg uppercase tracking-wider">
+        Publicado
       </div>
     </div>
     <div class="flex flex-col flex-grow p-2">
@@ -46,30 +54,40 @@
               <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
             </svg>
           </button>
+
+          <button *ngIf="normalizedStatus === 'draft'"
+                  (click)="onPublishClick()"
+                  class="p-2 text-gray-400 hover:text-emerald-500 hover:bg-emerald-500/10 rounded-lg transition-colors"
+                  title="Publicar Evento">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 2L11 13"></path>
+              <path d="M22 2L15 22l-4-9-9-4 20-7z"></path>
+            </svg>
+          </button>
           
           <button (click)="onPauseClick()"
                   class="p-2 rounded-lg transition-colors"
-                  [ngClass]="status === 'paused' ? 'text-green-500 hover:text-green-600 hover:bg-green-500/10' : 'text-gray-400 hover:text-orange-500 hover:bg-orange-500/10'"
-                  [title]="status === 'paused' ? 'Retomar Evento' : 'Pausar Evento'">
-            <svg *ngIf="status !== 'paused'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  [ngClass]="normalizedStatus === 'paused' ? 'text-green-500 hover:text-green-600 hover:bg-green-500/10' : 'text-gray-400 hover:text-orange-500 hover:bg-orange-500/10'"
+                  [title]="normalizedStatus === 'paused' ? 'Retomar Evento' : 'Pausar Evento'">
+            <svg *ngIf="normalizedStatus !== 'paused'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="12" r="10"></circle>
               <line x1="10" y1="15" x2="10" y2="9"></line>
               <line x1="14" y1="15" x2="14" y2="9"></line>
             </svg>
-            <svg *ngIf="status === 'paused'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg *ngIf="normalizedStatus === 'paused'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <polygon points="5 3 19 12 5 21 5 3"></polygon>
             </svg>
           </button>
           
           <button (click)="onCancelClick()"
                   class="p-2 rounded-lg transition-colors"
-                  [ngClass]="status === 'canceled' ? 'text-green-500 hover:text-green-600 hover:bg-green-500/10' : 'text-gray-400 hover:text-gray-500 hover:bg-gray-500/10'"
-                  [title]="status === 'canceled' ? 'Reativar Evento' : 'Cancelar Evento'">
-            <svg *ngIf="status !== 'canceled'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  [ngClass]="normalizedStatus === 'canceled' ? 'text-green-500 hover:text-green-600 hover:bg-green-500/10' : 'text-gray-400 hover:text-gray-500 hover:bg-gray-500/10'"
+                  [title]="normalizedStatus === 'canceled' ? 'Reativar Evento' : 'Cancelar Evento'">
+            <svg *ngIf="normalizedStatus !== 'canceled'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="12" r="10"></circle>
               <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
             </svg>
-            <svg *ngIf="status === 'canceled'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg *ngIf="normalizedStatus === 'canceled'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
               <path d="M3 3v5h5"></path>
             </svg>

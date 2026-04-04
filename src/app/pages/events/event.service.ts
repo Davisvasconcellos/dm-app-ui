@@ -156,7 +156,8 @@ export interface ApiSong {
   title: string;
   artist?: string | null;
   cover_image?: string | null;
-  catalog_id?: number | null;
+  catalog_id?: number | string | null;
+  lyrics_available?: boolean;
   key?: string | null; // tom
   tempo_bpm?: number | null;
   notes?: string | null;
@@ -208,7 +209,7 @@ export interface CreateSongAutoPayload {
   title: string;
   artist?: string;
   cover_image?: string | null;
-  catalog_id?: number | null;
+  catalog_id?: number | string | null;
   key?: string;
   tempo_bpm?: number;
   notes?: string;
@@ -222,6 +223,17 @@ export interface CreateSongAutoPayload {
 export interface CreateSongAutoResult {
   jam: ApiJam;
   song: ApiSong;
+}
+
+export interface ApiJamCatalogItem {
+  id?: number | string;
+  catalog_id?: number | string;
+  title?: string;
+  artist?: string;
+  cover_image?: string;
+  lyrics?: string | null;
+  chords?: string | null;
+  [key: string]: any;
 }
 
 export interface OpenSongAggregate extends ApiSong {
@@ -284,6 +296,33 @@ export interface PublicEventsListApiResponse {
   data: { events: ApiEvent[] };
   message?: string;
 }
+
+export interface PublicEventsListMeta {
+  total?: number;
+  page?: number;
+  limit?: number;
+  pages?: number;
+}
+
+export interface PublicEventsListPagedApiResponse {
+  success: boolean;
+  data: { events: ApiEvent[] };
+  meta?: PublicEventsListMeta;
+  message?: string;
+}
+
+export type PublicEventsListParams = {
+  page?: number;
+  limit?: number;
+  sort_by?: 'created_at' | 'start_datetime' | 'end_datetime' | 'name';
+  order?: 'asc' | 'desc';
+  name?: string;
+  slug?: string;
+  status?: 'upcoming' | 'ongoing' | 'past';
+  from?: string;
+  to?: string;
+  date?: string;
+};
 
 export interface PublicEventDetailWithQuestionsApiResponse {
   success: boolean;
@@ -516,6 +555,34 @@ export class EventService {
         if (Array.isArray(resp?.data)) return resp.data as ApiJam[];
         if (Array.isArray(resp)) return resp as ApiJam[];
         return [] as ApiJam[];
+      })
+    );
+  }
+
+  getJamCatalogItem(eventId: string | number, catalogId: string | number): Observable<ApiJamCatalogItem> {
+    const token = this.authService.getAuthToken();
+    const headers: HttpHeaders = new HttpHeaders(token ? { Authorization: `Bearer ${token}` } : {});
+    const safeEventId = encodeURIComponent(String(eventId).trim().replace(/`/g, ''));
+    const safeCatalogId = encodeURIComponent(String(catalogId).trim().replace(/`/g, ''));
+    const url = `${this.API_BASE_URL}/events/${safeEventId}/jams/catalog/${safeCatalogId}`;
+    return this.http.get<any>(url, { headers }).pipe(
+      map((resp) => {
+        const data = resp?.data?.catalog ?? resp?.data ?? resp;
+        return (data || {}) as ApiJamCatalogItem;
+      })
+    );
+  }
+
+  updateJamCatalogItem(eventId: string | number, catalogId: string | number, payload: { lyrics?: string | null; chords?: string | null }): Observable<ApiJamCatalogItem> {
+    const token = this.authService.getAuthToken();
+    const headers: HttpHeaders = new HttpHeaders(token ? { Authorization: `Bearer ${token}` } : {});
+    const safeEventId = encodeURIComponent(String(eventId).trim().replace(/`/g, ''));
+    const safeCatalogId = encodeURIComponent(String(catalogId).trim().replace(/`/g, ''));
+    const url = `${this.API_BASE_URL}/events/${safeEventId}/jams/catalog/${safeCatalogId}`;
+    return this.http.patch<any>(url, payload, { headers }).pipe(
+      map((resp) => {
+        const data = resp?.data?.catalog ?? resp?.data ?? resp;
+        return (data || {}) as ApiJamCatalogItem;
       })
     );
   }
@@ -961,6 +1028,26 @@ export class EventService {
     const url = `${this.API_BASE_URL.replace('/api/v1', '')}/api/public/v1/events/public`;
     return this.http.get<PublicEventsListApiResponse>(url).pipe(
       map((resp) => resp?.data?.events ?? [])
+    );
+  }
+
+  getPublicEventsListPaged(params?: PublicEventsListParams): Observable<{ events: ApiEvent[]; meta?: PublicEventsListMeta }> {
+    const base = `${this.API_BASE_URL.replace('/api/v1', '')}/api/public/v1/events/public`;
+    const query = new URLSearchParams();
+    if (params?.page) query.set('page', String(params.page));
+    if (params?.limit) query.set('limit', String(params.limit));
+    if (params?.sort_by) query.set('sort_by', String(params.sort_by));
+    if (params?.order) query.set('order', String(params.order));
+    if (params?.name) query.set('name', String(params.name));
+    if (params?.slug) query.set('slug', String(params.slug));
+    if (params?.status) query.set('status', String(params.status));
+    if (params?.from) query.set('from', String(params.from));
+    if (params?.to) query.set('to', String(params.to));
+    if (params?.date) query.set('date', String(params.date));
+    const url = `${base}${query.toString() ? `?${query.toString()}` : ''}`;
+
+    return this.http.get<PublicEventsListPagedApiResponse>(url).pipe(
+      map((resp) => ({ events: resp?.data?.events ?? [], meta: resp?.meta }))
     );
   }
 

@@ -7,6 +7,8 @@ import { ActivatedRoute } from '@angular/router';
 import { ResilienceService } from '../../../shared/services/resilience.service';
 import { Subject, takeUntil, of, retry, timer } from 'rxjs';
 import { NotificationComponent } from '../../../shared/components/ui/notification/notification/notification.component';
+import { ThemeService } from '../../../shared/services/theme.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-playlist',
@@ -44,6 +46,12 @@ export class PlaylistComponent implements OnInit, OnDestroy {
   private appRef = inject(ApplicationRef); // I'll check if I need more
   private injector = inject(Injector);
   private envInjector = inject(EnvironmentInjector);
+  private themeService = inject(ThemeService);
+  private themeSub: Subscription | null = null;
+  currentTheme: 'light' | 'dark' = (localStorage.getItem('theme') as any) === 'dark' ? 'dark' : 'light';
+  isMobile = false;
+  private mobileQuery: MediaQueryList | null = null;
+  private mobileQueryListener: ((e: MediaQueryListEvent) => void) | null = null;
 
   private readonly DURATION_INDEX_0 = 20000; // 20s
   private readonly DURATION_INDEX_1 = 20000; // 20s
@@ -59,6 +67,10 @@ export class PlaylistComponent implements OnInit, OnDestroy {
   private readonly reloadTrigger$ = new Subject<void>();
 
   ngOnInit(): void {
+    this.themeSub = this.themeService.theme$.subscribe((t) => {
+      this.currentTheme = t;
+    });
+    this.initViewport();
     this.initResilientReloader();
     this.subscribeToResilienceState();
 
@@ -109,9 +121,35 @@ export class PlaylistComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    if (this.themeSub) this.themeSub.unsubscribe();
+    if (this.mobileQuery && this.mobileQueryListener) {
+      try {
+        this.mobileQuery.removeEventListener('change', this.mobileQueryListener);
+      } catch {
+        try {
+          (this.mobileQuery as any).removeListener(this.mobileQueryListener);
+        } catch { }
+      }
+    }
     this.stopAutoAdvance();
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  private initViewport(): void {
+    try {
+      this.mobileQuery = window.matchMedia('(max-width: 767px)');
+      this.isMobile = this.mobileQuery.matches;
+      this.mobileQueryListener = (e: MediaQueryListEvent) => {
+        this.isMobile = e.matches;
+        this.cdr.markForCheck();
+      };
+      try {
+        this.mobileQuery.addEventListener('change', this.mobileQueryListener);
+      } catch {
+        (this.mobileQuery as any).addListener(this.mobileQueryListener);
+      }
+    } catch { }
   }
 
   private loadGlobalStage(): void {

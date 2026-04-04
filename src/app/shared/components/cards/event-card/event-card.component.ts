@@ -65,6 +65,11 @@ export class EventCardComponent {
   @Output() resumeEvent = new EventEmitter<void>();
   @Output() cancelEvent = new EventEmitter<void>();
   @Output() deleteEvent = new EventEmitter<void>();
+  @Output() publishEvent = new EventEmitter<void>();
+
+  get normalizedStatus(): string {
+    return this.status || 'draft';
+  }
 
   onViewLinksClick() {
     this.viewLinks.emit();
@@ -79,7 +84,7 @@ export class EventCardComponent {
   }
 
   onPauseClick() {
-    if (this.status === 'paused') {
+    if (this.normalizedStatus === 'paused') {
       this.resumeEvent.emit();
     } else {
       this.pauseEvent.emit();
@@ -87,7 +92,7 @@ export class EventCardComponent {
   }
 
   onCancelClick() {
-    if (this.status === 'canceled') {
+    if (this.normalizedStatus === 'canceled') {
       this.resumeEvent.emit();
     } else {
       this.cancelEvent.emit();
@@ -96,6 +101,10 @@ export class EventCardComponent {
 
   onDeleteClick() {
     this.deleteEvent.emit();
+  }
+
+  onPublishClick() {
+    this.publishEvent.emit();
   }
 
   onActionClick() {

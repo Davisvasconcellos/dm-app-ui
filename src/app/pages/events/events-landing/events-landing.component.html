@@ -1,0 +1,243 @@
+<div class="mx-auto max-w-6xl py-4 md:py-8">
+  <div class="flex flex-col gap-3">
+    <div class="flex items-center justify-between gap-4">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white md:text-3xl">Explore events</h1>
+        <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Acesse seus eventos, faça check-in e escolha suas jams.</p>
+      </div>
+      @if (!isLoggedIn()) {
+        <a
+          routerLink="/login"
+          class="hidden rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 md:inline-flex"
+        >
+          Entrar
+        </a>
+      }
+    </div>
+
+    <div class="flex items-center gap-2 overflow-x-auto pb-1">
+      @for (c of categories; track c.key) {
+        <button
+          type="button"
+          (click)="setActiveCategory(c.key)"
+          class="shrink-0 rounded-full px-4 py-2 text-xs font-semibold transition"
+          [ngClass]="activeCategoryKey === c.key
+            ? 'bg-brand-600 text-white'
+            : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-white/5 dark:text-gray-200 dark:hover:bg-white/10'"
+        >
+          {{ c.label }}
+        </button>
+      }
+    </div>
+  </div>
+
+  <div id="popular" class="mt-6 flex items-center justify-between scroll-mt-24">
+    <div class="flex items-center gap-2">
+      <span class="text-sm font-semibold text-gray-900 dark:text-white">Popular</span>
+      <span class="rounded-full bg-brand-600/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-brand-700 dark:text-brand-300">Popular</span>
+    </div>
+    @if (!isLoggedIn()) {
+      <a routerLink="/login" class="text-xs font-semibold text-brand-700 hover:underline dark:text-brand-300 md:hidden">Entrar</a>
+    }
+  </div>
+
+  <div class="-mx-4 mt-3 overflow-x-auto px-4 pb-2">
+    <div class="flex snap-x snap-mandatory gap-4">
+      @if (loadingPopular) {
+        @for (i of [1,2,3]; track i) {
+          <div class="snap-start">
+            <div class="h-[220px] w-[280px] rounded-2xl bg-gray-100 dark:bg-white/5"></div>
+          </div>
+        }
+      } @else {
+        @for (ev of popularEvents; track ev.id_code) {
+          <a
+            [routerLink]="toReserveUrl(ev.id_code)"
+            class="snap-start"
+          >
+            <div class="relative h-[220px] w-[280px] overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-white/[0.03]">
+              <div class="absolute inset-0">
+                @if (ev.imageUrl) {
+                  <img [src]="ev.imageUrl" class="h-full w-full object-cover" alt="">
+                } @else {
+                  <div class="h-full w-full bg-gradient-to-br from-brand-600/30 to-purple-600/20"></div>
+                }
+                <div class="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent"></div>
+              </div>
+              <div class="relative flex h-full flex-col justify-between p-4">
+                <div class="flex items-start justify-between gap-3">
+                  @if (ev.dateLabel) {
+                    <div class="rounded-xl bg-white/90 px-3 py-2 text-center text-[10px] font-bold uppercase tracking-wider text-gray-900">
+                      {{ ev.dateLabel }}
+                    </div>
+                  }
+                  <div class="rounded-full bg-white/10 px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-white">
+                    Evento
+                  </div>
+                </div>
+
+                <div>
+                  <div class="text-base font-semibold text-white line-clamp-2">{{ ev.title }}</div>
+                  @if (ev.subtitle) {
+                    <div class="mt-1 text-xs text-white/80 line-clamp-1">{{ ev.subtitle }}</div>
+                  }
+                  <div class="mt-4 inline-flex rounded-full bg-brand-600 px-4 py-2 text-xs font-semibold text-white hover:bg-brand-700">
+                    Abrir
+                  </div>
+                </div>
+              </div>
+            </div>
+          </a>
+        }
+      }
+    </div>
+  </div>
+
+  <div id="my" class="mt-8 flex items-center justify-between scroll-mt-24">
+    <div class="flex items-center gap-2">
+      <span class="text-sm font-semibold text-gray-900 dark:text-white">My events</span>
+      @if (!isLoggedIn()) {
+        <span class="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-gray-700 dark:bg-white/5 dark:text-gray-200">Login</span>
+      }
+    </div>
+    @if (!isLoggedIn()) {
+      <a routerLink="/login" class="text-xs font-semibold text-brand-700 hover:underline dark:text-brand-300">Entrar</a>
+    }
+  </div>
+
+  @if (!isLoggedIn()) {
+    <div class="mt-3 rounded-2xl border border-gray-200 bg-white p-5 text-sm text-gray-600 dark:border-gray-800 dark:bg-white/[0.03] dark:text-gray-300">
+      Faça login para ver os eventos em que você participa.
+    </div>
+  } @else {
+    <div class="-mx-4 mt-3 overflow-x-auto px-4 pb-2">
+      <div class="flex snap-x snap-mandatory gap-4">
+        @if (loadingMy) {
+          @for (i of [1,2,3]; track i) {
+            <div class="snap-start">
+              <div class="h-[160px] w-[260px] rounded-2xl bg-gray-100 dark:bg-white/5"></div>
+            </div>
+          }
+        } @else {
+          @if (myTickets.length === 0) {
+            <div class="min-w-[280px] rounded-2xl border border-gray-200 bg-white p-5 text-sm text-gray-600 dark:border-gray-800 dark:bg-white/[0.03] dark:text-gray-300">
+              Nenhum ingresso encontrado.
+            </div>
+          } @else {
+            @for (t of myTickets; track t.id_code) {
+              <button type="button" (click)="openTicket(t)" class="snap-start text-left">
+                <div class="relative h-[160px] w-[260px] overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-white/[0.03]">
+                  <div class="absolute inset-0">
+                    @if (t.event.imageUrl) {
+                      <img
+                        [src]="t.event.imageUrl"
+                        class="h-full w-full object-cover"
+                        [class.grayscale]="t.event.status === 'paused' || t.event.status === 'canceled'"
+                        [class.opacity-80]="t.event.status === 'paused' || t.event.status === 'canceled'"
+                        alt=""
+                      >
+                    } @else {
+                      <div class="h-full w-full bg-gradient-to-br from-emerald-500/25 to-blue-600/20"></div>
+                    }
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/75 via-black/15 to-transparent"></div>
+                  </div>
+                  @if (t.event.status === 'paused') {
+                    <div class="absolute top-2 right-2 rounded-full bg-orange-500 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-lg">
+                      Pausado
+                    </div>
+                  }
+                  @if (t.event.status === 'canceled') {
+                    <div class="absolute top-2 right-2 rounded-full bg-gray-700 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-lg">
+                      Cancelado
+                    </div>
+                  }
+                  @if (t.event.status === 'draft') {
+                    <div class="absolute top-2 right-2 rounded-full bg-purple-600 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-lg">
+                      Rascunho
+                    </div>
+                  }
+                  @if (t.event.status === 'published') {
+                    <div class="absolute top-2 right-2 rounded-full bg-emerald-600 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-lg">
+                      Publicado
+                    </div>
+                  }
+                  <div class="relative flex h-full flex-col justify-end p-4">
+                    <div class="text-sm font-semibold text-white line-clamp-2">{{ t.event.title }}</div>
+                    @if (t.event.dateLabel || t.event.subtitle) {
+                      <div class="mt-1 text-xs text-white/80 line-clamp-1">
+                        {{ t.event.dateLabel }} @if (t.event.subtitle) { • {{ t.event.subtitle }} }
+                      </div>
+                    }
+                  </div>
+                </div>
+              </button>
+            }
+          }
+        }
+      </div>
+    </div>
+  }
+
+  @if (selectedTicket) {
+    <button
+      type="button"
+      (click)="closeTicket()"
+      class="fixed inset-0 z-40 bg-black/40 backdrop-blur-md"
+      [ngClass]="isTicketClosing ? 'animate-[fadeOut_180ms_ease-in_forwards]' : 'animate-[fadeIn_180ms_ease-out]'"
+    ></button>
+    <div
+      class="fixed inset-x-0 bottom-16 md:bottom-0 z-50 will-change-transform"
+      [ngClass]="isTicketClosing ? 'animate-[slideDown_220ms_ease-in_forwards]' : 'animate-[slideUp_220ms_ease-out]'"
+    >
+      <div class="mx-auto max-w-2xl">
+        <div class="rounded-t-3xl border border-gray-200 bg-white p-5 shadow-xl dark:border-gray-800 dark:bg-gray-900">
+          <div class="mx-auto mb-4 h-1.5 w-12 rounded-full bg-gray-200 dark:bg-gray-800"></div>
+          <div class="flex items-start justify-between gap-4">
+            <div class="min-w-0">
+              <div class="text-base font-semibold text-gray-900 dark:text-white line-clamp-2">{{ selectedTicket.event.title }}</div>
+              <div class="mt-1 text-sm text-gray-600 dark:text-gray-400 line-clamp-1">
+                {{ selectedTicket.event.subtitle || '' }}
+              </div>
+              <div class="mt-1 text-xs text-gray-500 dark:text-gray-500">
+                {{ selectedTicket.event.dateLabel || '' }}
+                @if (selectedTicket.ticket_type_name) { • {{ selectedTicket.ticket_type_name }} }
+              </div>
+            </div>
+            <button type="button" (click)="closeTicket()" class="rounded-lg p-2 text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-white/5" aria-label="Fechar">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path d="M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                <path d="M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+              </svg>
+            </button>
+          </div>
+
+          <div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div class="overflow-hidden rounded-2xl border border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-white/[0.03]">
+              @if (selectedTicket.event.imageUrl) {
+                <img [src]="selectedTicket.event.imageUrl" class="h-40 w-full object-cover" alt="">
+              } @else {
+                <div class="h-40 w-full bg-gradient-to-br from-brand-600/30 to-purple-600/20"></div>
+              }
+            </div>
+
+            <div class="rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-800 dark:bg-white/[0.03]">
+              <div class="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Seu QR code</div>
+              <div class="mt-3 flex items-center justify-center">
+                <div class="rounded-xl bg-white p-2">
+                  <qrcode
+                    [qrdata]="selectedTicket.qrData"
+                    [width]="180"
+                    [errorCorrectionLevel]="'M'"
+                    [colorDark]="'#000000'"
+                    [colorLight]="'#ffffff'"
+                    class="h-full w-full"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</div>

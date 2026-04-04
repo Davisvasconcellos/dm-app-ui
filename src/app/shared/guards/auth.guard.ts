@@ -3,6 +3,7 @@ import { CanActivate, Router, ActivatedRouteSnapshot, RouterStateSnapshot } from
 import { Observable } from 'rxjs';
 import { map, take } from 'rxjs/operators';
 import { AuthService } from '../services/auth.service';
+import { AppContextService } from '../services/app-context.service';
 
 @Injectable({
   providedIn: 'root'
@@ -11,6 +12,7 @@ export class AuthGuard implements CanActivate {
 
   constructor(
     private authService: AuthService,
+    private appContext: AppContextService,
     private router: Router
   ) {}
 
@@ -31,7 +33,8 @@ export class AuthGuard implements CanActivate {
           if (isKioskFlow) {
             queryParams['flow'] = 'kiosk';
           }
-          this.router.navigate(['/signin'], { 
+          const target = this.appContext.getContext() === 'events' ? '/login' : '/signin';
+          this.router.navigate([target], { 
             queryParams
           });
           return false;

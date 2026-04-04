@@ -84,7 +84,7 @@ export class AppHeaderComponent implements OnInit, AfterViewInit {
       // O ChangeDetectorRef.detectChanges() não é necessário aqui porque
       // roleHomeLink é uma propriedade simples e não um signal/observable que requer CD manual.
       // Se necessário, pode-se usar markForCheck() se a estratégia for OnPush.
-      // this.cdr.detectChanges(); 
+      // this.cdr.detectChanges();
     });
   }
 

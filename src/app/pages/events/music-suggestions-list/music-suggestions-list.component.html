@@ -1,11 +1,15 @@
-<div class="w-full h-full bg-[#050505] flex flex-col">
+<div class="w-full h-full flex flex-col" [ngClass]="currentTheme === 'dark' ? 'bg-[#050505] text-white' : 'bg-white text-gray-900'">
   <!-- Header -->
-  <header class="flex-none px-4 py-6 md:px-10 md:py-8 border-b border-white/5 bg-[#050505] z-10 flex justify-between items-center">
+  <header
+    class="flex-none px-4 py-6 md:px-10 md:py-8 border-b z-10 flex justify-between items-center"
+    [ngClass]="currentTheme === 'dark' ? 'border-white/5 bg-[#050505]' : 'border-black/5 bg-white'"
+  >
     <div>
-      <h1 class="text-white font-oswald font-black italic text-xl md:text-3xl tracking-tighter uppercase leading-none">
+      <h1 class="font-oswald font-black italic text-xl md:text-3xl tracking-tighter uppercase leading-none"
+        [ngClass]="currentTheme === 'dark' ? 'text-white' : 'text-gray-900'">
         {{ 'events.guestV2.suggestions.title' | translate }} <span class="text-purple-500">SUGGESTIONS</span>
       </h1>
-      <p class="text-gray-500 text-[10px] font-bold tracking-[0.2em] uppercase mt-1">
+      <p class="text-[10px] font-bold tracking-[0.2em] uppercase mt-1" [ngClass]="currentTheme === 'dark' ? 'text-gray-500' : 'text-gray-600'">
         {{ 'events.guestV2.suggestions.subtitle' | translate }}
       </p>
     </div>
@@ -29,13 +33,16 @@
 
       <!-- Create Form (Inline) -->
       <div *ngIf="isCreating" class="mb-8 animate-in fade-in slide-in-from-top-4 duration-300">
-         <div class="bg-[#121212] rounded-3xl p-[15px] border border-purple-500/30 shadow-[0_0_50px_rgba(147,51,234,0.1)] relative overflow-hidden">
+         <div class="rounded-3xl p-[15px] border relative overflow-hidden"
+           [ngClass]="currentTheme === 'dark'
+             ? 'bg-[#121212] border-purple-500/30 shadow-[0_0_50px_rgba(147,51,234,0.1)]'
+             : 'bg-white border-black/5 shadow-[0_4px_20px_rgba(0,0,0,0.05)]'">
             <!-- Background Glow -->
             <div class="absolute top-0 right-0 w-64 h-64 bg-purple-600/10 blur-[80px] rounded-full pointer-events-none -mr-32 -mt-32"></div>
 
             <div class="flex justify-between items-center mb-3">
-                <span class="text-[10px] text-gray-500 uppercase font-bold tracking-wider">{{ 'events.guestV2.suggestions.newSuggestion' | translate }}</span>
-                <button (click)="toggleCreate()" class="text-gray-500 hover:text-white transition-colors" title="Fechar">
+                <span class="text-[10px] uppercase font-bold tracking-wider" [ngClass]="currentTheme === 'dark' ? 'text-gray-500' : 'text-gray-600'">{{ 'events.guestV2.suggestions.newSuggestion' | translate }}</span>
+                <button (click)="toggleCreate()" class="text-gray-500 transition-colors" [ngClass]="currentTheme === 'dark' ? 'hover:text-white' : 'hover:text-gray-900'" title="Fechar">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                 </button>
             </div>
@@ -52,7 +59,10 @@
                         <input [formControl]="searchMusicControl"
                                type="text"
                                placeholder="Busque por música ou artista..."
-                               class="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-4 pl-12 text-white placeholder-gray-600 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all font-medium text-lg">
+                               class="w-full border rounded-xl px-4 py-4 pl-12 placeholder-gray-400 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all font-medium text-lg"
+                               [ngClass]="currentTheme === 'dark'
+                                 ? 'bg-[#0a0a0a] border-white/10 text-white'
+                                 : 'bg-white border-black/10 text-gray-900'">
                         <div class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">
                              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                         </div>
@@ -64,15 +74,17 @@
 
                         <!-- Results Dropdown -->
                         <div *ngIf="musicResults.length > 0"
-                             class="absolute top-full left-0 right-0 mt-2 bg-[#1a1a1a] border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden max-h-60 overflow-y-auto custom-scrollbar">
+                             class="absolute top-full left-0 right-0 mt-2 border rounded-xl shadow-2xl z-50 overflow-hidden max-h-60 overflow-y-auto custom-scrollbar"
+                             [ngClass]="currentTheme === 'dark' ? 'bg-[#1a1a1a] border-white/10' : 'bg-white border-black/10'">
                             <button *ngFor="let result of musicResults"
                                     type="button"
                                     (click)="selectMusic(result)"
-                                    class="w-full flex items-center gap-4 p-3 hover:bg-white/5 transition-colors text-left border-b border-white/5 last:border-0">
-                                <img [src]="result.thumb || result.thumb_image || '/images/default-album.png'" (error)="onAlbumImageError($event)" class="w-12 h-12 rounded bg-[#0a0a0a] object-cover" alt="">
+                                    class="w-full flex items-center gap-4 p-3 transition-colors text-left border-b last:border-0"
+                                    [ngClass]="currentTheme === 'dark' ? 'hover:bg-white/5 border-white/5' : 'hover:bg-gray-50 border-black/5'">
+                                <img [src]="result.thumb || result.thumb_image || '/images/default-album.png'" (error)="onAlbumImageError($event)" class="w-12 h-12 rounded object-cover" [ngClass]="currentTheme === 'dark' ? 'bg-[#0a0a0a]' : 'bg-gray-100'" alt="">
                                 <div>
-                                    <div class="text-white font-medium text-sm line-clamp-1">{{ result.title }}</div>
-                                    <div class="text-gray-500 text-xs">{{ result.year || 'Unknown' }}</div>
+                                    <div class="font-medium text-sm line-clamp-1" [ngClass]="currentTheme === 'dark' ? 'text-white' : 'text-gray-900'">{{ result.title }}</div>
+                                    <div class="text-xs" [ngClass]="currentTheme === 'dark' ? 'text-gray-500' : 'text-gray-600'">{{ result.year || 'Unknown' }}</div>
                                 </div>
                             </button>
                         </div>
@@ -80,17 +92,19 @@
 
                     <!-- Selected Music Card (When music selected) -->
                     <div *ngIf="selectedMusic" class="relative group animate-in fade-in zoom-in-95 duration-200">
-                        <div class="bg-[#1a1a1a] border border-purple-500/30 rounded-xl p-4 flex items-center gap-5 shadow-[0_0_30px_rgba(147,51,234,0.1)]">
+                        <div class="border border-purple-500/30 rounded-xl p-4 flex items-center gap-5 shadow-[0_0_30px_rgba(147,51,234,0.1)]"
+                          [ngClass]="currentTheme === 'dark' ? 'bg-[#1a1a1a]' : 'bg-white'">
                             <img [src]="selectedMusic.cover_image || selectedMusic.thumb || selectedMusic.thumb_image || '/images/default-album.png'"
                                  (error)="onAlbumImageError($event)"
-                                 class="w-20 h-20 rounded-lg shadow-lg object-cover bg-black"
+                                 class="w-20 h-20 rounded-lg shadow-lg object-cover"
+                                 [ngClass]="currentTheme === 'dark' ? 'bg-black' : 'bg-gray-100'"
                                  alt="Album Cover">
                             <div class="flex-1 min-w-0">
-                                <h3 class="text-white font-bold text-lg leading-tight truncate">{{ createForm.get('song_name')?.value }}</h3>
+                                <h3 class="font-bold text-lg leading-tight truncate" [ngClass]="currentTheme === 'dark' ? 'text-white' : 'text-gray-900'">{{ createForm.get('song_name')?.value }}</h3>
                                 <p class="text-purple-400 text-sm font-medium truncate">{{ createForm.get('artist_name')?.value }}</p>
                                 <div class="flex gap-2 mt-2">
-                                     <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-white/10 text-gray-400 border border-white/5">DISCOGS</span>
-                                     <span *ngIf="selectedMusic.year" class="px-2 py-0.5 rounded text-[10px] font-bold bg-white/10 text-gray-400 border border-white/5">{{ selectedMusic.year }}</span>
+                                     <span class="px-2 py-0.5 rounded text-[10px] font-bold border" [ngClass]="currentTheme === 'dark' ? 'bg-white/10 text-gray-400 border-white/5' : 'bg-black/5 text-gray-600 border-black/10'">DISCOGS</span>
+                                     <span *ngIf="selectedMusic.year" class="px-2 py-0.5 rounded text-[10px] font-bold border" [ngClass]="currentTheme === 'dark' ? 'bg-white/10 text-gray-400 border-white/5' : 'bg-black/5 text-gray-600 border-black/10'">{{ selectedMusic.year }}</span>
                                 </div>
                             </div>
                             <button type="button"
@@ -103,7 +117,7 @@
                 </div>
 
                 <div class="space-y-4">
-                    <label class="text-gray-400 text-[10px] uppercase font-bold tracking-[0.2em] ml-1">{{ 'events.guestV2.suggestions.form.myInstrumentLabel' | translate }}</label>
+                    <label class="text-[10px] uppercase font-bold tracking-[0.2em] ml-1" [ngClass]="currentTheme === 'dark' ? 'text-gray-400' : 'text-gray-700'">{{ 'events.guestV2.suggestions.form.myInstrumentLabel' | translate }}</label>
                     <div class="relative">
                       <div class="overflow-x-auto scrollbar-hide -mx-1 px-1">
                         <div class="flex gap-2 pb-1 snap-x snap-mandatory">
@@ -113,7 +127,7 @@
                                   class="flex-none w-16 md:w-20 flex items-center justify-center p-2 rounded-lg border transition-all aspect-square snap-start"
                                   [ngClass]="createForm.get('my_instrument')?.value === inst
                                     ? 'bg-purple-600/20 border-purple-500 text-purple-400 shadow-[0_0_10px_rgba(147,51,234,0.2)]'
-                                    : 'bg-[#121212] border-white/10 hover:bg-white/5 text-gray-500 hover:text-gray-300'">
+                                    : (currentTheme === 'dark' ? 'bg-[#121212] border-white/10 hover:bg-white/5 text-gray-500 hover:text-gray-300' : 'bg-gray-50 border-black/10 hover:bg-gray-100 text-gray-700')">
                             <div class="w-full h-full p-0.5">
                               <ng-container [ngTemplateOutlet]="instrumentIcon" [ngTemplateOutletContext]="{ type: getInstrumentType(inst), showLabel: true }"></ng-container>
                             </div>
@@ -125,27 +139,31 @@
                 </div>
 
                 <!-- Invites Section -->
-                <div class="pt-4 border-t border-white/5">
+                <div class="pt-4 border-t" [ngClass]="currentTheme === 'dark' ? 'border-white/5' : 'border-black/5'">
                     <div class="flex justify-between items-center mb-4">
-                        <label class="text-gray-400 text-[10px] uppercase font-bold tracking-[0.2em]">{{ 'events.guestV2.suggestions.form.inviteFriendsLabel' | translate }}</label>
+                        <label class="text-[10px] uppercase font-bold tracking-[0.2em]" [ngClass]="currentTheme === 'dark' ? 'text-gray-400' : 'text-gray-700'">{{ 'events.guestV2.suggestions.form.inviteFriendsLabel' | translate }}</label>
                     </div>
 
                     <!-- Botão Toggle para abrir o formulário -->
                     <button *ngIf="!isInviteFormOpen"
                             type="button"
                             (click)="isInviteFormOpen = true"
-                            class="w-full flex items-center justify-center gap-2 py-3 border border-dashed border-white/20 rounded-xl text-gray-400 hover:text-white hover:border-white/40 hover:bg-white/5 transition-all group">
-                        <div class="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-purple-500/20 group-hover:text-purple-400 transition-colors">
+                            class="w-full flex items-center justify-center gap-2 py-3 border border-dashed rounded-xl transition-all group"
+                            [ngClass]="currentTheme === 'dark'
+                              ? 'border-white/20 text-gray-400 hover:text-white hover:border-white/40 hover:bg-white/5'
+                              : 'border-black/10 text-gray-700 hover:text-gray-900 hover:border-black/20 hover:bg-black/5'">
+                        <div class="w-6 h-6 rounded-full flex items-center justify-center group-hover:bg-purple-500/20 group-hover:text-purple-500 transition-colors" [ngClass]="currentTheme === 'dark' ? 'bg-white/10' : 'bg-black/5'">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                         </div>
                         <span class="text-xs font-bold uppercase tracking-wider">{{ 'events.guestV2.suggestions.form.openInviteFormButton' | translate }}</span>
                     </button>
 
-                    <div *ngIf="isInviteFormOpen" class="bg-white/5 rounded-xl p-[15px] border border-white/10 mb-4 shadow-inner animate-fade-in-down">
+                    <div *ngIf="isInviteFormOpen" class="rounded-xl p-[15px] border mb-4 shadow-inner animate-fade-in-down"
+                      [ngClass]="currentTheme === 'dark' ? 'bg-white/5 border-white/10' : 'bg-white border-black/5'">
                         <!-- Header do Subform com botão fechar -->
                         <div class="flex justify-between items-center mb-3">
-                            <span class="text-[10px] text-gray-500 uppercase font-bold tracking-wider">{{ 'events.guestV2.suggestions.form.friendLabel' | translate }}</span>
-                            <button type="button" (click)="isInviteFormOpen = false" class="text-gray-500 hover:text-white transition-colors" title="Fechar">
+                            <span class="text-[10px] uppercase font-bold tracking-wider" [ngClass]="currentTheme === 'dark' ? 'text-gray-500' : 'text-gray-600'">{{ 'events.guestV2.suggestions.form.friendLabel' | translate }}</span>
+                            <button type="button" (click)="isInviteFormOpen = false" class="text-gray-500 transition-colors" [ngClass]="currentTheme === 'dark' ? 'hover:text-white' : 'hover:text-gray-900'" title="Fechar">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                             </button>
                         </div>
@@ -161,24 +179,28 @@
                                            (ngModelChange)="onFriendQueryChange($event)"
                                            [ngModelOptions]="{standalone: true}"
                                            placeholder="{{ 'events.guestV2.suggestions.form.friendPlaceholder' | translate }}"
-                                           class="w-full bg-[#121212] border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm focus:border-purple-500 focus:ring-0 transition-all" />
+                                           class="w-full border rounded-lg px-3 py-2.5 text-sm focus:border-purple-500 focus:ring-0 transition-all"
+                                           [ngClass]="currentTheme === 'dark' ? 'bg-[#121212] border-white/10 text-white' : 'bg-white border-black/10 text-gray-900'" />
                                     <div *ngIf="getFilteredFriends().length"
-                                         class="absolute z-20 left-0 right-0 mt-1 bg-[#0a0a0a] border border-white/10 rounded-lg shadow-xl max-h-56 overflow-auto">
+                                         class="absolute z-20 left-0 right-0 mt-1 border rounded-lg shadow-xl max-h-56 overflow-auto"
+                                         [ngClass]="currentTheme === 'dark' ? 'bg-[#0a0a0a] border-white/10' : 'bg-white border-black/10'">
                                         <button *ngFor="let friend of getFilteredFriends(); trackBy: trackFriend"
                                                 type="button"
                                                 (click)="selectFriend(friend)"
-                                                class="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-white/5 focus:bg-white/5 transition-colors">
-                                            <img [src]="friend.avatar" (error)="onImageError($event)" class="w-8 h-8 rounded-full object-cover border border-white/10">
-                                            <span class="text-sm text-white truncate">{{ friend.name }}</span>
+                                                class="w-full flex items-center gap-3 px-3 py-2 text-left transition-colors"
+                                                [ngClass]="currentTheme === 'dark' ? 'hover:bg-white/5 focus:bg-white/5' : 'hover:bg-gray-50 focus:bg-gray-50'">
+                                            <img [src]="friend.avatar" (error)="onImageError($event)" class="w-8 h-8 rounded-full object-cover border" [ngClass]="currentTheme === 'dark' ? 'border-white/10' : 'border-black/10'">
+                                            <span class="text-sm truncate" [ngClass]="currentTheme === 'dark' ? 'text-white' : 'text-gray-900'">{{ friend.name }}</span>
                                         </button>
                                     </div>
                                 </div>
 
                                 <!-- Modo Selecionado: Exibe Card Full Width -->
-                                <div *ngIf="selectedFriendId" class="w-full bg-[#121212] border border-purple-500/30 rounded-lg px-3 py-2.5 flex items-center justify-between shadow-[0_0_15px_rgba(147,51,234,0.1)] transition-all animate-fade-in">
+                                <div *ngIf="selectedFriendId" class="w-full border border-purple-500/30 rounded-lg px-3 py-2.5 flex items-center justify-between shadow-[0_0_15px_rgba(147,51,234,0.1)] transition-all animate-fade-in"
+                                  [ngClass]="currentTheme === 'dark' ? 'bg-[#121212]' : 'bg-white'">
                                     <div class="flex items-center gap-3 overflow-hidden">
-                                        <img [src]="getFriendById(selectedFriendId)?.avatar" (error)="onImageError($event)" class="w-7 h-7 rounded-full object-cover border border-white/10 shrink-0">
-                                        <span class="text-sm text-white font-medium truncate">{{ getFriendById(selectedFriendId)?.name }}</span>
+                                        <img [src]="getFriendById(selectedFriendId)?.avatar" (error)="onImageError($event)" class="w-7 h-7 rounded-full object-cover border shrink-0" [ngClass]="currentTheme === 'dark' ? 'border-white/10' : 'border-black/10'">
+                                        <span class="text-sm font-medium truncate" [ngClass]="currentTheme === 'dark' ? 'text-white' : 'text-gray-900'">{{ getFriendById(selectedFriendId)?.name }}</span>
                                     </div>
                                     <button type="button" (click)="selectedFriendId=''; friendQuery='';" class="text-gray-400 hover:text-red-500 transition-colors p-1 rounded-md hover:bg-white/5 shrink-0" title="Remover seleção">
                                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
@@ -187,7 +209,7 @@
                             </div>
                             <!-- Linha 2: Grid de instrumentos -->
                             <div class="w-full space-y-2">
-                                <span class="text-[10px] text-gray-500 uppercase font-bold tracking-wider">{{ 'events.guestV2.suggestions.form.suggestedInstrumentLabel' | translate }}</span>
+                                <span class="text-[10px] uppercase font-bold tracking-wider" [ngClass]="currentTheme === 'dark' ? 'text-gray-500' : 'text-gray-600'">{{ 'events.guestV2.suggestions.form.suggestedInstrumentLabel' | translate }}</span>
                                 <div class="relative">
                                   <div class="overflow-x-auto scrollbar-hide -mx-1 px-1">
                                     <div class="flex gap-2 pb-1 snap-x snap-mandatory">
@@ -197,7 +219,7 @@
                                         class="flex-none w-16 md:w-20 flex items-center justify-center p-2 rounded-lg border transition-all aspect-square snap-start"
                                         [ngClass]="selectedFriendInstrument === inst
                                           ? 'bg-purple-600/20 border-purple-500 text-purple-400 shadow-[0_0_10px_rgba(147,51,234,0.2)]'
-                                          : 'bg-[#121212] border-white/10 hover:bg-white/5 text-gray-500 hover:text-gray-300'">
+                                          : (currentTheme === 'dark' ? 'bg-[#121212] border-white/10 hover:bg-white/5 text-gray-500 hover:text-gray-300' : 'bg-gray-50 border-black/10 hover:bg-gray-100 text-gray-700')">
                                           <div class="w-full h-full p-0.5">
                                              <ng-container [ngTemplateOutlet]="instrumentIcon" [ngTemplateOutletContext]="{ type: getInstrumentType(inst), showLabel: true }"></ng-container>
                                           </div>
@@ -209,7 +231,8 @@
                             <!-- Linha 3: Botão Adicionar -->
                             <div class="w-full flex justify-end">
                               <button type="button" (click)="addInvite()" [disabled]="!selectedFriendId || !selectedFriendInstrument"
-                                      class="px-6 py-2.5 bg-white/5 hover:bg-white/10 text-white rounded-lg font-bold text-xs uppercase tracking-wider transition-all disabled:opacity-50 disabled:cursor-not-allowed border border-white/10 hover:border-white/30">
+                                      class="px-6 py-2.5 rounded-lg font-bold text-xs uppercase tracking-wider transition-all disabled:opacity-50 disabled:cursor-not-allowed border"
+                                      [ngClass]="currentTheme === 'dark' ? 'bg-white/5 hover:bg-white/10 text-white border-white/10 hover:border-white/30' : 'bg-black/5 hover:bg-black/10 text-gray-900 border-black/10 hover:border-black/20'">
                                   {{ 'events.guestV2.suggestions.form.addButton' | translate }}
                               </button>
                             </div>
@@ -218,12 +241,13 @@
 
                     <!-- Added Invites List -->
                     <div *ngIf="invites.controls.length > 0" class="mt-4">
-                        <label class="text-gray-400 text-[10px] uppercase font-bold tracking-[0.2em] mb-3 block pl-1">{{ 'events.guestV2.suggestions.form.invitedListLabel' | translate }}</label>
+                        <label class="text-[10px] uppercase font-bold tracking-[0.2em] mb-3 block pl-1" [ngClass]="currentTheme === 'dark' ? 'text-gray-400' : 'text-gray-700'">{{ 'events.guestV2.suggestions.form.invitedListLabel' | translate }}</label>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            <div *ngFor="let invite of invites.controls; let i = index" class="flex items-center gap-3 bg-[#0a0a0a] p-[15px] rounded-xl border border-white/5 shadow-md">
-                                <img [src]="invite.value.avatar" class="w-10 h-10 rounded-full object-cover border border-white/10">
+                            <div *ngFor="let invite of invites.controls; let i = index" class="flex items-center gap-3 p-[15px] rounded-xl border shadow-md"
+                              [ngClass]="currentTheme === 'dark' ? 'bg-[#0a0a0a] border-white/5' : 'bg-white border-black/5'">
+                                <img [src]="invite.value.avatar" class="w-10 h-10 rounded-full object-cover border" [ngClass]="currentTheme === 'dark' ? 'border-white/10' : 'border-black/10'">
                                 <div class="flex-grow min-w-0">
-                                    <p class="text-white font-bold text-sm truncate">{{ invite.value.name }}</p>
+                                    <p class="font-bold text-sm truncate" [ngClass]="currentTheme === 'dark' ? 'text-white' : 'text-gray-900'">{{ invite.value.name }}</p>
                                     <div class="flex items-center gap-1.5 text-purple-400">
                                         <div class="w-3 h-3">
                                             <ng-container [ngTemplateOutlet]="instrumentIcon" [ngTemplateOutletContext]="{ type: getInstrumentType(invite.value.instrument), showLabel: false }"></ng-container>
@@ -231,7 +255,13 @@
                                         <p class="text-[10px] uppercase font-bold tracking-wider opacity-80">{{ invite.value.instrument }}</p>
                                     </div>
                                 </div>
-                                <button type="button" (click)="removeInvite(i)" class="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-red-500 transition-colors bg-white/5 rounded-lg hover:bg-white/10" title="Remover">
+                                <button
+                                  type="button"
+                                  (click)="removeInvite(i)"
+                                  class="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-red-500 transition-colors rounded-lg"
+                                  [ngClass]="currentTheme === 'dark' ? 'bg-white/5 hover:bg-white/10' : 'bg-black/5 hover:bg-black/10'"
+                                  title="Remover"
+                                >
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                                 </button>
                             </div>
@@ -250,26 +280,38 @@
       </div>
 
       <!-- 1. INVITES SECTION (Aligned with 'My Jams') -->
-      <section *ngIf="invitesForMe.length > 0" class="relative bg-[#121212]/50 rounded-3xl px-2 py-6 md:p-6 border border-purple-500/20 shadow-[0_0_50px_rgba(147,51,234,0.05)]">
-         <h2 class="text-purple-500 font-oswald font-black italic text-2xl md:text-3xl uppercase tracking-tighter mb-6 border-b border-purple-500/30 pb-2 pl-5 md:pl-6">
-            {{ 'events.guestV2.suggestions.invites.title' | translate }} <span class="text-white/30 text-lg not-italic font-normal tracking-normal ml-2">({{ invitesForMe.length }})</span>
+      <section *ngIf="invitesForMe.length > 0" class="relative rounded-3xl px-2 py-6 md:p-6"
+        [ngClass]="currentTheme === 'dark'
+          ? 'bg-[#121212]/50 border border-purple-500/20 shadow-[0_0_50px_rgba(147,51,234,0.05)]'
+          : 'bg-white border border-black/5 shadow-[0_4px_20px_rgba(0,0,0,0.05)]'">
+         <h2 class="text-purple-500 font-oswald font-black italic text-2xl md:text-3xl uppercase tracking-tighter mb-6 border-b pb-2 pl-5 md:pl-6"
+           [ngClass]="currentTheme === 'dark' ? 'border-purple-500/30' : 'border-black/5'">
+            {{ 'events.guestV2.suggestions.invites.title' | translate }}
+            <span class="text-lg not-italic font-normal tracking-normal ml-2" [ngClass]="currentTheme === 'dark' ? 'text-white/30' : 'text-gray-500'">({{ invitesForMe.length }})</span>
          </h2>
 
          <div class="space-y-4">
             <div *ngFor="let invite of invitesForMe"
-                 class="bg-[#121212] rounded-2xl p-[15px] border border-white/5 group hover:border-purple-500/20 transition-all shadow-lg overflow-hidden relative">
+                 class="rounded-2xl p-[15px] border group transition-all shadow-lg overflow-hidden relative"
+                 [ngClass]="currentTheme === 'dark'
+                  ? 'bg-[#121212] border-white/5 hover:border-purple-500/20'
+                  : 'bg-white border-black/5 border-l-4 border-l-purple-500 hover:border-black/10 shadow-[0_4px_16px_rgba(0,0,0,0.04)] hover:shadow-[0_6px_24px_rgba(0,0,0,0.06)]'">
               <div class="flex flex-col gap-2">
                 <div class="px-1">
-                  <h4 class="text-white font-oswald font-black italic text-lg md:text-3xl uppercase leading-none tracking-tighter group-hover:text-purple-500 transition-colors">
+                  <h4 class="font-oswald font-black italic text-lg md:text-3xl uppercase leading-none tracking-tighter transition-colors"
+                    [ngClass]="currentTheme === 'dark' ? 'text-white group-hover:text-purple-500' : 'text-gray-900 group-hover:text-purple-600'">
                     {{ invite.song_name }}
                   </h4>
-                  <p class="text-gray-400 font-sans text-xs md:text-sm normal-case tracking-normal">
+                  <p class="font-sans text-xs md:text-sm normal-case tracking-normal" [ngClass]="currentTheme === 'dark' ? 'text-gray-400' : 'text-gray-600'">
                     {{ 'events.guestV2.suggestions.invites.from' | translate }} {{ getInviteSender(invite)?.name || 'Amigo' }}
                   </p>
                 </div>
                 <div class="flex items-center justify-between">
                   <div class="flex items-stretch gap-1.5">
-                    <div class="w-14 h-14 md:w-16 md:h-16 flex items-center justify-center bg-[#1a1a1a] text-white rounded-xl shadow-[inset_0_0_10px_rgba(0,0,0,0.2)] overflow-hidden border border-white/10">
+                    <div
+                      class="w-14 h-14 md:w-16 md:h-16 flex items-center justify-center rounded-xl shadow-[inset_0_0_10px_rgba(0,0,0,0.2)] overflow-hidden border"
+                      [ngClass]="currentTheme === 'dark' ? 'bg-[#1a1a1a] text-white border-white/10' : 'bg-gray-100 text-gray-900 border-black/10'"
+                    >
                       <img [src]="(getInviteSender(invite)?.avatar) || '/images/user/default-avatar.jpg'"
                            (error)="onImageError($event)"
                            class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
@@ -295,26 +337,30 @@
 
       <!-- 2. PARTICIPATING (Accepted Invites) -->
       <section *ngIf="acceptedSuggestions.length > 0">
-        <div class="flex justify-between items-end mb-6 border-b border-white/10 pb-2">
-            <h2 class="text-white font-oswald font-black italic text-2xl md:text-3xl uppercase tracking-tighter leading-none pl-2">
+        <div class="flex justify-between items-end mb-6 border-b pb-2" [ngClass]="currentTheme === 'dark' ? 'border-white/10' : 'border-black/5'">
+            <h2 class="font-oswald font-black italic text-2xl md:text-3xl uppercase tracking-tighter leading-none pl-2" [ngClass]="currentTheme === 'dark' ? 'text-white' : 'text-gray-900'">
               {{ 'events.guestV2.suggestions.participating.title' | translate }}
             </h2>
         </div>
 
         <div class="grid grid-cols-1 gap-4">
             <div *ngFor="let suggestion of acceptedSuggestions"
-                 class="bg-[#121212] border-white/5 rounded-2xl overflow-hidden shadow-lg transition-all group relative border-t-4 hover:border-purple-500/20 mb-[20px]"
-                 [ngClass]="getSuggestionBorderClass(suggestion)">
+                 class="rounded-2xl overflow-hidden transition-all group relative mb-[20px]"
+                 [ngClass]="(currentTheme === 'dark'
+                   ? 'bg-[#121212] border border-white/5 shadow-lg border-t-4 hover:border-purple-500/20'
+                   : 'bg-white border border-black/5 shadow-[0_4px_20px_rgba(0,0,0,0.05)] border-l-4 hover:shadow-[0_6px_24px_rgba(0,0,0,0.06)]')
+                   + ' ' + getSuggestionAccentClass(suggestion)">
 
                  <div class="p-[15px]">
                     <!-- Title Row -->
                     <div class="flex items-start justify-between gap-3 mb-1">
                         <div class="flex flex-col gap-1 min-w-0 flex-grow">
-                            <h3 class="text-white font-oswald font-black text-xl md:text-2xl uppercase italic tracking-tighter truncate group-hover:text-purple-400 transition-colors leading-none">
+                            <h3 class="font-oswald font-black text-xl md:text-2xl uppercase italic tracking-tighter truncate transition-colors leading-none"
+                              [ngClass]="currentTheme === 'dark' ? 'text-white group-hover:text-purple-400' : 'text-gray-900 group-hover:text-purple-600'">
                                 {{ suggestion.song_name }}
                             </h3>
 
-                            <p class="text-gray-400 text-xs font-bold uppercase tracking-widest">{{ suggestion.artist_name }}</p>
+                            <p class="text-xs font-bold uppercase tracking-widest" [ngClass]="currentTheme === 'dark' ? 'text-gray-400' : 'text-gray-600'">{{ suggestion.artist_name }}</p>
 
                             <div class="mt-1 flex items-center gap-2">
                               <span class="inline-block px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider border"
@@ -323,8 +369,9 @@
                               </span>
 
                               <!-- My Instrument Badge -->
-                              <span class="flex items-center gap-1 px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider border border-white/10 bg-white/5 text-gray-300">
-                                <span class="w-3 h-3 text-purple-400">
+                              <span class="flex items-center gap-1 px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider border"
+                                [ngClass]="currentTheme === 'dark' ? 'border-white/10 bg-white/5 text-gray-300' : 'border-black/10 bg-black/5 text-gray-700'">
+                                <span class="w-3 h-3" [ngClass]="currentTheme === 'dark' ? 'text-purple-400' : 'text-purple-600'">
                                    <ng-container [ngTemplateOutlet]="instrumentIcon" [ngTemplateOutletContext]="{ type: getInstrumentType(getMyInviteInstrument(suggestion)), showLabel: false }"></ng-container>
                                 </span>
                                 {{ getInstrumentLabelFromType(getMyInviteInstrument(suggestion)) }}
@@ -334,20 +381,22 @@
                     </div>
 
                     <!-- Participants/Status Row -->
-                    <div class="mt-4 flex items-center justify-between border-t border-white/5 pt-3">
+                    <div class="mt-4 flex items-center justify-between border-t pt-3" [ngClass]="currentTheme === 'dark' ? 'border-white/5' : 'border-black/5'">
                         <div class="flex -space-x-2">
                             <ng-container *ngFor="let p of getInvitees(suggestion); let i = index">
                                 <img *ngIf="i < 3"
                                      [src]="p.avatar || '/images/user/default-avatar.jpg'"
-                                     class="w-6 h-6 rounded-full border border-[#121212] ring-1 ring-white/10 object-cover"
+                                     class="w-6 h-6 rounded-full border ring-1 object-cover"
+                                     [ngClass]="currentTheme === 'dark' ? 'border-[#121212] ring-white/10' : 'border-white ring-black/10'"
                                      [title]="p.name + ' (' + p.instrument + ')'">
                             </ng-container>
-                            <div *ngIf="getInvitees(suggestion).length > 3" class="w-6 h-6 rounded-full bg-gray-800 border border-[#121212] ring-1 ring-white/10 flex items-center justify-center text-[9px] font-bold text-gray-400">
+                            <div *ngIf="getInvitees(suggestion).length > 3" class="w-6 h-6 rounded-full border ring-1 flex items-center justify-center text-[9px] font-bold"
+                              [ngClass]="currentTheme === 'dark' ? 'bg-gray-800 border-[#121212] ring-white/10 text-gray-400' : 'bg-gray-100 border-white ring-black/10 text-gray-700'">
                                 +{{ getInvitees(suggestion).length - 3 }}
                             </div>
                         </div>
 
-                        <div class="text-[10px] text-gray-500 font-bold uppercase tracking-widest">
+                        <div class="text-[10px] font-bold uppercase tracking-widest" [ngClass]="currentTheme === 'dark' ? 'text-gray-500' : 'text-gray-600'">
                             {{ 'events.guestV2.suggestions.invites.from' | translate }} {{ getInviteSender(suggestion)?.name || 'Band' }}
                         </div>
                     </div>
@@ -358,24 +407,31 @@
 
       <!-- 3. MY SUGGESTIONS -->
       <section>
-        <div class="flex justify-between items-end mb-6 border-b border-white/10 pb-2">
-            <h2 class="text-white font-oswald font-black italic text-2xl md:text-3xl uppercase tracking-tighter leading-none pl-2">{{ 'events.guestV2.suggestions.mySuggestions.title' | translate }}</h2>
+        <div class="flex justify-between items-end mb-6 border-b pb-2" [ngClass]="currentTheme === 'dark' ? 'border-white/10' : 'border-black/5'">
+            <h2 class="font-oswald font-black italic text-2xl md:text-3xl uppercase tracking-tighter leading-none pl-2"
+              [ngClass]="currentTheme === 'dark' ? 'text-white' : 'text-gray-900'">
+              {{ 'events.guestV2.suggestions.mySuggestions.title' | translate }}
+            </h2>
         </div>
 
         <div class="grid grid-cols-1 gap-4">
             <div *ngFor="let suggestion of mySuggestions"
-                 class="bg-[#121212] border-white/5 rounded-2xl overflow-hidden shadow-lg transition-all group relative border-t-4 hover:border-purple-500/20 mb-[20px]"
-                 [ngClass]="getSuggestionBorderClass(suggestion)">
+                 class="rounded-2xl overflow-hidden transition-all group relative mb-[20px]"
+                 [ngClass]="(currentTheme === 'dark'
+                   ? 'bg-[#121212] border border-white/5 shadow-lg border-t-4 hover:border-purple-500/20'
+                   : 'bg-white border border-black/5 shadow-[0_4px_20px_rgba(0,0,0,0.05)] border-l-4 hover:shadow-[0_6px_24px_rgba(0,0,0,0.06)]')
+                   + ' ' + getSuggestionAccentClass(suggestion)">
 
                  <div class="p-[15px]">
                     <!-- Title Row: título e ações -->
                     <div class="flex items-start justify-between gap-3 mb-1">
                         <div class="flex flex-col gap-1 min-w-0 flex-grow">
-                            <h3 class="text-white font-oswald font-black text-xl md:text-2xl uppercase italic tracking-tighter truncate group-hover:text-purple-400 transition-colors leading-none">
+                            <h3 class="font-oswald font-black text-xl md:text-2xl uppercase italic tracking-tighter truncate transition-colors leading-none"
+                              [ngClass]="currentTheme === 'dark' ? 'text-white group-hover:text-purple-400' : 'text-gray-900 group-hover:text-purple-600'">
                                 {{ suggestion.song_name }}
                             </h3>
 
-                            <p class="text-gray-400 text-xs font-bold uppercase tracking-widest">{{ suggestion.artist_name }}</p>
+                            <p class="text-xs font-bold uppercase tracking-widest" [ngClass]="currentTheme === 'dark' ? 'text-gray-400' : 'text-gray-600'">{{ suggestion.artist_name }}</p>
 
                             <div class="mt-1">
                               <span class="inline-block px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider border"
@@ -390,7 +446,8 @@
                             <!-- Edit Button: Visible only if NOT submitted/pending/approved/rejected -->
                             <button *ngIf="suggestion.status !== 'SUBMITTED' && suggestion.status !== 'PENDING' && suggestion.status !== 'APPROVED' && suggestion.status !== 'REJECTED'"
                                     (click)="editSuggestion(suggestion)"
-                                    class="p-2 hover:bg-white/5 rounded-lg text-gray-400 hover:text-white transition-colors"
+                                    class="p-2 rounded-lg text-gray-400 transition-colors"
+                                    [ngClass]="currentTheme === 'dark' ? 'hover:bg-white/5 hover:text-white' : 'hover:bg-black/5 hover:text-gray-900'"
                                     title="{{ 'events.guestV2.suggestions.mySuggestions.edit' | translate }}">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
                             </button>
@@ -405,10 +462,16 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mt-3">
                           <div *ngFor="let p of getInvitees(suggestion)"
                    class="flex items-center gap-3 p-[15px] rounded-xl border"
-                               [ngClass]="p.status === 'ACCEPTED' ? 'bg-green-600/15 border-green-500' : p.status === 'REJECTED' ? 'bg-red-600/15 border-red-500' : p.status === 'PENDING' ? 'bg-yellow-600/15 border-yellow-500' : 'bg-[#0a0a0a] border-white/5'">
-                              <img [src]="p.avatar" (error)="onImageError($event)" class="w-10 h-10 rounded-full object-cover border border-white/10">
+                               [ngClass]="p.status === 'ACCEPTED'
+                                 ? (currentTheme === 'dark' ? 'bg-green-600/15 border-green-500' : 'bg-green-50 border-green-200')
+                                 : p.status === 'REJECTED'
+                                   ? (currentTheme === 'dark' ? 'bg-red-600/15 border-red-500' : 'bg-red-50 border-red-200')
+                                   : p.status === 'PENDING'
+                                     ? (currentTheme === 'dark' ? 'bg-yellow-600/15 border-yellow-500' : 'bg-amber-50 border-amber-200')
+                                     : (currentTheme === 'dark' ? 'bg-[#0a0a0a] border-white/5' : 'bg-white border-black/5')">
+                              <img [src]="p.avatar" (error)="onImageError($event)" class="w-10 h-10 rounded-full object-cover border" [ngClass]="currentTheme === 'dark' ? 'border-white/10' : 'border-black/10'">
                               <div class="flex-grow min-w-0">
-                                  <p class="text-white font-bold text-sm truncate">{{ p.name }}</p>
+                                  <p class="font-bold text-sm truncate" [ngClass]="currentTheme === 'dark' ? 'text-white' : 'text-gray-900'">{{ p.name }}</p>
                                   <p class="text-[10px] uppercase font-bold tracking-wider opacity-80"
                                      [ngClass]="p.status === 'ACCEPTED' ? 'text-green-300' : p.status === 'REJECTED' ? 'text-red-300' : p.status === 'PENDING' ? 'text-yellow-300' : 'text-gray-400'">
                                     {{ p.instrument }}
@@ -422,7 +485,7 @@
 
                         <div class="mt-3">
                           <!-- Se o status for DRAFT, mostra o botão de Enviar -->
-                          <button *ngIf="suggestion.status === 'DRAFT'"
+                          <button *ngIf="suggestion.status === 'DRAFT' && !isSubmittingSuggestion(suggestion)"
                                   type="button"
                                   (click)="submitSuggestion(suggestion.id)"
                                   [disabled]="!canSubmitSuggestion(suggestion)"
@@ -431,9 +494,10 @@
                           </button>
 
                           <!-- Se o status for SUBMITTED ou PENDING, mostra Aguardando Aprovação -->
-                          <button *ngIf="suggestion.status === 'SUBMITTED' || suggestion.status === 'PENDING'"
+                          <button *ngIf="suggestion.status === 'SUBMITTED' || suggestion.status === 'PENDING' || isSubmittingSuggestion(suggestion)"
                                   type="button" disabled
-                                  class="w-full px-6 py-3 bg-yellow-600/20 text-yellow-500 border border-yellow-600/30 rounded-xl font-bold text-xs uppercase tracking-wider cursor-not-allowed opacity-80 flex items-center justify-center gap-2">
+                                  class="w-full px-6 py-3 border rounded-xl font-bold text-xs uppercase tracking-wider cursor-not-allowed opacity-80 flex items-center justify-center gap-2"
+                                  [ngClass]="currentTheme === 'dark' ? 'bg-yellow-600/20 text-yellow-500 border-yellow-600/30' : 'bg-amber-50 text-amber-700 border-amber-200'">
                             <span class="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></span>
                             AGUARDANDO APROVAÇÃO
                           </button>
@@ -441,7 +505,8 @@
                           <!-- Se o status for APPROVED ou ACCEPTED, mostra Aprovado -->
                           <button *ngIf="suggestion.status === 'APPROVED' || suggestion.status === 'ACCEPTED'"
                                   type="button" disabled
-                                  class="w-full px-6 py-3 bg-green-600/20 text-green-500 border border-green-600/30 rounded-xl font-bold text-xs uppercase tracking-wider cursor-not-allowed opacity-80 flex items-center justify-center gap-2">
+                                  class="w-full px-6 py-3 border rounded-xl font-bold text-xs uppercase tracking-wider cursor-not-allowed opacity-80 flex items-center justify-center gap-2"
+                                  [ngClass]="currentTheme === 'dark' ? 'bg-green-600/20 text-green-500 border-green-600/30' : 'bg-green-100 text-green-800 border-green-200'">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
                             APROVADO
                           </button>

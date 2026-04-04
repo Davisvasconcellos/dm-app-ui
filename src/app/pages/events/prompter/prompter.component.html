@@ -1,0 +1,158 @@
+<div class="fixed inset-0 h-screen overflow-hidden font-sans"
+  [ngClass]="currentTheme === 'dark' ? 'bg-black text-white' : 'bg-white text-gray-900'">
+  <div class="flex h-full w-full">
+    <main class="relative flex-1 overflow-hidden">
+      <div class="absolute inset-0 z-0 opacity-30 bg-cover bg-center transition-all duration-1000"
+        [style.backgroundImage]="'url(' + (selectedSong?.cover_image || selectedSong?.cover_url || '/images/cards/card-01.jpg') + ')'">
+      </div>
+      <div class="absolute inset-0 z-10"
+        [ngClass]="currentTheme === 'dark'
+          ? 'bg-gradient-to-t from-black via-black/50 to-black/20'
+          : 'bg-gradient-to-t from-white via-white/80 to-white/40'">
+      </div>
+
+      <div class="relative z-20 h-full w-full p-6 md:p-10 flex flex-col">
+        <div class="flex items-start justify-between gap-4">
+          <div class="min-w-0">
+            <h1 class="text-3xl md:text-6xl font-black uppercase tracking-tighter truncate"
+              [ngClass]="currentTheme === 'dark' ? 'text-white' : 'text-gray-900'">
+              {{ selectedSong?.title || 'PROMPTER' }}
+            </h1>
+            <div class="mt-2 flex items-center gap-3">
+              <span class="h-[2px] w-10 bg-red-600 inline-block"></span>
+              <h2 class="text-sm md:text-xl font-bold uppercase tracking-widest truncate"
+                [ngClass]="currentTheme === 'dark' ? 'text-gray-300' : 'text-gray-700'">
+                {{ selectedSong?.artist || '' }}
+              </h2>
+              <span class="h-[2px] w-10 bg-red-600 inline-block"></span>
+            </div>
+          </div>
+
+          <div class="shrink-0 flex items-center gap-2">
+            @if (canFullscreen) {
+              <button type="button" (click)="toggleFullscreen()"
+                class="rounded-xl border px-3 py-2 text-xs font-semibold uppercase tracking-wider"
+                [ngClass]="currentTheme === 'dark'
+                  ? 'border-white/10 bg-black/40 text-white hover:bg-black/60'
+                  : 'border-black/10 bg-white/70 text-gray-900 hover:bg-white'">
+                @if (isFullscreen) { Sair Fullscreen } @else { Fullscreen }
+              </button>
+            }
+            <button type="button" (click)="toggleSidebar()"
+              class="rounded-xl border px-3 py-2 text-xs font-semibold uppercase tracking-wider"
+              [ngClass]="currentTheme === 'dark'
+                ? 'border-white/10 bg-black/40 text-white hover:bg-black/60'
+                : 'border-black/10 bg-white/70 text-gray-900 hover:bg-white'">
+              Setlist
+            </button>
+          </div>
+        </div>
+
+        <div class="mt-6 flex-1 overflow-hidden rounded-2xl border"
+          [ngClass]="currentTheme === 'dark' ? 'border-white/10 bg-black/40' : 'border-black/10 bg-white/70'">
+          <div #lyricsScroll class="h-full overflow-y-auto px-4 py-4 md:px-6 md:py-6" (scroll)="onUserScroll()" (wheel)="onUserScroll()" (touchstart)="onUserScroll()" (touchmove)="onUserScroll()">
+            @if (isLoading) {
+              <div class="text-sm" [ngClass]="currentTheme === 'dark' ? 'text-gray-300' : 'text-gray-700'">Carregando...</div>
+            } @else if (errorMessage) {
+              <div class="text-sm text-red-500">{{ errorMessage }}</div>
+            } @else if (isLyricsLoading) {
+              <div class="text-sm" [ngClass]="currentTheme === 'dark' ? 'text-gray-300' : 'text-gray-700'">Carregando letra...</div>
+            } @else if (lyricsErrorMessage) {
+              <div class="text-sm text-yellow-500">{{ lyricsErrorMessage }}</div>
+            } @else if (!lyricsText) {
+              <div class="text-sm" [ngClass]="currentTheme === 'dark' ? 'text-gray-300' : 'text-gray-700'">Sem letra cadastrada.</div>
+            } @else {
+              <pre class="whitespace-pre-wrap font-mono leading-relaxed"
+                [style.fontSize.px]="fontSizePx"
+                [ngClass]="currentTheme === 'dark' ? 'text-gray-100' : 'text-gray-900'">{{ lyricsText }}</pre>
+            }
+          </div>
+        </div>
+
+        <div class="mt-4 rounded-2xl border px-4 py-3 flex flex-wrap items-center gap-4"
+          [ngClass]="currentTheme === 'dark' ? 'border-white/10 bg-black/40' : 'border-black/10 bg-white/70'">
+          <div class="flex items-center gap-2">
+            <button type="button" (click)="decreaseFont()"
+              class="h-9 w-9 rounded-xl border flex items-center justify-center font-black"
+              [ngClass]="currentTheme === 'dark' ? 'border-white/10 bg-black/40 text-white hover:bg-black/60' : 'border-black/10 bg-white text-gray-900 hover:bg-white'">-</button>
+            <button type="button" (click)="increaseFont()"
+              class="h-9 w-9 rounded-xl border flex items-center justify-center font-black"
+              [ngClass]="currentTheme === 'dark' ? 'border-white/10 bg-black/40 text-white hover:bg-black/60' : 'border-black/10 bg-white text-gray-900 hover:bg-white'">+</button>
+            <div class="text-xs font-semibold uppercase tracking-wider"
+              [ngClass]="currentTheme === 'dark' ? 'text-gray-300' : 'text-gray-700'">
+              Fonte {{ fontSizePx }}px
+            </div>
+          </div>
+
+          <div class="flex-1 min-w-[220px] flex items-center gap-3">
+            <div class="text-xs font-semibold uppercase tracking-wider"
+              [ngClass]="currentTheme === 'dark' ? 'text-gray-300' : 'text-gray-700'">
+              Velocidade
+            </div>
+            <input type="range" min="0" max="10" step="1" [value]="scrollSpeed" (input)="setScrollSpeed($any($event.target).value)"
+              class="w-full accent-red-600" />
+            <div class="w-10 text-right text-xs font-semibold tabular-nums"
+              [ngClass]="currentTheme === 'dark' ? 'text-gray-300' : 'text-gray-700'">
+              {{ scrollSpeed }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <aside class="shrink-0 border-l transition-all duration-300 ease-in-out overflow-hidden"
+      [ngClass]="(currentTheme === 'dark' ? 'bg-black/90 border-white/10' : 'bg-white border-black/10')
+        + ' ' + (isSidebarOpen ? 'w-80 md:w-96' : 'w-0 border-l-0')">
+      <div class="h-full flex flex-col">
+        <div class="p-4 md:p-6 border-b flex items-center justify-between"
+          [ngClass]="currentTheme === 'dark' ? 'border-white/10 bg-gradient-to-r from-gray-900 to-black' : 'border-black/10 bg-white'">
+          <h3 class="text-lg font-black uppercase tracking-widest flex items-center gap-2"
+            [ngClass]="currentTheme === 'dark' ? 'text-white' : 'text-gray-900'">
+            <span class="text-red-500">≡</span>
+            Setlist
+          </h3>
+          <button type="button" (click)="toggleSidebar()"
+            class="text-gray-500 hover:text-gray-900 transition-colors"
+            [ngClass]="currentTheme === 'dark' ? 'text-white/50 hover:text-white' : ''">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="flex-1 overflow-y-auto">
+          @for (song of playlistSongs; track song.id; let idx = $index) {
+            <div (click)="setPlaylistIndex(idx)" tabindex="0" role="button"
+              class="flex items-center gap-3 p-4 cursor-pointer border-b outline-none"
+              [ngClass]="currentTheme === 'dark'
+                ? (idx === selectedPlaylistIndex ? 'bg-white/10 border-white/5' : 'hover:bg-white/5 border-white/5')
+                : (idx === selectedPlaylistIndex ? 'bg-black/5 border-black/5' : 'hover:bg-black/5 border-black/5')">
+              <div class="w-12 shrink-0 text-center font-oswald font-black italic text-lg"
+                [ngClass]="idx === 0 ? 'text-emerald-500' : 'text-yellow-500/80'">
+                #{{ idx + 1 }}
+              </div>
+              <div class="min-w-0 flex-1">
+                <div class="font-black text-xs md:text-sm uppercase truncate"
+                  [ngClass]="currentTheme === 'dark' ? 'text-gray-200' : 'text-gray-900'">
+                  {{ song.title }}
+                </div>
+                <div class="text-[10px] uppercase tracking-widest font-bold truncate"
+                  [ngClass]="currentTheme === 'dark' ? 'text-gray-500' : 'text-gray-600'">
+                  {{ song.artist }}
+                </div>
+              </div>
+              <div class="shrink-0">
+                @if (song.lyrics_available) {
+                  <span class="inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
+                } @else {
+                  <span class="inline-flex h-2 w-2 rounded-full bg-gray-400/40"></span>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>

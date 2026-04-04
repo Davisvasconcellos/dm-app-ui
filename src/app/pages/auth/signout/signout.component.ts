@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../shared/services/auth.service';
 import { CommonModule } from '@angular/common';
+import { AppContextService } from '../../../shared/services/app-context.service';
 
 @Component({
   selector: 'app-signout',
@@ -34,6 +35,7 @@ export class SignoutComponent implements OnInit {
 
   constructor(
     private authService: AuthService,
+    private appContext: AppContextService,
     private router: Router
   ) {}
 
@@ -63,6 +65,7 @@ export class SignoutComponent implements OnInit {
   }
 
   private redirectToLogin(): void {
-    this.router.navigate(['/signin']);
+    const target = this.appContext.getContext() === 'events' ? '/login' : '/signin';
+    this.router.navigate([target]);
   }
 }

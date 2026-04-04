@@ -1,0 +1,128 @@
+:host {
+  display: contents;
+}
+
+.magic-nav {
+  --nav-bg: #ffffff;
+  --page-bg: #f3f4f6;
+  --accent: #3b82f6;
+  --text: #111827;
+  --muted: #6b7280;
+  --item-count: 3;
+  position: relative;
+  height: 64px;
+  width: min(420px, calc(100vw - 24px));
+  background: var(--nav-bg);
+  border-radius: 16px;
+  border: 1px solid rgba(17, 24, 39, 0.08);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+}
+
+:host-context(.dark) .magic-nav {
+  --nav-bg: #0b1220;
+  --page-bg: #050a14;
+  --accent: #22c55e;
+  --text: #e5e7eb;
+  --muted: #9ca3af;
+  border: 1px solid rgba(11, 18, 32, 1);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.45);
+}
+
+.magic-nav ul {
+  display: flex;
+  height: 64px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.magic-nav li {
+  position: relative;
+  width: calc(100% / var(--item-count));
+  height: 64px;
+  z-index: 2;
+}
+
+.magic-nav a {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 64px;
+  width: 100%;
+  text-decoration: none;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  gap: 4px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.magic-nav a .icon {
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  transition: transform 180ms ease, color 180ms ease;
+}
+
+.magic-nav a.active {
+  color: var(--text);
+}
+
+.magic-nav a.active .icon {
+  color: #ffffff;
+  transform: translateY(-14px);
+}
+
+.magic-nav a.active .label {
+  transform: translateY(8px);
+  opacity: 1;
+}
+
+.magic-nav a .label {
+  opacity: 0.85;
+  transition: transform 180ms ease, opacity 180ms ease;
+}
+
+.indicator {
+  position: absolute;
+  top: -22px;
+  width: 56px;
+  height: 56px;
+  background: var(--accent);
+  border-radius: 50%;
+  border: 6px solid var(--page-bg);
+  transform: translateX(-50%);
+  transition: left 240ms ease;
+  z-index: 1;
+}
+
+.indicator::before,
+.indicator::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 20px;
+  height: 20px;
+  background: transparent;
+}
+
+.indicator::before {
+  left: -22px;
+  border-top-right-radius: 20px;
+  box-shadow: 1px -10px 0 0 var(--page-bg);
+}
+
+.indicator::after {
+  right: -22px;
+  border-top-left-radius: 20px;
+  box-shadow: -1px -10px 0 0 var(--page-bg);
+}
+
+.disabled {
+  opacity: 0.55;
+  pointer-events: none;
+}

@@ -1,10 +1,11 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges } from '@angular/core';
 import { Task } from '../types/types';
 import { CommonModule } from '@angular/common';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { DndModule } from 'ngx-drag-drop';
 import { EventService } from '../../../../../pages/events/event.service';
 import { forkJoin } from 'rxjs';
+import { ModalComponent } from '../../../ui/modal/modal.component';
 
 
 @Component({
@@ -13,12 +14,13 @@ import { forkJoin } from 'rxjs';
   imports: [
     CommonModule,
     DragDropModule,
-    DndModule
+    DndModule,
+    ModalComponent
   ],
   templateUrl: './kanban-task-item.component.html',
   styles: ``
 })
-export class KanbanTaskItemComponent {
+export class KanbanTaskItemComponent implements OnChanges {
 
   @Input() task: Task = {} as Task;
   @Input() index: number = 0;
@@ -30,8 +32,29 @@ export class KanbanTaskItemComponent {
   @Output() expandedToggled = new EventEmitter<Task>();
 
   isMenuOpen = false;
+  isLyricsModalOpen = false;
+  lyricsDraft = '';
+  isLyricsLoading = false;
+  isLyricsSaving = false;
+  lyricsErrorMessage = '';
+  private lastTaskKey = '';
 
   constructor(private eventService: EventService) { }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (!changes['task']) return;
+    const nextKey = String(this.task?.id ?? this.task?.song?.id ?? '');
+    if (!nextKey) return;
+    if (this.lastTaskKey && this.lastTaskKey !== nextKey) {
+      this.isMenuOpen = false;
+      this.isLyricsModalOpen = false;
+      this.lyricsDraft = '';
+      this.isLyricsLoading = false;
+      this.isLyricsSaving = false;
+      this.lyricsErrorMessage = '';
+    }
+    this.lastTaskKey = nextKey;
+  }
 
   getBorderClass(): string {
     // Se estiver em on_stage
@@ -126,6 +149,62 @@ export class KanbanTaskItemComponent {
     if (event) { try { event.stopPropagation(); } catch { } }
     this.isMenuOpen = false;
     this.delete.emit(this.task);
+  }
+
+  openLyricsModal(event?: MouseEvent) {
+    if (event) { try { event.stopPropagation(); } catch { } }
+    this.isMenuOpen = false;
+    const eventId = this.eventIdCode;
+    const catalogId = String((this.task as any)?.song?.catalog_id ?? '').trim().replace(/`/g, '');
+    if (!eventId || !catalogId) return;
+    this.isLyricsModalOpen = true;
+    this.isLyricsLoading = true;
+    this.isLyricsSaving = false;
+    this.lyricsErrorMessage = '';
+    this.lyricsDraft = '';
+    this.eventService.getJamCatalogItem(eventId, catalogId).subscribe({
+      next: (data: any) => {
+        const lyrics = data?.lyrics ?? '';
+        this.lyricsDraft = String(lyrics || '');
+        this.isLyricsLoading = false;
+      },
+      error: (err: any) => {
+        this.lyricsErrorMessage = err?.error?.message || err?.message || 'Falha ao carregar a letra.';
+        this.isLyricsLoading = false;
+      }
+    });
+  }
+
+  closeLyricsModal() {
+    this.isLyricsLoading = false;
+    this.isLyricsSaving = false;
+    this.lyricsErrorMessage = '';
+    this.isLyricsModalOpen = false;
+  }
+
+  confirmLyrics() {
+    const eventId = this.eventIdCode;
+    const catalogId = String((this.task as any)?.song?.catalog_id ?? '').trim().replace(/`/g, '');
+    if (!eventId || !catalogId) return;
+    if (this.isLyricsSaving) return;
+    this.isLyricsSaving = true;
+    this.lyricsErrorMessage = '';
+    const trimmed = String(this.lyricsDraft || '').trim();
+    const payload = { lyrics: trimmed ? this.lyricsDraft : null };
+    this.eventService.updateJamCatalogItem(eventId, catalogId, payload).subscribe({
+      next: () => {
+        this.isLyricsSaving = false;
+        const hasLyrics = !!trimmed;
+        try {
+          (this.task as any).song = { ...(this.task as any).song, lyrics_available: hasLyrics };
+        } catch { }
+        this.isLyricsModalOpen = false;
+      },
+      error: (err: any) => {
+        this.isLyricsSaving = false;
+        this.lyricsErrorMessage = err?.error?.message || err?.message || 'Falha ao salvar a letra.';
+      }
+    });
   }
 
   getApprovedUsers(): any[] {

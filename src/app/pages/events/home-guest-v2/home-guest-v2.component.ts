@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, OnDestroy, ApplicationRef, Injector, EnvironmentInjector, createComponent, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, ApplicationRef, Injector, EnvironmentInjector, ElementRef, ViewChild, createComponent, inject } from '@angular/core';
 import { trigger, state, style, transition, animate, stagger, query } from '@angular/animations';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -12,6 +12,8 @@ import { ToastService } from '../../../shared/services/toast.service';
 import { MusicSuggestionsListComponent } from '../music-suggestions-list/music-suggestions-list.component';
 import { ModalComponent } from '../../../shared/components/ui/modal/modal.component';
 import { PlaylistComponent } from '../playlist/playlist.component';
+import { ThemeService } from '../../../shared/services/theme.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-home-guest-v2',
@@ -45,6 +47,26 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
   onStageSongs: ApiSong[] = [];
   playingNowSongs: ApiSong[] = [];
   goToStageSongs: ApiSong[] = [];
+
+  @ViewChild('lyricsSheetScroll') lyricsSheetScroll?: ElementRef<HTMLDivElement>;
+  isLyricsSheetOpen = false;
+  lyricsSheetSong: ApiSong | null = null;
+  lyricsSheetText = '';
+  isLyricsSheetLoading = false;
+  lyricsSheetErrorMessage = '';
+  private lyricsSheetCache = new Map<string, string>();
+  lyricsSheetFontSizePx = 18;
+  lyricsSheetSpeed = 0;
+  private readonly lyricsSheetMaxSpeed = 10;
+  private readonly lyricsSheetLinesPerSecondPerStep = 0.5;
+  private readonly lyricsSheetMinFontSizePx = 12;
+  private readonly lyricsSheetMaxFontSizePx = 48;
+  private lyricsSheetIsUserPaused = false;
+  private lyricsSheetResumeTimeoutId: any = null;
+  private lyricsSheetRafId: number | null = null;
+  private lyricsSheetLastFrameTs = 0;
+  private lyricsSheetLastAutoScrollAt = 0;
+  private lyricsSheetScrollCarryPx = 0;
 
   // Invites
   invitesForMe: MusicSuggestion[] = [];
@@ -102,6 +124,7 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
   viewMode: 'playlist' | 'dashboard' | 'suggestions' = 'dashboard'; // Start with dashboard as it is fully implemented
   isSidebarOpen = false;
   isProfileMenuOpen = false;
+  currentTheme: 'light' | 'dark' = (localStorage.getItem('theme') as any) === 'dark' ? 'dark' : 'light';
   currentLang = 'pt-br';
   languages: { code: 'pt-br' | 'en' | string; label: string; flag: string }[] = [
     { code: 'pt-br', label: 'Português (Brasil)', flag: 'https://flagcdn.com/w40/br.png' },
@@ -130,6 +153,8 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
   private injector = inject(Injector);
   private envInjector = inject(EnvironmentInjector);
   private musicSuggestionService = inject(MusicSuggestionService);
+  private themeService = inject(ThemeService);
+  private themeSub: Subscription | null = null;
 
   constructor() {
     this.useSse = false;
@@ -148,6 +173,9 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.currentUser = this.authService.getCurrentUser();
+    this.themeSub = this.themeService.theme$.subscribe((t) => {
+      this.currentTheme = t;
+    });
 
     this.route.paramMap.subscribe(pm => {
       this.eventIdCode = pm.get('id_code') || '';
@@ -218,6 +246,8 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
         console.error('Visibility listener error', e);
       }
     });
+
+    this.startLyricsSheetAutoScroll();
   }
 
   loadInvites() {
@@ -238,8 +268,11 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    if (this.themeSub) this.themeSub.unsubscribe();
     this.stopAutoAdvance();
     if (this.tickHandle) clearInterval(this.tickHandle);
+    if (this.lyricsSheetRafId !== null) cancelAnimationFrame(this.lyricsSheetRafId);
+    if (this.lyricsSheetResumeTimeoutId) clearTimeout(this.lyricsSheetResumeTimeoutId);
     const ids = Object.keys(this.esMap);
     ids.forEach(id => {
       try { this.esMap[id as string | number].close(); } catch { }
@@ -259,6 +292,16 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
     localStorage.setItem('lang', lang);
     this.translate.use(lang);
     this.isProfileMenuOpen = false;
+  }
+
+  setTheme(theme: 'light' | 'dark'): void {
+    this.themeService.setTheme(theme);
+    this.currentTheme = theme;
+  }
+
+  exitEvent(): void {
+    this.isProfileMenuOpen = false;
+    this.router.navigateByUrl('/');
   }
 
   // Logic from HomeGuestComponent
@@ -531,6 +574,155 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
 
   get currentSong(): ApiSong | null {
     return this.playingNowSongs.length > 0 && this.playingNowSongs[0].queue_position === 1 ? this.playingNowSongs[0] : null;
+  }
+
+  get canOpenCurrentLyrics(): boolean {
+    const s: any = this.currentSong as any;
+    const hasCatalog = !!String(s?.catalog_id ?? '').trim();
+    return hasCatalog;
+  }
+
+  get currentSongHasLyrics(): boolean {
+    const s: any = this.currentSong as any;
+    const catalogId = String(s?.catalog_id ?? '').trim().replace(/`/g, '');
+    if (!catalogId) return false;
+    if (s?.lyrics_available === true) return true;
+    const cached = this.lyricsSheetCache.get(catalogId);
+    return !!String(cached || '').trim();
+  }
+
+  onStageCardClick(): void {
+    const s = this.currentSong;
+    if (!s) return;
+    if (!this.canOpenCurrentLyrics) {
+      this.triggerToast('info', 'Letra', 'Sem catálogo para esta música.');
+      return;
+    }
+    this.openLyricsSheet(s);
+  }
+
+  openLyricsSheet(song: ApiSong): void {
+    this.lyricsSheetSong = song;
+    this.isLyricsSheetOpen = true;
+    this.lyricsSheetErrorMessage = '';
+    this.loadLyricsSheet(song);
+    this.lyricsSheetScrollToTop();
+  }
+
+  closeLyricsSheet(): void {
+    this.isLyricsSheetOpen = false;
+    this.lyricsSheetIsUserPaused = false;
+    if (this.lyricsSheetResumeTimeoutId) clearTimeout(this.lyricsSheetResumeTimeoutId);
+    this.lyricsSheetResumeTimeoutId = null;
+    this.lyricsSheetScrollCarryPx = 0;
+  }
+
+  increaseLyricsFont(): void {
+    this.lyricsSheetFontSizePx = Math.min(this.lyricsSheetMaxFontSizePx, this.lyricsSheetFontSizePx + 2);
+  }
+
+  decreaseLyricsFont(): void {
+    this.lyricsSheetFontSizePx = Math.max(this.lyricsSheetMinFontSizePx, this.lyricsSheetFontSizePx - 2);
+  }
+
+  setLyricsSpeed(value: number | string): void {
+    const n = Math.max(0, Math.min(this.lyricsSheetMaxSpeed, Number(value) || 0));
+    this.lyricsSheetSpeed = Math.round(n);
+  }
+
+  onLyricsSheetUserScroll(): void {
+    const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+    if (now - this.lyricsSheetLastAutoScrollAt < 120) return;
+    this.lyricsSheetIsUserPaused = true;
+    if (this.lyricsSheetResumeTimeoutId) clearTimeout(this.lyricsSheetResumeTimeoutId);
+    this.lyricsSheetResumeTimeoutId = setTimeout(() => {
+      this.lyricsSheetIsUserPaused = false;
+    }, 2000);
+  }
+
+  private loadLyricsSheet(song: ApiSong): void {
+    if (!this.eventIdCode) return;
+    const catalogId = String((song as any)?.catalog_id ?? '').trim().replace(/`/g, '');
+    if (!catalogId) return;
+    if (this.lyricsSheetCache.has(catalogId)) {
+      this.lyricsSheetText = this.lyricsSheetCache.get(catalogId) || '';
+      return;
+    }
+    this.isLyricsSheetLoading = true;
+    this.lyricsSheetErrorMessage = '';
+    this.lyricsSheetText = '';
+    this.eventService.getJamCatalogItem(this.eventIdCode, catalogId).subscribe({
+      next: (data: any) => {
+        const text = String(data?.lyrics ?? '');
+        this.lyricsSheetCache.set(catalogId, text);
+        this.lyricsSheetText = text;
+        try { (song as any).lyrics_available = !!text.trim(); } catch { }
+        this.isLyricsSheetLoading = false;
+      },
+      error: (err) => {
+        this.isLyricsSheetLoading = false;
+        this.lyricsSheetErrorMessage = err?.error?.message || err?.message || 'Falha ao carregar letra.';
+      }
+    });
+  }
+
+  private lyricsSheetScrollToTop(): void {
+    const el = this.lyricsSheetScroll?.nativeElement;
+    if (!el) return;
+    el.scrollTop = 0;
+    this.lyricsSheetLastAutoScrollAt = typeof performance !== 'undefined' ? performance.now() : Date.now();
+    this.lyricsSheetScrollCarryPx = 0;
+  }
+
+  private lyricsSheetGetLineHeightPx(): number {
+    const el = this.lyricsSheetScroll?.nativeElement;
+    if (!el) return this.lyricsSheetFontSizePx * 1.4;
+    const pre = el.querySelector('pre') as HTMLElement | null;
+    const styleTarget = pre || el;
+    const lh = getComputedStyle(styleTarget).lineHeight;
+    const asNumber = Number(String(lh).replace('px', ''));
+    if (Number.isFinite(asNumber) && asNumber > 0) return asNumber;
+    return this.lyricsSheetFontSizePx * 1.4;
+  }
+
+  private startLyricsSheetAutoScroll(): void {
+    if (this.lyricsSheetRafId !== null) return;
+    const loop = (ts: number) => {
+      if (!this.lyricsSheetLastFrameTs) this.lyricsSheetLastFrameTs = ts;
+      const dt = Math.min(64, ts - this.lyricsSheetLastFrameTs);
+      this.lyricsSheetLastFrameTs = ts;
+
+      const el = this.lyricsSheetScroll?.nativeElement;
+      if (el && this.shouldLyricsSheetAutoScroll(el)) {
+        const lineHeightPx = this.lyricsSheetGetLineHeightPx();
+        const linesPerSecond = this.lyricsSheetSpeed * this.lyricsSheetLinesPerSecondPerStep;
+        const pxPerSecond = linesPerSecond * lineHeightPx;
+        const deltaPx = pxPerSecond * (dt / 1000);
+        this.lyricsSheetScrollCarryPx += deltaPx;
+        const applyPx = Math.trunc(this.lyricsSheetScrollCarryPx);
+        if (applyPx) {
+          this.lyricsSheetScrollCarryPx -= applyPx;
+          const next = el.scrollTop + applyPx;
+          const maxTop = Math.max(0, el.scrollHeight - el.clientHeight);
+          el.scrollTop = Math.min(maxTop, next);
+          this.lyricsSheetLastAutoScrollAt = typeof performance !== 'undefined' ? performance.now() : Date.now();
+        }
+      } else if (this.lyricsSheetSpeed <= 0 || this.lyricsSheetIsUserPaused || !this.isLyricsSheetOpen) {
+        this.lyricsSheetScrollCarryPx = 0;
+      }
+
+      this.lyricsSheetRafId = requestAnimationFrame(loop);
+    };
+    this.lyricsSheetRafId = requestAnimationFrame(loop);
+  }
+
+  private shouldLyricsSheetAutoScroll(el: HTMLDivElement): boolean {
+    if (!this.isLyricsSheetOpen) return false;
+    if (this.lyricsSheetSpeed <= 0) return false;
+    if (this.lyricsSheetIsUserPaused) return false;
+    if (this.isLyricsSheetLoading) return false;
+    if (!this.lyricsSheetText) return false;
+    return el.scrollHeight > el.clientHeight + 2;
   }
 
   get nextSong(): ApiSong | null {

@@ -181,18 +181,32 @@ export class CheckinComponent implements OnInit, OnDestroy {
 
         if (!requiresAutoQuest) {
           try { console.log('[CHECKIN][Destino] auto_checkin_flow_quest=false. Redirecionando home-guest-v2 com id_code'); } catch {}
+          this.rememberRecentEvent(idCode);
           this.router.navigate([`/events/home-guest-v2/${idCode}`]);
           return;
         }
         // Fluxo simplificado: se flag true, abre questionário sem layout; caso contrário, home-guest.
         try { console.log('[CHECKIN][Destino] Flag auto_checkin_flow_quest=true. Navegando para answer-plain (sem layout)'); } catch {}
+        this.rememberRecentEvent(idCode);
         this.router.navigate([`/events/answer-plain/${idCode}`]);
       },
       error: () => {
         try { console.log('[CHECKIN][Destino] Erro ao carregar /events/:id_code. Navegando home-guest-v2 com id_code', { idCode }); } catch {}
+        this.rememberRecentEvent(idCode);
         this.router.navigate([`/events/home-guest-v2/${idCode}`]);
       }
     });
+  }
+
+  private rememberRecentEvent(idCode: string): void {
+    try {
+      const key = 'events_recent';
+      const raw = localStorage.getItem(key);
+      const prev = raw ? JSON.parse(raw) : [];
+      const list = Array.isArray(prev) ? prev.map((x) => String(x)).filter(Boolean) : [];
+      const next = [idCode, ...list.filter((x) => x !== idCode)].slice(0, 12);
+      localStorage.setItem(key, JSON.stringify(next));
+    } catch {}
   }
 
   private precheckSkipIfAlreadyChecked(idCode: string): void {
