@@ -1,0 +1,386 @@
+<div class="space-y-6">
+  <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <div class="text-lg font-semibold text-gray-900 dark:text-white">Adicionar projeto</div>
+      <div class="text-xs text-gray-500 dark:text-gray-400">
+        Cadastre o projeto, etapas e equipe.
+      </div>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <a
+        routerLink="/project/admin/projects"
+        class="rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-900/40 dark:text-gray-200 dark:hover:bg-white/5"
+      >
+        Voltar
+      </a>
+      <button
+        (click)="save()"
+        class="rounded-lg bg-brand-500 px-4 py-3 text-sm font-medium text-white hover:bg-brand-600 disabled:opacity-60"
+        [disabled]="isSubmitting || !name.trim() || !activeStore"
+      >
+        Salvar
+      </button>
+    </div>
+  </div>
+
+  @if (!activeStore) {
+    <div class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-100">
+      Selecione uma unidade (store) para criar projetos.
+    </div>
+  }
+
+  <div class="inline-flex overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900/40">
+    <button
+      class="px-3 py-2 text-xs font-medium"
+      [ngClass]="activeTab === 'project' ? 'bg-gray-100 text-gray-900 dark:bg-white/10 dark:text-white' : 'text-gray-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-white/5'"
+      (click)="activeTab = 'project'"
+    >
+      Projeto
+    </button>
+    <button
+      class="px-3 py-2 text-xs font-medium"
+      [ngClass]="activeTab === 'stages' ? 'bg-gray-100 text-gray-900 dark:bg-white/10 dark:text-white' : 'text-gray-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-white/5'"
+      (click)="activeTab = 'stages'"
+    >
+      Etapas
+    </button>
+    <button
+      class="px-3 py-2 text-xs font-medium"
+      [ngClass]="activeTab === 'team' ? 'bg-gray-100 text-gray-900 dark:bg-white/10 dark:text-white' : 'text-gray-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-white/5'"
+      (click)="activeTab = 'team'"
+    >
+      Equipe
+    </button>
+  </div>
+
+  @if (activeTab === 'project') {
+    <div class="rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900/40">
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div class="sm:col-span-2">
+          <div class="text-xs font-medium text-gray-700 dark:text-gray-200">Nome do projeto</div>
+          <input
+            class="mt-1 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-brand-500 dark:border-gray-800 dark:bg-gray-900/40 dark:text-white"
+            [(ngModel)]="name"
+            placeholder="Ex: Phoenix SaaS"
+          />
+        </div>
+
+        <div class="sm:col-span-2">
+          <div class="text-xs font-medium text-gray-700 dark:text-gray-200">Descrição</div>
+          <textarea
+            class="mt-1 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-brand-500 dark:border-gray-800 dark:bg-gray-900/40 dark:text-white"
+            rows="3"
+            [(ngModel)]="description"
+            placeholder="Ex: Projeto executivo completo"
+          ></textarea>
+        </div>
+
+        <div class="sm:col-span-2">
+          <div class="text-xs font-medium text-gray-700 dark:text-gray-200">Cliente</div>
+          <select
+            class="mt-1 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-brand-500 dark:border-gray-800 dark:bg-gray-900/40 dark:text-white"
+            [(ngModel)]="selectedCustomerIdCode"
+            (ngModelChange)="onCustomerChange($event)"
+            [disabled]="isLoadingCustomers || customers.length === 0"
+          >
+            <option value="">{{ isLoadingCustomers ? 'Carregando...' : (customers.length ? 'Selecione um cliente' : 'Sem clientes cadastrados') }}</option>
+            @for (c of customers; track c.id_code) {
+              <option [value]="c.id_code">{{ c.name }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="sm:col-span-2">
+          <div class="text-xs font-medium text-gray-700 dark:text-gray-200">Responsável</div>
+          <input
+            class="mt-1 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-brand-500 dark:border-gray-800 dark:bg-gray-900/40 dark:text-white"
+            [(ngModel)]="responsible_name"
+            placeholder="Ex: Fulano"
+          />
+        </div>
+
+        <div class="sm:col-span-2">
+          <div class="text-xs font-medium text-gray-700 dark:text-gray-200">Logo</div>
+          <div class="mt-1 flex items-center gap-4">
+            <div class="h-16 w-16 overflow-hidden rounded-2xl bg-gray-100 dark:bg-white/10 flex items-center justify-center">
+              @if (logoPreviewUrl) {
+                <img [src]="logoPreviewUrl" class="h-full w-full object-cover" alt="logo preview" />
+              } @else if (logo_url) {
+                <img [src]="logo_url" class="h-full w-full object-cover" alt="logo" />
+              } @else {
+                <div class="text-sm font-semibold text-gray-600 dark:text-gray-200">
+                  {{ (name?.trim()?.[0] || 'P').toUpperCase() }}
+                </div>
+              }
+            </div>
+
+            <div class="flex flex-col gap-2">
+              <div class="text-xs text-gray-500 dark:text-gray-400">
+                PNG/JPG • até 300KB
+              </div>
+              <div class="flex items-center gap-2">
+                <button
+                  type="button"
+                  class="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-900/20 dark:text-gray-200 dark:hover:bg-white/5"
+                  (click)="triggerLogoInput()"
+                >
+                  Upload
+                </button>
+                @if (pendingLogoFile) {
+                  <button
+                    type="button"
+                    class="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-900/20 dark:text-gray-200 dark:hover:bg-white/5"
+                    (click)="clearLogo()"
+                  >
+                    Remover
+                  </button>
+                }
+              </div>
+            </div>
+
+            <input type="file" accept="image/png,image/jpeg" class="hidden" #logoFileInput (change)="onLogoSelected($event)" />
+          </div>
+        </div>
+
+        <div>
+          <app-date-picker
+            id="project_start_date"
+            label="Data de início"
+            placeholder="Selecione"
+            dateFormat="Y-m-d"
+            [defaultDate]="start_date || ''"
+            (dateChange)="onStartPickerChange($event)"
+          />
+        </div>
+        <div>
+          <app-date-picker
+            id="project_end_date"
+            label="Data de fim"
+            placeholder="Selecione"
+            dateFormat="Y-m-d"
+            [minDate]="start_date || undefined"
+            [defaultDate]="end_date || ''"
+            (dateChange)="onEndPickerChange($event)"
+          />
+        </div>
+
+        <div class="sm:col-span-2">
+          <div class="text-xs font-medium text-gray-700 dark:text-gray-200">Status inicial</div>
+          <div class="mt-2 flex flex-wrap gap-3">
+            <label class="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 dark:border-gray-800 dark:bg-gray-900/20 dark:text-gray-200">
+              <input type="radio" name="status" [(ngModel)]="status" value="draft" />
+              Rascunho
+            </label>
+            <label class="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 dark:border-gray-800 dark:bg-gray-900/20 dark:text-gray-200">
+              <input type="radio" name="status" [(ngModel)]="status" value="active" />
+              Ativo
+            </label>
+            <label class="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 dark:border-gray-800 dark:bg-gray-900/20 dark:text-gray-200">
+              <input type="radio" name="status" [(ngModel)]="status" value="paused" />
+              Pausado
+            </label>
+            <label class="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 dark:border-gray-800 dark:bg-gray-900/20 dark:text-gray-200">
+              <input type="radio" name="status" [(ngModel)]="status" value="canceled" />
+              Cancelado
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (activeTab === 'stages') {
+    <div class="rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900/40">
+      <div class="flex items-center justify-between">
+        <div class="text-sm font-semibold text-gray-900 dark:text-white">Etapas do projeto</div>
+        <button
+          class="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-900/20 dark:text-gray-200 dark:hover:bg-white/5"
+          (click)="addStage()"
+        >
+          Adicionar etapa
+        </button>
+      </div>
+
+      <div class="mt-4 space-y-3">
+        @for (s of stages; track $index) {
+          <div class="rounded-xl border border-gray-200 p-4 dark:border-gray-800">
+            <div class="flex items-start justify-between gap-3">
+              <div class="text-sm font-semibold text-gray-900 dark:text-white">
+                Etapa {{ $index + 1 }}
+              </div>
+              <button
+                class="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50 dark:border-gray-800 dark:bg-gray-900/20 dark:text-red-400 dark:hover:bg-red-500/10"
+                (click)="removeStage(s)"
+              >
+                Remover
+              </button>
+            </div>
+
+            <div class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-6">
+              <div class="sm:col-span-2">
+                <div class="text-xs font-medium text-gray-700 dark:text-gray-200">Código</div>
+                <input
+                  class="mt-1 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-brand-500 dark:border-gray-800 dark:bg-gray-900/40 dark:text-white"
+                  [(ngModel)]="s.code"
+                  [ngModelOptions]="{ standalone: true }"
+                  placeholder="Ex: EX"
+                />
+              </div>
+              <div class="sm:col-span-4">
+                <div class="text-xs font-medium text-gray-700 dark:text-gray-200">Nome</div>
+                <input
+                  class="mt-1 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-brand-500 dark:border-gray-800 dark:bg-gray-900/40 dark:text-white"
+                  [(ngModel)]="s.name"
+                  [ngModelOptions]="{ standalone: true }"
+                  placeholder="Ex: Executivo"
+                />
+              </div>
+
+              <div class="sm:col-span-2">
+                <app-date-picker
+                  [id]="'stage_due_' + $index"
+                  label="Previsão de entrega"
+                  placeholder="Selecione"
+                  dateFormat="Y-m-d"
+                  [defaultDate]="s.due_date || ''"
+                  (dateChange)="onStageDuePickerChange($index, $event)"
+                />
+              </div>
+
+              <div class="sm:col-span-2">
+                <div class="text-xs font-medium text-gray-700 dark:text-gray-200">Valor de recebimento</div>
+                <input
+                  class="mt-1 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-brand-500 dark:border-gray-800 dark:bg-gray-900/40 dark:text-white"
+                  appCurrencyMask
+                  [(ngModel)]="s.contract_value"
+                  [ngModelOptions]="{ standalone: true }"
+                  placeholder="R$ 0,00"
+                />
+              </div>
+
+              <div class="sm:col-span-2">
+                <div class="text-xs font-medium text-gray-700 dark:text-gray-200">Horas estimadas</div>
+                <input
+                  class="mt-1 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-brand-500 dark:border-gray-800 dark:bg-gray-900/40 dark:text-white"
+                  type="number"
+                  step="1"
+                  min="0"
+                  [(ngModel)]="s.hours_estimated"
+                  [ngModelOptions]="{ standalone: true }"
+                  (blur)="sanitizeStageHours(s)"
+                  placeholder="Ex: 120"
+                />
+              </div>
+
+              <div class="sm:col-span-2">
+                <div class="text-xs font-medium text-gray-700 dark:text-gray-200">Cor</div>
+                <div class="mt-1 flex items-center gap-2">
+                  <input
+                    class="h-11 w-14 rounded-lg border border-gray-200 bg-white px-2 py-2 dark:border-gray-800 dark:bg-gray-900/40"
+                    type="color"
+                    [(ngModel)]="s.color"
+                    [ngModelOptions]="{ standalone: true }"
+                  />
+                  <input
+                    class="h-11 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-brand-500 dark:border-gray-800 dark:bg-gray-900/40 dark:text-white"
+                    [(ngModel)]="s.color"
+                    [ngModelOptions]="{ standalone: true }"
+                    placeholder="#3b82f6"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+
+        @if (stages.length === 0) {
+          <div class="rounded-lg border border-gray-200 bg-white p-6 text-sm text-gray-500 dark:border-gray-800 dark:bg-gray-900/20 dark:text-gray-400">
+            Nenhuma etapa adicionada.
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  @if (activeTab === 'team') {
+    <div class="rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900/40">
+      <div class="text-sm font-semibold text-gray-900 dark:text-white">Equipe</div>
+      <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+        Selecione colaboradores da unidade para vincular ao projeto.
+      </div>
+
+      <div class="mt-4 overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800">
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead class="bg-gray-50 dark:bg-white/[0.03]">
+              <tr>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Selecionar</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Email</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Role</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+              @for (c of collaborators; track c.user_id) {
+                <tr class="hover:bg-gray-50 dark:hover:bg-white/[0.03]">
+                  <td class="px-4 py-3">
+                    <input type="checkbox" [(ngModel)]="c.selected" />
+                  </td>
+                  <td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-200">
+                    {{ c.email }}
+                  </td>
+                  <td class="px-4 py-3">
+                    <select
+                      class="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-brand-500 dark:border-gray-800 dark:bg-gray-900/40 dark:text-white"
+                      [(ngModel)]="c.role"
+                    >
+                      <option value="member">member</option>
+                      <option value="manager">manager</option>
+                    </select>
+                  </td>
+                </tr>
+              }
+              @if (collaborators.length === 0) {
+                <tr>
+                  <td colspan="3" class="px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-400">
+                    Nenhum colaborador encontrado.
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  }
+</div>
+
+<app-modal [isOpen]="isProgressModalOpen" (close)="closeProgressModal()" className="max-w-lg p-6">
+  <div class="text-lg font-semibold text-gray-900 dark:text-white">Processando</div>
+  <div class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+    {{ progressMessage }}
+  </div>
+
+  <div class="mt-4 space-y-2 text-sm">
+    <div class="flex items-center justify-between rounded-lg border border-gray-100 p-3 dark:border-gray-800">
+      <span>Criando projeto...</span>
+      <span class="text-gray-500 dark:text-gray-400">{{ stepLabel('creating') }}</span>
+    </div>
+    <div class="flex items-center justify-between rounded-lg border border-gray-100 p-3 dark:border-gray-800">
+      <span>Enviando logo...</span>
+      <span class="text-gray-500 dark:text-gray-400">{{ stepLabel('uploading') }}</span>
+    </div>
+    <div class="flex items-center justify-between rounded-lg border border-gray-100 p-3 dark:border-gray-800">
+      <span>Atualizando projeto...</span>
+      <span class="text-gray-500 dark:text-gray-400">{{ stepLabel('patching') }}</span>
+    </div>
+    <div class="flex items-center justify-between rounded-lg border border-gray-100 p-3 dark:border-gray-800">
+      <span>Inserindo etapas...</span>
+      <span class="text-gray-500 dark:text-gray-400">{{ stepLabel('stages') }}</span>
+    </div>
+    <div class="flex items-center justify-between rounded-lg border border-gray-100 p-3 dark:border-gray-800">
+      <span>Vinculando equipe...</span>
+      <span class="text-gray-500 dark:text-gray-400">{{ stepLabel('members') }}</span>
+    </div>
+  </div>
+</app-modal>

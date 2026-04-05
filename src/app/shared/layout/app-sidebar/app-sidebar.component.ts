@@ -48,6 +48,7 @@ export class AppSidebarComponent implements OnInit, OnDestroy {
       subItems: [
         { name: 'Home Master', path: '/master/home' },
         { name: 'Gerenciar Módulos', path: '/master/modules' },
+        { name: 'Gestão de Módulos', path: '/master/sys-modules' },
       ]
     },
     {
@@ -103,6 +104,18 @@ export class AppSidebarComponent implements OnInit, OnDestroy {
         // { name: 'Home Guest (sem layout)', path: '/events/home-guest' },
         // { name: 'Criar Jam', path: '/events/criar-jam' },
         { name: 'Jam Kanban', path: '/events/jam-kanban' },
+      ],
+    },
+    {
+      icon: '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h18"/><path d="M3 12h18"/><path d="M3 17h18"/></svg>',
+      name: 'Projetos',
+      moduleSlug: 'project',
+      subItems: [
+        { name: 'Lista', path: '/project/admin/projects', roles: ['admin', 'master', 'manager'] },
+        { name: 'Admin (Feed)', path: '/project/admin', roles: ['admin', 'master', 'manager'] },
+        { name: 'Sessões', path: '/project/admin/sessions', roles: ['admin', 'master', 'manager'] },
+        { name: 'Backoffice', path: '/project/admin/backoffice', roles: ['admin', 'master', 'manager'] },
+        { name: 'Meu dia', path: '/project/me' },
       ],
     },
     {

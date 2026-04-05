@@ -33,7 +33,8 @@ export class AuthGuard implements CanActivate {
           if (isKioskFlow) {
             queryParams['flow'] = 'kiosk';
           }
-          const target = this.appContext.getContext() === 'events' ? '/login' : '/signin';
+          const ctx = this.appContext.getContext();
+          const target = ctx === 'events' || ctx === 'project' ? '/login' : '/signin';
           this.router.navigate([target], { 
             queryParams
           });

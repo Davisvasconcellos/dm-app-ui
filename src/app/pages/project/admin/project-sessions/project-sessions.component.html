@@ -1,0 +1,82 @@
+<div class="space-y-6">
+  <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <div class="text-lg font-semibold text-gray-900 dark:text-white">Sessões</div>
+      <div class="text-xs text-gray-500 dark:text-gray-400">
+        Quem está ativo agora (Electron) e em qual projeto foi o último play.
+      </div>
+    </div>
+    <a
+      routerLink="/project/admin"
+      class="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-900/40 dark:text-gray-200 dark:hover:bg-white/5"
+    >
+      Voltar
+    </a>
+  </div>
+
+  @if (!activeStore) {
+    <div class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-100">
+      Selecione uma unidade (store) para carregar os colaboradores.
+    </div>
+  }
+
+  <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+    <div class="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900/40">
+      <div class="text-xs text-gray-500 dark:text-gray-400">Ativos</div>
+      <div class="mt-1 text-xl font-semibold text-gray-900 dark:text-white">{{ activeCount }}</div>
+    </div>
+    <div class="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900/40">
+      <div class="text-xs text-gray-500 dark:text-gray-400">Trabalhando</div>
+      <div class="mt-1 text-xl font-semibold text-gray-900 dark:text-white">{{ workingCount }}</div>
+    </div>
+    <div class="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900/40">
+      <div class="text-xs text-gray-500 dark:text-gray-400">Offline</div>
+      <div class="mt-1 text-xl font-semibold text-gray-900 dark:text-white">{{ offlineCount }}</div>
+    </div>
+  </div>
+
+  <div class="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900/40">
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-gray-50 dark:bg-white/[0.03]">
+          <tr>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Colaborador</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Status</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Projeto (último)</th>
+            <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400">Divisão do dia</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+          @for (m of members; track m.id_code) {
+            <tr class="hover:bg-gray-50 dark:hover:bg-white/[0.03]">
+              <td class="px-4 py-3">
+                <div class="text-sm font-medium text-gray-900 dark:text-white">{{ m.name }}</div>
+                <div class="text-xs text-gray-500 dark:text-gray-400">{{ m.email || '—' }}</div>
+              </td>
+              <td class="px-4 py-3">
+                <span class="rounded-md px-2 py-1 text-[11px] font-medium" [ngClass]="statusClass(m.status)">
+                  {{ statusLabel(m.status) }}
+                </span>
+              </td>
+              <td class="px-4 py-3">
+                <div class="text-sm text-gray-900 dark:text-white">{{ m.current_project_name || '—' }}</div>
+                <div class="text-xs text-gray-500 dark:text-gray-400">{{ m.current_project_id_code || '' }}</div>
+              </td>
+              <td class="px-4 py-3 text-right">
+                <div class="text-sm font-medium text-gray-900 dark:text-white">
+                  {{ clampPct(m.today_project_pct) }}% / {{ clampPct(m.today_office_pct) }}%
+                </div>
+                <div class="text-[11px] text-gray-500 dark:text-gray-400">Projetos / Escritório</div>
+              </td>
+            </tr>
+          }
+          @if (members.length === 0) {
+            <tr>
+              <td colspan="4" class="px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-400">Nenhum colaborador.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

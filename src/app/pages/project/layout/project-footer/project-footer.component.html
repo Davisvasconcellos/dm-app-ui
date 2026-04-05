@@ -1,0 +1,29 @@
+<nav class="fixed bottom-0 left-0 right-0 z-[999999] supports-[padding:max(0px)]:pb-[max(env(safe-area-inset-bottom),0px)]" aria-label="Project bottom navigation">
+  <div class="mx-auto flex justify-center px-3 pb-3">
+    <div class="magic-nav" [style.--item-count]="items.length">
+      <span class="indicator" [style.left.%]="indicatorLeftPercent"></span>
+      <ul>
+        <li *ngFor="let item of items; let i = index">
+          <a [routerLink]="item.link" [class.active]="activeIndex === i">
+            <span class="icon" aria-hidden="true">
+              <ng-container [ngSwitch]="item.key">
+                <svg *ngSwitchCase="'home'" width="22" height="22" viewBox="0 0 24 24" fill="none">
+                  <path d="M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1h-5.5a.5.5 0 0 1-.5-.5V15a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v5.5a.5.5 0 0 1-.5.5H4a1 1 0 0 1-1-1v-9.5Z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <svg *ngSwitchCase="'history'" width="22" height="22" viewBox="0 0 24 24" fill="none">
+                  <path d="M3 12a9 9 0 1 0 3-6.7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M3 3v5h5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M12 7v6l4 2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <svg *ngSwitchCase="'me'" width="22" height="22" viewBox="0 0 24 24" fill="none">
+                  <path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm7 9a7 7 0 0 0-14 0" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </ng-container>
+            </span>
+            <span class="label">{{ item.label }}</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>

@@ -3,6 +3,17 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
+export interface SysModule {
+  id?: number | string;
+  id_code: string;
+  name: string;
+  slug: string;
+  description?: string | null;
+  home_path?: string | null;
+  active: boolean;
+  [key: string]: any;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -13,6 +24,23 @@ export class MasterService {
 
   getModules(): Observable<any> {
     return this.http.get<any>(`${this.API_BASE_URL}/sys-modules`);
+  }
+
+  listSysModules(all = false): Observable<any> {
+    const qs = all ? '?all=true' : '';
+    return this.http.get<any>(`${this.API_BASE_URL}/sys-modules${qs}`);
+  }
+
+  getSysModule(idCode: string): Observable<any> {
+    return this.http.get<any>(`${this.API_BASE_URL}/sys-modules/${encodeURIComponent(idCode)}`);
+  }
+
+  createSysModule(payload: { name: string; slug: string; description?: string | null; home_path?: string | null; active?: boolean }): Observable<any> {
+    return this.http.post<any>(`${this.API_BASE_URL}/sys-modules`, payload);
+  }
+
+  updateSysModule(idCode: string, payload: { name?: string; slug?: string; description?: string | null; home_path?: string | null; active?: boolean }): Observable<any> {
+    return this.http.patch<any>(`${this.API_BASE_URL}/sys-modules/${encodeURIComponent(idCode)}`, payload);
   }
 
   getUsers(): Observable<any> {

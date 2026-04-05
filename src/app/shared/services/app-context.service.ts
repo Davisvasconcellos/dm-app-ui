@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 
-export type AppContext = 'main' | 'app' | 'events';
+export type AppContext = 'main' | 'app' | 'events' | 'project';
 
 @Injectable({ providedIn: 'root' })
 export class AppContextService {
@@ -13,6 +13,7 @@ export class AppContextService {
     const host = this.getHostname().toLowerCase();
     if (!host) return 'main';
     if (host.startsWith('events.')) return 'events';
+    if (host.startsWith('project.')) return 'project';
     if (host.startsWith('app.')) return 'app';
     if (host.includes('.app.')) return 'app';
     return 'main';
@@ -25,7 +26,7 @@ export class AppContextService {
     const parts = host.split('.').filter(Boolean);
     if (parts.length < 2) return null;
 
-    const reserved = new Set(['www', 'app', 'events', 'localhost']);
+    const reserved = new Set(['www', 'app', 'events', 'project', 'localhost']);
 
     if (parts.length >= 2 && parts[1] === 'app') {
       const t = parts[0];

@@ -114,9 +114,15 @@ import { GuestGuard } from './shared/guards/guest.guard';
 import { AutoCheckinGuard } from './shared/guards/auto-checkin.guard';
 import { AdminOrgGuard } from './shared/guards/admin-org.guard';
 import { eventsHostGuard } from './shared/guards/events-host.guard';
+import { projectHostGuard } from './shared/guards/project-host.guard';
 import { EventsLayoutComponent } from './shared/layout/events-layout/events-layout.component';
 
 export const routes: Routes = [
+  {
+    path: '',
+    canMatch: [projectHostGuard],
+    loadChildren: () => import('./pages/project/project-host.module').then(m => m.ProjectHostModule),
+  },
   {
     path: '',
     canMatch: [eventsHostGuard],
@@ -414,6 +420,11 @@ export const routes: Routes = [
             path: 'modules',
             loadComponent: () => import('./pages/master/modules-manager/modules-manager.component').then(m => m.ModulesManagerComponent),
             title: 'Gerenciamento de Módulos'
+          },
+          {
+            path: 'sys-modules',
+            loadComponent: () => import('./pages/master/sys-modules-management/sys-modules-management.component').then(m => m.SysModulesManagementComponent),
+            title: 'Gestão de Módulos'
           },
           {
             path: 'user-management',
@@ -754,6 +765,10 @@ export const routes: Routes = [
         path: 'events/criar-jam',
         loadComponent: () => import('./pages/events/jam-admin/jam-admin.component').then(m => m.JamAdminComponent),
         title: 'Criar Jam'
+      },
+      {
+        path: 'project',
+        loadChildren: () => import('./pages/project/project.module').then(m => m.ProjectModule),
       },
       {
         path: 'map-test',

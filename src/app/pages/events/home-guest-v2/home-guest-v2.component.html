@@ -182,6 +182,8 @@
                 role="button"
                 tabindex="0"
                 (click)="onStageCardClick()"
+                (keydown.enter)="onStageCardClick()"
+                (keydown.space)="onStageCardClick()"
                 class="rounded-xl px-2 py-6 md:p-6 border-l-[6px] border-emerald-500 shadow-2xl relative overflow-hidden transition-transform active:scale-[0.99]"
                 [ngClass]="(currentTheme === 'dark' ? 'bg-[#121212]' : 'bg-white border border-black/5 shadow-[0_4px_20px_rgba(0,0,0,0.05)]') + (canOpenCurrentLyrics ? ' cursor-pointer' : '')"
               >

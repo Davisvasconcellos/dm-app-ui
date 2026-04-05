@@ -71,7 +71,14 @@ export class AcceptInviteComponent implements OnInit {
         this.storeInviteService.acceptInvite(this.token!).subscribe({
             next: (res) => {
                 this.toast.triggerToast('success', 'Sucesso', 'Convite aceito com sucesso!');
-                this.router.navigate(['/admin/home']);
+                this.authService.getUserMe().subscribe({
+                    next: () => {
+                        this.router.navigate(['/'], { replaceUrl: true });
+                    },
+                    error: () => {
+                        this.router.navigate(['/'], { replaceUrl: true });
+                    }
+                });
             },
             error: (err) => {
                 this.error = 'Não foi possível aceitar o convite.';

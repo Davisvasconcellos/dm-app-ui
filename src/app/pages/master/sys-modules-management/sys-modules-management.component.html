@@ -1,0 +1,163 @@
+<div class="p-6">
+  <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-800 dark:text-white">Gestão de Módulos</h1>
+      <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Criar, editar e ativar/desativar módulos do sistema.</p>
+    </div>
+
+    <div class="flex flex-col sm:flex-row gap-3 sm:items-center">
+      <div class="flex items-center gap-2">
+        <button type="button" (click)="toggleShowAll()"
+          class="px-4 py-2 rounded-lg border text-sm font-semibold"
+          [ngClass]="showAll
+            ? 'border-brand-500 text-brand-700 bg-brand-50 dark:bg-brand-500/10 dark:text-brand-300 dark:border-brand-500/40'
+            : 'border-gray-200 text-gray-700 bg-white dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700'">
+          {{ showAll ? 'Mostrando: Todos' : 'Mostrando: Ativos' }}
+        </button>
+        <button type="button" (click)="loadModules()"
+          class="px-4 py-2 rounded-lg border text-sm font-semibold border-gray-200 text-gray-700 bg-white hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700 dark:hover:bg-white/5">
+          Recarregar
+        </button>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <input type="text" [(ngModel)]="searchTerm" placeholder="Buscar por nome/slug/rota..."
+          class="w-full sm:w-72 px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 dark:bg-gray-900 dark:border-gray-700 dark:text-white" />
+        <button type="button" (click)="openCreate()"
+          class="px-4 py-2 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold">
+          Novo
+        </button>
+      </div>
+    </div>
+  </div>
+
+  @if (errorMessage) {
+    <div class="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/40 dark:bg-red-900/10 dark:text-red-200">
+      {{ errorMessage }}
+    </div>
+  }
+
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow overflow-hidden border border-gray-100 dark:border-gray-700">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700">
+            <th class="p-4 text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300">Nome</th>
+            <th class="p-4 text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300">Slug</th>
+            <th class="p-4 text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300">Home Path</th>
+            <th class="p-4 text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300">Ativo</th>
+            <th class="p-4 text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300">Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (loading) {
+            <tr>
+              <td class="p-6 text-sm text-gray-500 dark:text-gray-300" colspan="5">Carregando...</td>
+            </tr>
+          } @else if (filteredModules.length === 0) {
+            <tr>
+              <td class="p-6 text-sm text-gray-500 dark:text-gray-300" colspan="5">Nenhum módulo encontrado.</td>
+            </tr>
+          } @else {
+            @for (m of filteredModules; track m.id_code) {
+              <tr class="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50/60 dark:hover:bg-white/5">
+                <td class="p-4">
+                  <div class="text-sm font-semibold text-gray-900 dark:text-white">{{ m.name }}</div>
+                  @if (m.description) {
+                    <div class="mt-1 text-xs text-gray-500 dark:text-gray-400 line-clamp-2">{{ m.description }}</div>
+                  }
+                </td>
+                <td class="p-4 text-sm text-gray-700 dark:text-gray-200">{{ m.slug }}</td>
+                <td class="p-4 text-sm text-gray-700 dark:text-gray-200">{{ m.home_path || '-' }}</td>
+                <td class="p-4">
+                  <span class="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wider"
+                    [ngClass]="m.active !== false
+                      ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30'
+                      : 'bg-gray-100 text-gray-700 border border-gray-200 dark:bg-white/5 dark:text-gray-300 dark:border-white/10'">
+                    {{ m.active !== false ? 'Ativo' : 'Inativo' }}
+                  </span>
+                </td>
+                <td class="p-4">
+                  <div class="flex items-center gap-2">
+                    <button type="button" (click)="openEdit(m)"
+                      class="px-3 py-1.5 rounded-lg border text-xs font-semibold border-gray-200 text-gray-700 bg-white hover:bg-gray-50 dark:bg-gray-900 dark:text-gray-200 dark:border-gray-700 dark:hover:bg-white/5">
+                      Editar
+                    </button>
+                    <button type="button" (click)="toggleActive(m)"
+                      class="px-3 py-1.5 rounded-lg border text-xs font-semibold"
+                      [ngClass]="m.active !== false
+                        ? 'border-red-200 text-red-700 bg-red-50 hover:bg-red-100 dark:bg-red-900/10 dark:text-red-200 dark:border-red-900/30'
+                        : 'border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-900/10 dark:text-emerald-200 dark:border-emerald-900/30'">
+                      {{ m.active !== false ? 'Desativar' : 'Ativar' }}
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<app-modal [isOpen]="isFormOpen" (close)="closeForm()" className="max-w-2xl" [showCloseButton]="false">
+  <div class="p-6">
+    <div class="flex items-start justify-between gap-4">
+      <div>
+        <h3 class="text-xl font-bold text-gray-900 dark:text-white">{{ isEditing ? 'Editar módulo' : 'Novo módulo' }}</h3>
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Preencha os dados básicos do módulo.</p>
+      </div>
+      <button type="button" (click)="closeForm()"
+        class="rounded-lg p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-200">
+        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <label class="text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300">Nome</label>
+        <input type="text" [(ngModel)]="form.name"
+          class="mt-2 w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+          placeholder="Nome do módulo" />
+      </div>
+      <div>
+        <label class="text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300">Slug</label>
+        <input type="text" [(ngModel)]="form.slug"
+          class="mt-2 w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+          placeholder="meu-modulo" />
+      </div>
+      <div class="md:col-span-2">
+        <label class="text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300">Home Path</label>
+        <input type="text" [(ngModel)]="form.home_path"
+          class="mt-2 w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+          placeholder="/alguma-rota" />
+      </div>
+      <div class="md:col-span-2">
+        <label class="text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300">Descrição</label>
+        <textarea [(ngModel)]="form.description"
+          class="mt-2 min-h-[120px] w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+          placeholder="Descrição do módulo..."></textarea>
+      </div>
+      <div class="md:col-span-2 flex items-center gap-3">
+        <input id="activeFlag" type="checkbox" [(ngModel)]="form.active"
+          class="h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-900" />
+        <label for="activeFlag" class="text-sm font-semibold text-gray-700 dark:text-gray-200">Ativo</label>
+      </div>
+    </div>
+
+    <div class="mt-6 flex items-center justify-end gap-3">
+      <button type="button" (click)="closeForm()"
+        class="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:bg-white/5">
+        Cancelar
+      </button>
+      <button type="button" (click)="save()" [disabled]="saving"
+        class="rounded-xl bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-60 disabled:cursor-not-allowed">
+        {{ saving ? 'Salvando...' : 'Salvar' }}
+      </button>
+    </div>
+  </div>
+</app-modal>
+

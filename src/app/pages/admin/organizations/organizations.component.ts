@@ -10,6 +10,7 @@ import { StoreService } from '../stores/store.service';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { LocalStorageService } from '../../../shared/services/local-storage.service';
 import { StoreInviteService, StoreInvite, CreateInvitePayload } from '../stores/config/store-invite.service';
+import { StoreContextService } from '../../../shared/services/store-context.service';
 import { LabelComponent } from '../../../shared/components/form/label/label.component';
 import { InputFieldComponent } from '../../../shared/components/form/input/input-field.component';
 import { SelectComponent } from '../../../shared/components/form/select/select.component';
@@ -514,7 +515,8 @@ export class OrganizationsComponent implements OnInit {
   moduleOptions = [
     { value: 'financial', label: 'Financeiro', slug: 'financial', permissions: ['financial:read', 'financial:write'] },
     { value: 'events', label: 'Eventos', slug: 'events', permissions: ['events:read', 'events:write'] },
-    { value: 'pub', label: 'Pub', slug: 'pub', permissions: ['pub:read', 'pub:write'] }
+    { value: 'pub', label: 'Pub', slug: 'pub', permissions: ['pub:read', 'pub:write'] },
+    { value: 'project', label: 'Projetos', slug: 'project', permissions: ['project:read', 'project:write'] }
   ];
   filteredModuleOptions: any[] = [];
 
@@ -529,6 +531,7 @@ export class OrganizationsComponent implements OnInit {
   private imageUpload = inject(ImageUploadService);
   private toast = inject(ToastService);
   private authService = inject(AuthService);
+  private storeContext = inject(StoreContextService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private localStorage = inject(LocalStorageService);
@@ -546,11 +549,11 @@ export class OrganizationsComponent implements OnInit {
       expires_in_days: [7]
     });
 
-    // Filtra os módulos baseados nos módulos do usuário logado
-    this.filteredModuleOptions = this.moduleOptions.filter(opt => this.authService.hasModule(opt.slug));
+    this.recomputeModuleOptions();
     const qpOnboarding = this.route.snapshot.queryParamMap.get('onboarding') === '1';
     this.showOnboardingModal = qpOnboarding;
     this.authService.currentUser$.subscribe((user: User | null) => {
+      this.recomputeModuleOptions();
       const owned = (user as any)?.ownedOrganizations;
       const first = Array.isArray(owned) && owned.length > 0 ? owned[0] : null;
       this.existingOrgId = first?.id || first?.id_code || null;
@@ -572,6 +575,14 @@ export class OrganizationsComponent implements OnInit {
         this.loadOrganizationStores();
       }
     });
+
+    this.storeContext.activeStore$.subscribe(() => {
+      this.recomputeModuleOptions();
+    });
+  }
+
+  private recomputeModuleOptions(): void {
+    this.filteredModuleOptions = this.moduleOptions.filter((opt) => this.authService.hasModule(opt.slug));
   }
 
   dismissOnboarding(): void {

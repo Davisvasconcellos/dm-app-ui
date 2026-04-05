@@ -17,6 +17,13 @@ import { RouterModule } from '@angular/router';
           <h2 class="text-lg font-semibold text-gray-800 dark:text-white">User Management</h2>
           <p class="mt-1 text-sm text-gray-600 dark:text-gray-300">Alterar role e habilitar módulos (somente admin).</p>
         </a>
+        <a
+          [routerLink]="['/master/sys-modules']"
+          class="block rounded-lg border border-gray-200 bg-white p-6 shadow hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-750"
+        >
+          <h2 class="text-lg font-semibold text-gray-800 dark:text-white">Gestão de Módulos</h2>
+          <p class="mt-1 text-sm text-gray-600 dark:text-gray-300">Criar e ativar/desativar módulos do sistema.</p>
+        </a>
       </div>
     </div>
   `

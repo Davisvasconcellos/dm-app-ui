@@ -27,26 +27,19 @@ export class CurrencyMaskDirective implements OnInit {
   onInput(event: any) {
     const input = event.target as HTMLInputElement;
     const value = input.value;
-    
-    // Remove non-digits
-    const digits = value.replace(/\D/g, '');
-    
-    // Handle empty case
-    if (!digits) {
+
+    const parsed = this.parseCurrencyInput(value);
+    if (parsed === null) {
       input.value = '';
-      this.control.control?.setValue(null);
+      this.control.control?.setValue(null, { emitEvent: false, emitModelToViewChange: false, emitViewToModelChange: false });
       return;
     }
 
-    // Convert to number (cents)
-    const numberValue = parseInt(digits, 10) / 100;
-
-    // Format for display
-    const formatted = this.formatCurrency(numberValue);
+    const formatted = this.formatCurrency(parsed);
     
     // Update view and model
     input.value = formatted;
-    this.control.control?.setValue(numberValue, { emitEvent: false });
+    this.control.control?.setValue(parsed, { emitEvent: false, emitModelToViewChange: false, emitViewToModelChange: true });
 
     // Force cursor to end immediately
     this.setCursorToEnd();
@@ -89,5 +82,30 @@ export class CurrencyMaskDirective implements OnInit {
       style: 'currency',
       currency: 'BRL'
     }).format(value);
+  }
+
+  private parseCurrencyInput(raw: string): number | null {
+    const s = String(raw || '').trim();
+    if (!s) return null;
+
+    const cleaned = s.replace(/[^\d,.\-]/g, '');
+    if (!cleaned) return null;
+
+    const negative = cleaned.includes('-');
+    const core = cleaned.replace(/-/g, '');
+    if (!core) return null;
+
+    let normalized: string;
+    if (core.includes(',')) {
+      normalized = core.replace(/\./g, '').replace(',', '.');
+    } else if (/^\d+\.\d{1,2}$/.test(core)) {
+      normalized = core;
+    } else {
+      normalized = core.replace(/\./g, '');
+    }
+
+    const n = Number.parseFloat(normalized);
+    if (!Number.isFinite(n)) return null;
+    return negative ? -n : n;
   }
 }
