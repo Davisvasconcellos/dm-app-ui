@@ -53,6 +53,59 @@ export class ProjectService {
     );
   }
 
+  getMeToday(storeIdCode: string): Observable<any | null> {
+    const storeId = String(storeIdCode || '').trim();
+    if (!storeId) return of(null);
+    const headers = this.getHeaders(storeId);
+    const params = new HttpParams().set('store_id', storeId);
+    return this.http.get<any>(`${this.API_BASE_URL}/me/today`, { headers, params }).pipe(
+      map((resp) => this.unwrapResponse(resp)),
+      catchError(() => of(null))
+    );
+  }
+
+  checkIn(storeIdCode: string, payload?: { source?: string; device_id?: string }): Observable<any | null> {
+    const storeId = String(storeIdCode || '').trim();
+    if (!storeId) return of(null);
+    const headers = this.getHeaders(storeId);
+    return this.http.post<any>(`${this.API_BASE_URL}/sessions/check-in`, payload || {}, { headers }).pipe(
+      map((resp) => this.unwrapResponse(resp)),
+      catchError(() => of(null))
+    );
+  }
+
+  startGlobalTimeEntry(storeIdCode: string, description: string = 'Expediente'): Observable<any | null> {
+    const storeId = String(storeIdCode || '').trim();
+    if (!storeId) return of(null);
+    const headers = this.getHeaders(storeId);
+    return this.http.post<any>(`${this.API_BASE_URL}/time-entries/start`, { description }, { headers }).pipe(
+      map((resp) => this.unwrapResponse(resp)),
+      catchError(() => of(null))
+    );
+  }
+
+  heartbeatTimeEntry(storeIdCode: string, timeEntryId: string): Observable<any | null> {
+    const storeId = String(storeIdCode || '').trim();
+    const id = String(timeEntryId || '').trim();
+    if (!storeId || !id) return of(null);
+    const headers = this.getHeaders(storeId);
+    return this.http.post<any>(`${this.API_BASE_URL}/time-entries/${encodeURIComponent(id)}/heartbeat`, {}, { headers }).pipe(
+      map((resp) => this.unwrapResponse(resp)),
+      catchError(() => of(null))
+    );
+  }
+
+  stopTimeEntry(storeIdCode: string, timeEntryId: string): Observable<any | null> {
+    const storeId = String(storeIdCode || '').trim();
+    const id = String(timeEntryId || '').trim();
+    if (!storeId || !id) return of(null);
+    const headers = this.getHeaders(storeId);
+    return this.http.post<any>(`${this.API_BASE_URL}/time-entries/${encodeURIComponent(id)}/stop`, {}, { headers }).pipe(
+      map((resp) => this.unwrapResponse(resp)),
+      catchError(() => of(null))
+    );
+  }
+
   getProjectById(idCode: string): Observable<Project | null> {
     const clean = String(idCode || '').trim();
     if (!clean) return of(null);

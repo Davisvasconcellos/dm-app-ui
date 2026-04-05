@@ -83,7 +83,7 @@
   } @else {
     <button
       type="button"
-      class="w-full rounded-2xl border p-4 shadow-sm transition dark:bg-gray-900/40"
+      class="relative w-full overflow-hidden rounded-2xl border p-4 shadow-sm transition dark:bg-gray-900/40"
       [ngClass]="isTimerRunning
         ? 'border-emerald-200 bg-emerald-50/70 hover:bg-emerald-50 dark:border-emerald-400/30 dark:bg-emerald-400/15 dark:hover:bg-emerald-400/20'
         : 'border-gray-200 bg-white hover:bg-gray-50/50 dark:border-gray-800 dark:hover:bg-white/5'"
@@ -92,6 +92,14 @@
       <div class="text-center text-4xl font-bold tracking-tight text-gray-900 tabular-nums dark:text-white">
         {{ todayTotalLabel }}
       </div>
+      @if (isTimerRunning) {
+        <div class="absolute bottom-0 left-0 right-0 h-[2px] bg-emerald-500/10 dark:bg-emerald-400/15">
+          <div
+            class="h-full bg-emerald-500/60 dark:bg-emerald-300/70"
+            [style.width.%]="globalHeartbeatProgressPercent"
+          ></div>
+        </div>
+      }
     </button>
 
     @if (!isTimerRunning) {

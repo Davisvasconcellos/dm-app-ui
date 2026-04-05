@@ -53,6 +53,7 @@ export class HomeProjectComponent implements OnInit, OnDestroy {
   private sub = new Subscription();
   private tickIntervalId: any = null;
   private closeStagesTimeoutId: any = null;
+  private heartbeatIntervalId: any = null;
 
   @ViewChildren('projectCardEl') projectCardEls!: QueryList<ElementRef<HTMLElement>>;
 
@@ -77,7 +78,14 @@ export class HomeProjectComponent implements OnInit, OnDestroy {
   selectedStage: StageItem | null = null;
   stageHistoryItems: StageItem[] = [];
   nowMs = Date.now();
-  trackerRunning = false;
+  globalLoading = false;
+  globalRunning = false;
+  globalTimeEntryId = '';
+  globalConfirmedMinutes = 0;
+  globalRunningMinutesEstimated = 0;
+  globalHeartbeatLocalMs = 0;
+  globalLastSyncLocalMs = 0;
+  globalSyncing = false;
 
   ngOnInit(): void {
     const current = this.projectContext.getActiveProject();
@@ -85,9 +93,7 @@ export class HomeProjectComponent implements OnInit, OnDestroy {
 
     this.tickIntervalId = setInterval(() => {
       this.nowMs = Date.now();
-      this.trackerRunning = this.timer.hasAnyRunning(this.timer.getDateKey(new Date()));
     }, 1000);
-    this.trackerRunning = this.timer.hasAnyRunning(this.timer.getDateKey(new Date()));
 
     this.sub.add(
       this.projectService.listProjects().subscribe((items) => {
@@ -105,6 +111,21 @@ export class HomeProjectComponent implements OnInit, OnDestroy {
         this.stages = [];
         this.selectedStageIdCode = '';
         this.selectedStage = null;
+        this.stageHistoryItems = [];
+        this.stopHeartbeatLoop();
+        if (st?.id_code) {
+          if (this.selectedProjectIdCode) this.restoreProjectStageHistory(this.selectedProjectIdCode);
+          this.loadGlobalToday(st.id_code);
+        } else {
+          this.globalLoading = false;
+          this.globalRunning = false;
+          this.globalTimeEntryId = '';
+          this.globalConfirmedMinutes = 0;
+          this.globalRunningMinutesEstimated = 0;
+          this.globalHeartbeatLocalMs = 0;
+          this.globalLastSyncLocalMs = 0;
+          this.globalSyncing = false;
+        }
       })
     );
 
@@ -114,6 +135,7 @@ export class HomeProjectComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     if (this.tickIntervalId) clearInterval(this.tickIntervalId);
     if (this.closeStagesTimeoutId) clearTimeout(this.closeStagesTimeoutId);
+    this.stopHeartbeatLoop();
     this.sub.unsubscribe();
   }
 
@@ -155,35 +177,38 @@ export class HomeProjectComponent implements OnInit, OnDestroy {
     this.selectedStage = s;
     this.upsertStageHistory(pid, s);
     const dateKey = this.timer.getDateKey(new Date());
-    this.timer.start(pid, dateKey, s.id_code);
+    if (this.globalRunning) this.timer.start(pid, dateKey, s.id_code);
     this.closeStages();
   }
 
   toggleTimer(): void {
-    const dateKey = this.timer.getDateKey(new Date());
-    if (this.timer.hasAnyRunning(dateKey)) {
-      this.timer.stopAllRunning();
-      this.closeStages();
-      this.trackerRunning = false;
-      return;
+    const storeId = (this.activeStore?.id_code || '').trim();
+    if (!storeId) return;
+    if (this.globalRunning) {
+      this.stopGlobal(storeId);
+    } else {
+      this.startGlobal(storeId);
     }
-
-    const pid = this.selectedProjectIdCode;
-    const sid = this.selectedStageIdCode || null;
-    if (pid && sid) this.timer.start(pid, dateKey, sid);
-    else this.timer.start('__unassigned__', dateKey, '__unassigned__');
-
-    this.trackerRunning = true;
   }
 
   get isTimerRunning(): boolean {
-    return this.trackerRunning;
+    return this.globalRunning;
   }
 
   get todayTotalLabel(): string {
-    const dateKey = this.timer.getDateKey(new Date());
-    const ms = this.timer.getTotalElapsedMsForDate(dateKey, this.nowMs);
-    return this.formatDurationHms(ms);
+    const totalSeconds =
+      Math.max(0, Math.floor(this.globalConfirmedMinutes * 60)) +
+      (this.globalRunning
+        ? Math.max(0, Math.floor(this.globalRunningMinutesEstimated * 60) + Math.floor((this.nowMs - this.globalHeartbeatLocalMs) / 1000))
+        : 0);
+    return this.formatDurationHms(totalSeconds * 1000);
+  }
+
+  get globalHeartbeatProgressPercent(): number {
+    if (!this.globalRunning) return 0;
+    if (!this.globalLastSyncLocalMs) return 0;
+    const elapsedMs = Math.max(0, this.nowMs - this.globalLastSyncLocalMs);
+    return Math.min(100, Math.floor((elapsedMs / 60_000) * 100));
   }
 
   get selectedStageTotalLabel(): string {
@@ -213,7 +238,7 @@ export class HomeProjectComponent implements OnInit, OnDestroy {
     this.selectedStageIdCode = s.id_code;
     this.selectedStage = s;
     this.upsertStageHistory(pid, s);
-    if (this.trackerRunning) {
+    if (this.globalRunning) {
       const dateKey = this.timer.getDateKey(new Date());
       this.timer.start(pid, dateKey, s.id_code);
     }
@@ -447,6 +472,129 @@ export class HomeProjectComponent implements OnInit, OnDestroy {
       error: () => {
         this.stages = [];
         this.isLoadingStages = false;
+      },
+    });
+  }
+
+  private loadGlobalToday(storeId: string): void {
+    this.globalLoading = true;
+    this.projectService.getMeToday(storeId).subscribe({
+      next: (resp) => {
+        const data = resp?.data || resp?.body?.data || null;
+        const metaTotals = resp?.meta?.totals || resp?.body?.meta?.totals || null;
+        const confirmed = Number(metaTotals?.confirmed_minutes ?? data?.meta?.totals?.confirmed_minutes ?? 0);
+        const running = data?.running || null;
+        const id = String(running?.id || running?.time_entry_id || '').trim();
+        const minutesEstimated = Number(running?.minutes_estimated ?? 0);
+
+        this.globalConfirmedMinutes = Number.isFinite(confirmed) ? confirmed : 0;
+        this.globalRunning = !!id;
+        this.globalTimeEntryId = id || '';
+        this.globalRunningMinutesEstimated = this.globalRunning && Number.isFinite(minutesEstimated) ? minutesEstimated : 0;
+        this.globalHeartbeatLocalMs = Date.now();
+        this.globalLastSyncLocalMs = Date.now();
+        this.globalLoading = false;
+
+        if (this.globalRunning && this.globalTimeEntryId) {
+          this.startHeartbeatLoop(storeId, this.globalTimeEntryId);
+        } else {
+          this.stopHeartbeatLoop();
+        }
+      },
+      error: () => {
+        this.globalLoading = false;
+        this.globalRunning = false;
+        this.globalTimeEntryId = '';
+        this.globalRunningMinutesEstimated = 0;
+        this.stopHeartbeatLoop();
+      },
+    });
+  }
+
+  private startGlobal(storeId: string): void {
+    if (this.globalLoading) return;
+    this.globalLoading = true;
+    this.projectService.checkIn(storeId, { source: 'web' }).subscribe({
+      next: () => {
+        this.projectService.startGlobalTimeEntry(storeId, 'Expediente').subscribe({
+          next: (startResp) => {
+            const id = String(startResp?.data?.time_entry_id || startResp?.data?.id || startResp?.data?.timeEntryId || '').trim();
+            if (!id) {
+              this.globalLoading = false;
+              return;
+            }
+            this.globalRunning = true;
+            this.globalTimeEntryId = id;
+            this.globalRunningMinutesEstimated = 0;
+            this.globalHeartbeatLocalMs = Date.now();
+            this.globalLastSyncLocalMs = Date.now();
+            this.globalLoading = false;
+            this.heartbeatOnce(storeId, id);
+            this.startHeartbeatLoop(storeId, id);
+          },
+          error: () => {
+            this.globalLoading = false;
+          },
+        });
+      },
+      error: () => {
+        this.globalLoading = false;
+      },
+    });
+  }
+
+  private stopGlobal(storeId: string): void {
+    const id = String(this.globalTimeEntryId || '').trim();
+    if (!id || this.globalLoading) return;
+    this.globalLoading = true;
+    this.projectService.stopTimeEntry(storeId, id).subscribe({
+      next: (resp) => {
+        const minutes = Number(resp?.data?.minutes ?? 0);
+        if (Number.isFinite(minutes) && minutes > 0) this.globalConfirmedMinutes += minutes;
+        this.globalRunning = false;
+        this.globalTimeEntryId = '';
+        this.globalRunningMinutesEstimated = 0;
+        this.globalHeartbeatLocalMs = Date.now();
+        this.globalLastSyncLocalMs = Date.now();
+        this.globalLoading = false;
+        this.stopHeartbeatLoop();
+        this.timer.stopAllRunning();
+        this.closeStages();
+      },
+      error: () => {
+        this.globalLoading = false;
+      },
+    });
+  }
+
+  private startHeartbeatLoop(storeId: string, timeEntryId: string): void {
+    this.stopHeartbeatLoop();
+    this.heartbeatIntervalId = setInterval(() => {
+      this.heartbeatOnce(storeId, timeEntryId);
+    }, 60_000);
+  }
+
+  private stopHeartbeatLoop(): void {
+    if (this.heartbeatIntervalId) clearInterval(this.heartbeatIntervalId);
+    this.heartbeatIntervalId = null;
+    this.globalSyncing = false;
+  }
+
+  private heartbeatOnce(storeId: string, timeEntryId: string): void {
+    if (!this.globalRunning) return;
+    this.globalSyncing = true;
+    this.projectService.heartbeatTimeEntry(storeId, timeEntryId).subscribe({
+      next: (resp) => {
+        const minutesEstimated = Number(resp?.data?.minutes_estimated ?? 0);
+        const id = String(resp?.data?.time_entry_id || timeEntryId).trim();
+        if (!id || id !== timeEntryId) return;
+        if (Number.isFinite(minutesEstimated)) this.globalRunningMinutesEstimated = minutesEstimated;
+        this.globalHeartbeatLocalMs = Date.now();
+        this.globalLastSyncLocalMs = Date.now();
+        this.globalSyncing = false;
+      },
+      error: () => {
+        this.globalSyncing = false;
       },
     });
   }
