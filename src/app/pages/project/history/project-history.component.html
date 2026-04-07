@@ -1,7 +1,97 @@
-<div class="space-y-4">
-  <div class="text-lg font-semibold text-gray-900 dark:text-white">History</div>
-  <div class="rounded-2xl border border-gray-200 bg-white p-5 text-sm text-gray-600 dark:border-gray-800 dark:bg-white/[0.03] dark:text-gray-300">
-    Em breve: histórico de atividades do projeto (time entries, mudanças de etapa, tarefas concluídas).
+<div class="space-y-6">
+  <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+    <div class="text-xl font-bold text-gray-900 dark:text-white">Timesheet</div>
+  </div>
+  
+  <form [formGroup]="form" (ngSubmit)="loadData()" class="flex flex-row gap-2 items-end p-2 md:p-3 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-sm">
+    <div class="flex-1">
+      <app-date-picker 
+        id="startDate"
+        label="Início"
+        dateFormat="Y-m-d"
+        labelSize="text-[10px] font-bold text-gray-400 mb-0.5 uppercase tracking-tighter"
+        [defaultDate]="form.get('start_date')?.value"
+        (dateChange)="onStartDateChange($event)"
+      ></app-date-picker>
+    </div>
+    <div class="flex-1">
+      <app-date-picker 
+        id="endDate"
+        label="Fim"
+        dateFormat="Y-m-d"
+        labelSize="text-[10px] font-bold text-gray-400 mb-0.5 uppercase tracking-tighter"
+        [defaultDate]="form.get('end_date')?.value"
+        (dateChange)="onEndDateChange($event)"
+      ></app-date-picker>
+    </div>
+    <div class="flex-none pb-0.5">
+      <button type="submit" [disabled]="form.invalid || isLoading" class="px-5 py-2 text-[14px] font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors disabled:opacity-50 h-[44px]">
+        {{ isLoading ? '...' : 'Buscar' }}
+      </button>
+    </div>
+  </form>
+
+  <div *ngIf="data && !isLoading" class="space-y-6">
+    <!-- Total Período -->
+    <div class="rounded-2xl border border-blue-100 bg-blue-50/50 p-2 dark:border-blue-900/40 dark:bg-blue-900/10 shadow-sm flex flex-col items-center justify-center relative overflow-hidden">
+      <div class="absolute inset-0 bg-gradient-to-tr from-transparent to-blue-100/30 dark:to-blue-900/10 pointer-events-none"></div>
+      <p class="text-[9px] font-bold tracking-widest text-blue-600 dark:text-blue-400 uppercase mb-0 z-10">Total do Período</p>
+      <p class="text-xl font-bold text-gray-900 dark:text-white z-10 tabular-nums">{{ formatSecondsToHms(getLiveTotalPeriodSeconds()) }}</p>
+    </div>
+
+    <!-- Dias list -->
+    <div class="space-y-6">
+      <div *ngFor="let day of data.days">
+        <!-- Day Header -->
+        <div class="flex items-center justify-between mb-2">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+              <span class="text-xs font-bold text-blue-600 dark:text-blue-400 tabular-nums">{{ day.date.split('-')[2] }}</span>
+            </div>
+            <span class="text-lg font-bold text-blue-600 dark:text-blue-400 tabular-nums">{{ formatSecondsToHms(getLiveDayTotalSeconds(day)) }}</span>
+          </div>
+          <span class="text-xs font-medium text-gray-400">{{ formatDateShow(day.date) }}</span>
+        </div>  
+        
+        <hr class="border-gray-200 dark:border-gray-800 mb-4" />
+        
+        <!-- Day Entries (Grid 2 cols) -->
+        <div class="grid grid-cols-2 gap-3">
+          <div *ngFor="let m of day.markings" class="flex flex-row items-center justify-between px-3 py-2 rounded-xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 shadow-xs hover:border-blue-200 dark:hover:border-blue-900/50 transition-all">
+            <div class="flex flex-col min-w-0">
+              <div class="flex items-center gap-1.5 text-[11px] font-bold text-gray-500 dark:text-gray-400 tabular-nums uppercase tracking-tight">
+                <span>{{ formatTime(m.start_at) }}</span>
+                <span class="text-gray-300 dark:text-gray-600">—</span>
+                <span class="text-gray-700 dark:text-gray-300">
+                  <ng-container *ngIf="m.is_running; else closedTime"><span class="text-emerald-500 text-[10px] uppercase font-sans tracking-normal">Live</span></ng-container>
+                  <ng-template #closedTime>{{ formatTime(m.end_at) }}</ng-template>
+                </span>
+              </div>
+              <div *ngIf="m.project" class="flex items-center gap-1 mt-0.5 min-w-0">
+                <span class="w-1.5 h-1.5 rounded-full shrink-0" [style.background-color]="m.project.color || '#9ca3af'"></span>
+                <span class="text-[10px] font-medium text-gray-400 truncate uppercase">{{ m.project.name }}</span>
+              </div>
+              <div *ngIf="!m.project" class="flex items-center gap-1 mt-0.5">
+                <span class="text-[10px] font-medium text-gray-400 uppercase italic">Geral</span>
+              </div>
+            </div>
+            
+            <div class="text-[14px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 px-2 py-0.5 rounded-md tabular-nums shadow-xs">
+              {{ formatSecondsToHms(getLiveSeconds(m)) }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Empty State -->
+    <div *ngIf="data.days.length === 0" class="py-16 flex flex-col items-center justify-center text-center text-gray-400 dark:text-gray-500 rounded-3xl border-2 border-dashed border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/30">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="mb-4 opacity-50">
+        <circle cx="12" cy="12" r="10"></circle>
+        <path d="M12 8v4l3 3"></path>
+      </svg>
+      <p class="text-base font-medium text-gray-500 dark:text-gray-400">Nenhum registro no período.</p>
+    </div>
   </div>
 </div>
 

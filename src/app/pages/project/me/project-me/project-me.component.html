@@ -1,81 +1,243 @@
-<div class="space-y-6">
-  <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+<div class="mx-auto flex h-full min-h-0 max-w-2xl flex-col pb-2">
+  
+  <!-- Fixed Top Area -->
+  <div class="shrink-0 space-y-4 pt-2">
+    @if (!activeStore) {
+      <div class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-100">
+        Selecione uma unidade (store) para carregar os projetos.
+      </div>
+    }
+
+    <!-- Header & Calendar Strip -->
     <div>
-      <div class="text-lg font-semibold text-gray-900 dark:text-white">Meu dia</div>
-      <div class="text-xs text-gray-500 dark:text-gray-400">
-        Visão do colaborador.
+    <!-- Date display -->
+    <div class="flex items-end justify-between pt-2">
+      <div>
+        <div class="text-[13px] font-medium text-gray-500 uppercase tracking-wide dark:text-gray-400">
+          {{ selectedDateMonthYear() }}
+        </div>
+        <div class="mt-1 text-3xl font-bold text-gray-900 dark:text-white capitalize">
+          {{ isTodayStr(selectedDate) ? 'Hoje' : selectedDateFormatted().split(',')[0] }}
+        </div>
+      </div>
+      
+      <!-- Buttons -->
+      <div class="flex items-center gap-2">
+        <button 
+          class="flex h-10 items-center justify-center rounded-full border border-gray-200 bg-white px-4 text-xs font-semibold text-gray-700 transition-colors hover:bg-gray-50 dark:border-white/[0.08] dark:bg-gray-900/40 dark:text-gray-200 dark:hover:bg-white/[0.04]" 
+          (click)="setToday()"
+        >
+          Ir para Hoje
+        </button>
+
+        <!-- Custom date picker overlay -->
+        <div class="relative flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-gray-100 text-gray-600 transition-colors hover:bg-gray-200 dark:bg-white/[0.06] dark:text-gray-300 dark:hover:bg-white/[0.12]" title="Escolher data">
+          <div class="absolute inset-0 z-10 overflow-hidden opacity-0" title="Escolher data">
+            <app-date-picker
+              dateFormat="Y-m-d"
+              position="below right"
+              [defaultDate]="selectedDate"
+              (dateChange)="onDatePickerChange($event)"
+            ></app-date-picker>
+          </div>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+        </div>
       </div>
     </div>
-    <a
-      routerLink="/project"
-      class="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-900/40 dark:text-gray-200 dark:hover:bg-white/5"
-    >
-      Atualizar
-    </a>
-  </div>
 
-  @if (!activeStore) {
-    <div class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-100">
-      Selecione uma unidade (store) para carregar os projetos e colaboradores.
+    <!-- Horizontal Calendar Strip -->
+    <div class="mt-8 flex items-center justify-between px-2">
+      @for (day of daysOfWeek; track day.date) {
+        <button 
+          (click)="selectDate(day.date)"
+          class="flex min-w-[3rem] flex-col items-center justify-center gap-2 focus:outline-hidden"
+        >
+          <span class="text-[12px] font-semibold uppercase tracking-wider transition-colors"
+            [ngClass]="day.isSelected ? 'text-brand-600 dark:text-brand-400' : 'text-gray-400 dark:text-gray-500'"
+          >
+            {{ day.dayName }}
+          </span>
+          <div class="flex h-11 w-11 items-center justify-center rounded-full text-[17px] font-bold transition-all"
+            [ngClass]="{
+              'bg-brand-500 text-white shadow-lg shadow-brand-500/30 dark:shadow-brand-500/20': day.isSelected,
+              'text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-white/[0.08]': !day.isSelected,
+              'ring-1 ring-inset ring-brand-500/30 text-brand-600 dark:text-brand-400 dark:ring-brand-500/40': day.isToday && !day.isSelected
+            }"
+          >
+            {{ day.dayNumber }}
+          </div>
+          @if (day.isSelected) {
+            <div class="h-1.5 w-1.5 rounded-full bg-brand-500 dark:bg-brand-400"></div>
+          } @else {
+            <div class="h-1.5 w-1.5 rounded-full bg-transparent"></div>
+          }
+        </button>
+      }
     </div>
-  }
+  </div> <!-- End Fixed Top Area -->
 
-  @if (myMember) {
-    <div class="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900/40">
-      <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div class="min-w-0">
-          <div class="truncate text-sm font-semibold text-gray-900 dark:text-white">{{ myMember.name }}</div>
-          <div class="mt-1 truncate text-xs text-gray-500 dark:text-gray-400">{{ myMember.email || '' }}</div>
-        </div>
-        <span class="rounded-md px-2 py-1 text-[11px] font-medium" [ngClass]="statusClass(myMember.status)">
-          {{ statusLabel(myMember.status) }}
-        </span>
-      </div>
+  <!-- Scrollable Timeline Area -->
+  <div class="mt-4 flex-1 overflow-y-auto pl-1 pr-2 pb-6 custom-scrollbar">
+    <!-- Chronological Timeline -->
+    @if (timelineProjects.length > 0) {
+      <div class="relative">
+      <!-- Main vertical line -->
+      <div class="absolute bottom-4 left-[21px] top-4 w-0.5 bg-gray-200 dark:bg-gray-800"></div>
+      
+      <div class="space-y-10">
+        @for (project of timelineProjects; track project.id) {
+          <div class="relative">
+            <!-- Project Header (Blue Card for Active, Grey/Brandish for completed) -->
+            <div class="relative flex items-center gap-5">
+              <div class="relative flex w-11 shrink-0 justify-center">
+                <div class="z-10 h-3 w-3 rounded-full border-2 border-brand-500 bg-white ring-4 ring-brand-50 dark:border-brand-400 dark:bg-gray-900 dark:ring-brand-500/10"></div>
+              </div>
+              <div class="w-full flex-1">
+                <div class="rounded-2xl bg-brand-500 p-5 shadow-lg shadow-brand-500/20 transition-all dark:bg-brand-600">
+                  <div class="flex items-center justify-between">
+                    <div class="text-[18px] font-bold tracking-tight text-white">
+                      {{ project.projectName }}
+                    </div>
+                    <div class="flex flex-col items-end">
+                      <div class="text-sm font-bold tabular-nums text-white">{{ project.totalDuration }}</div>
+                      <div class="text-[10px] font-medium tracking-wider text-brand-100 uppercase">Total Hoje</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
 
-      <div class="mt-4 rounded-lg bg-gray-50 p-3 text-sm text-gray-700 dark:bg-white/5 dark:text-gray-200">
-        <div class="flex items-center justify-between">
-          <span>Projeto atual</span>
-          <span class="font-medium">{{ myMember.current_project_name || '—' }}</span>
-        </div>
-        <div class="mt-2 flex h-2 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-white/10">
-          <div class="h-full bg-brand-500" [style.width.%]="clampPct(myMember.today_project_pct)"></div>
-          <div class="h-full bg-gray-300 dark:bg-white/20" [style.width.%]="clampPct(myMember.today_office_pct)"></div>
-        </div>
-        <div class="mt-1 flex justify-between text-[11px] text-gray-500 dark:text-gray-400">
-          <span>{{ clampPct(myMember.today_project_pct) }}% projetos</span>
-          <span>{{ clampPct(myMember.today_office_pct) }}% escritório</span>
-        </div>
+            <!-- Project Tasks -->
+            <div class="mt-4 space-y-4">
+              @for (task of project.tasks; track task.id) {
+                <div class="relative flex items-stretch gap-5">
+                  <div class="relative flex w-11 shrink-0 justify-center pt-5">
+                    @if (task.status === 'active') {
+                      <span class="absolute flex h-3 w-3">
+                        <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-400 opacity-75"></span>
+                        <span class="relative inline-flex h-3 w-3 rounded-full border-2 border-brand-500 bg-white dark:border-brand-400 dark:bg-gray-900"></span>
+                      </span>
+                    } @else {
+                      <div class="z-10 h-2.5 w-2.5 rounded-full border-2 border-gray-300 bg-white dark:border-gray-600 dark:bg-gray-900"></div>
+                    }
+                  </div>
+                  
+                  <div class="w-full flex-1">
+                    <div class="group rounded-2xl border border-gray-100 bg-white p-4 shadow-sm transition-all hover:border-gray-200 hover:shadow-md dark:border-gray-800/60 dark:bg-gray-900/50 dark:hover:border-gray-700/80">
+                      
+                      <div class="flex items-start justify-between gap-4">
+                        <div class="flex-1 min-w-0">
+                          <div class="flex items-center gap-2">
+                            <span class="h-2 w-2 rounded-full" [ngClass]="task.stageColor"></span>
+                            <span class="text-[15px] font-bold text-gray-900 dark:text-white">{{ task.stageTitle }}</span>
+                            @if (task.status === 'active') {
+                              <span class="rounded bg-brand-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-brand-600 dark:bg-brand-500/10 dark:text-brand-400">Em andamento</span>
+                            }
+                          </div>
+                          
+                          <div class="mt-2 flex items-center justify-between">
+                            @if (task.description) {
+                              <div class="text-[13px] leading-relaxed text-gray-500 dark:text-gray-400">{{ task.description }}</div>
+                            } @else {
+                              <div class="text-[13px] italic text-gray-400 dark:text-gray-500">Sem observações logadas</div>
+                            }
+                          </div>
+                        </div>
+
+                        <!-- Task Time -->
+                        <div class="flex shrink-0 flex-col items-end whitespace-nowrap">
+                          <div class="text-[14px] font-semibold tabular-nums text-gray-900 dark:text-white">{{ task.duration }}</div>
+                          <div class="mt-0.5 text-[11px] font-medium text-gray-400 dark:text-gray-500">
+                            {{ task.startTime }} - {{ task.endTime || 'Agora' }}
+                          </div>
+                          
+                          <!-- Ações (Edit Note) -->
+                          <button 
+                            (click)="openNoteModal(task)"
+                            class="mt-2 flex items-center gap-1.5 rounded-lg bg-gray-50 px-2 py-1.5 text-[11px] font-medium text-gray-500 opacity-0 transition-all hover:bg-brand-50 hover:text-brand-600 group-hover:opacity-100 dark:bg-white/5 dark:text-gray-400 dark:hover:bg-brand-500/10 dark:hover:text-brand-400"
+                            [title]="task.description ? 'Editar observação' : 'Adicionar observação'"
+                          >
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                            {{ task.description ? 'Editar Obs.' : '+ Observação' }}
+                          </button>
+                        </div>
+                      </div>
+
+                      @if (task.status === 'active') {
+                        <div class="mt-3 flex items-center gap-2 border-t border-gray-50 pt-3 dark:border-gray-800/40">
+                          <div class="flex -space-x-1.5">
+                            <img src="https://lh3.googleusercontent.com/a/ACg8ocL-ziENoK93sbBfiBOlaqHxCi_wRETFI-UzxnJGvfkINoGncCg=s96-c" class="h-6 w-6 rounded-full border-2 border-white object-cover dark:border-gray-900" alt="User 1">
+                            <img src="https://lh3.googleusercontent.com/a/ACg8ocIHgOHW4bZn1P9xhjo_f-36rr7jSRWP90UuKJRqi2_jdH7au21F=s96-c" class="h-6 w-6 rounded-full border-2 border-white object-cover dark:border-gray-900" alt="User 2">
+                          </div>
+                          <div class="flex items-center gap-2">
+                             <div class="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500"></div>
+                             <span class="text-[11px] font-medium text-gray-500 dark:text-gray-400">Trabalhando agora</span>
+                          </div>
+                        </div>
+                      }
+                      
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+
+          </div>
+        }
       </div>
     </div>
   } @else {
-    <div class="rounded-xl border border-gray-200 bg-white p-4 text-sm text-gray-500 dark:border-gray-800 dark:bg-gray-900/40 dark:text-gray-400">
-      Colaborador não encontrado na unidade ativa.
+    <div class="mt-10 flex flex-col items-center justify-center rounded-3xl border border-dashed border-gray-200 bg-gray-50/50 p-12 text-center dark:border-gray-800/60 dark:bg-white/[0.01]">
+      <div class="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-white text-gray-400 shadow-sm dark:bg-gray-900/40 dark:text-gray-500">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 16 14"></polyline>
+        </svg>
+      </div>
+      <div class="text-base font-semibold text-gray-900 dark:text-white">Nenhum registro encontrado</div>
+      <div class="mt-1.5 text-sm max-w-[240px] text-gray-500 dark:text-gray-400">Suas tarefas do dia aparecerão aqui detalhadas por projeto.</div>
     </div>
   }
+  </div> <!-- End Scrollable Area -->
+</div>
 
-  <div class="space-y-3">
-    <div class="text-sm font-semibold text-gray-900 dark:text-white">Projetos ativos</div>
-    <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
-      @for (p of projects; track p.id_code) {
-        <a
-          class="rounded-xl border border-gray-200 bg-white p-4 hover:border-gray-300 dark:border-gray-800 dark:bg-gray-900/40"
-          routerLink="/project/admin"
-        >
-          <div class="text-sm font-semibold text-gray-900 dark:text-white">{{ p.name }}</div>
-          <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ p.client_name || 'Cliente' }}</div>
-          <div class="mt-3 inline-flex items-center gap-2">
-            <span class="rounded-md bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700 dark:bg-white/10 dark:text-gray-200">
-              {{ p.current_stage }}
-            </span>
-            <span class="text-xs text-gray-500 dark:text-gray-400">Etapa atual</span>
-          </div>
-        </a>
-      }
-      @if (projects.length === 0) {
-        <div class="rounded-xl border border-gray-200 bg-white p-4 text-sm text-gray-500 dark:border-gray-800 dark:bg-gray-900/40 dark:text-gray-400">
-          Nenhum projeto ativo.
-        </div>
-      }
+<!-- Note Edit Modal -->
+<app-modal [isOpen]="!!editingTask" (close)="closeNoteModal()">
+  <div class="p-6 sm:p-8 w-full max-w-lg">
+    <div class="flex items-center gap-3 mb-6">
+      <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-600 dark:bg-brand-500/20 dark:text-brand-400">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+      </div>
+      <div>
+        <h3 class="text-lg font-bold text-gray-900 dark:text-white">Observação na Tarefa</h3>
+        <p class="text-[13px] text-gray-500 dark:text-gray-400">Etapa: <span class="font-semibold">{{ editingTask?.stageTitle }}</span></p>
+      </div>
+    </div>
+
+    <div>
+      <label class="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">Sua observação</label>
+      <textarea
+        rows="4"
+        [(ngModel)]="draftNote"
+        class="block w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 shadow-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:focus:border-brand-400 dark:focus:ring-brand-400"
+        placeholder="O que você está pesquisando, desenvolvendo ou discutindo?"
+      ></textarea>
+      <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">Pode detalhar as reuniões, issues feitas ou links.</p>
+    </div>
+
+    <div class="mt-8 flex items-center justify-end gap-3 border-t border-gray-100 pt-5 dark:border-gray-800">
+      <button
+        (click)="closeNoteModal()"
+        class="rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+      >
+        Cancelar
+      </button>
+      <button
+        (click)="saveNote()"
+        class="rounded-xl bg-brand-500 px-5 py-2.5 text-sm font-semibold text-white shadow-xs hover:bg-brand-600 dark:bg-brand-600 dark:hover:bg-brand-500"
+      >
+        Salvar observação
+      </button>
     </div>
   </div>
-</div>
+</app-modal>

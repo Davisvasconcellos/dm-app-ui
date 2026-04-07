@@ -14,8 +14,8 @@ export class ProjectFooterComponent implements OnInit, OnDestroy {
 
   readonly items = [
     { key: 'home', label: 'Home', link: '/project' },
-    { key: 'history', label: 'History', link: '/project/history' },
-    { key: 'me', label: 'Meu dia', link: '/project/me' },
+    { key: 'timesheet', label: 'Timesheet', link: '/project/history' },
+    { key: 'timeline', label: 'Timeline', link: '/project/me' },
   ] as const;
 
   activeIndex = 0;

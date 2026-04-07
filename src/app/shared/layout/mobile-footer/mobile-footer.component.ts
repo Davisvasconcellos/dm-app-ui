@@ -17,9 +17,9 @@ export class MobileFooterComponent implements OnInit, OnDestroy {
   private sub = new Subscription();
 
   readonly items = [
-    { key: 'home', label: 'Home', link: '/', fragment: null as string | null },
-    { key: 'checkin', label: 'Checkin', link: '/self-checkin', fragment: null as string | null },
-    { key: 'profile', label: 'Profile', link: '/profile-qr', fragment: null as string | null },
+    { key: 'home', label: 'Home', link: '/project', fragment: null as string | null },
+    { key: 'timesheet', label: 'Timesheet', link: '/project/history', fragment: null as string | null },
+    { key: 'timeline', label: 'Timeline', link: '/project/me', fragment: null as string | null },
   ] as const;
 
   activeIndex = 0;

@@ -20,20 +20,22 @@ import { ProjectSessionsComponent } from './admin/project-sessions/project-sessi
 import { ProjectMeComponent } from './me/project-me/project-me.component';
 
 import { ProjectSummaryCardComponent } from './components/project-summary-card/project-summary-card.component';
+import { ReactiveFormsModule } from '@angular/forms';
 
 @NgModule({
   imports: [
     CommonModule,
     FormsModule,
+    ReactiveFormsModule,
     RouterModule,
     ProjectRoutingModule,
     ModalComponent,
     DatePickerComponent,
     CurrencyMaskDirective,
+    ProjectHistoryComponent,
   ],
   declarations: [
     HomeProjectComponent,
-    ProjectHistoryComponent,
     ProjectWorkComponent,
     ProjectAdminDashboardComponent,
     ProjectBackofficeComponent,
@@ -45,3 +47,4 @@ import { ProjectSummaryCardComponent } from './components/project-summary-card/p
   ],
 })
 export class ProjectModule {}
+// Rebuild for Timesheet 123

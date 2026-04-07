@@ -6,6 +6,7 @@ type StageSnapshot = {
   title: string;
   acronym: string | null;
   color_1: string | null;
+  description?: string | null;
 };
 
 type ProjectHistory = {
@@ -58,6 +59,26 @@ export class ProjectStageHistoryService {
         [dateKey]: {
           ...day,
           [projectIdCode]: { ...proj, stages: newOrder.slice(0, this.MAX_STAGES) },
+        },
+      },
+    };
+    this.persist(next);
+  }
+
+  updateStageNote(dateKey: string, projectIdCode: string, stageIdCode: string, description: string | null): void {
+    const st = this.load();
+    const day = st.by_date[dateKey] || {};
+    const proj = day[projectIdCode] || { active_stage_id_code: null, stages: [] };
+
+    const stages = proj.stages.map((s) => (s.id_code === stageIdCode ? { ...s, description } : s));
+
+    const next: StageHistoryState = {
+      version: 1,
+      by_date: {
+        ...st.by_date,
+        [dateKey]: {
+          ...day,
+          [projectIdCode]: { ...proj, stages },
         },
       },
     };

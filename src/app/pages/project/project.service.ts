@@ -69,6 +69,20 @@ export class ProjectService {
     );
   }
 
+  getTimemarker(storeIdCode: string, startDate: string, endDate: string): Observable<any | null> {
+    const storeId = String(storeIdCode || '').trim();
+    if (!storeId) return of(null);
+    const headers = this.getHeaders(storeId);
+    const params = new HttpParams()
+      .set('start_date', startDate)
+      .set('end_date', endDate)
+      .set('_t', Date.now().toString());
+    return this.http.get<any>(`${this.API_BASE_URL}/me/timemarker`, { headers, params }).pipe(
+      map((resp) => this.unwrapResponse(resp)),
+      catchError(() => of(null))
+    );
+  }
+
   checkIn(storeIdCode: string, payload?: { source?: string; device_id?: string }): Observable<any | null> {
     const storeId = String(storeIdCode || '').trim();
     if (!storeId) return of(null);
@@ -127,6 +141,17 @@ export class ProjectService {
     if (!storeId || !id) return of(null);
     const headers = this.getHeaders(storeId);
     return this.http.post<any>(`${this.API_BASE_URL}/time-entries/${encodeURIComponent(id)}/stop`, {}, { headers }).pipe(
+      map((resp) => this.unwrapResponse(resp)),
+      catchError(() => of(null))
+    );
+  }
+
+  updateTimeEntryNote(storeIdCode: string, timeEntryId: string, description: string | null): Observable<any | null> {
+    const storeId = String(storeIdCode || '').trim();
+    const id = String(timeEntryId || '').trim();
+    if (!storeId || !id) return of(null);
+    const headers = this.getHeaders(storeId);
+    return this.http.patch<any>(`${this.API_BASE_URL}/time-entries/${encodeURIComponent(id)}/note`, { description }, { headers }).pipe(
       map((resp) => this.unwrapResponse(resp)),
       catchError(() => of(null))
     );

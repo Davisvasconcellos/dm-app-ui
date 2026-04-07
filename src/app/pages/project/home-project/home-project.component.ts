@@ -20,6 +20,7 @@ interface StageItem {
   color_1: string | null;
   total_minutes?: number;
   total_amount?: number;
+  description?: string;
 }
 
 interface ScopeStore {
@@ -100,6 +101,9 @@ export class HomeProjectComponent implements OnInit, OnDestroy {
   taskLoading = false;
   dragIndex: number | null = null;
   dragOverIndex: number | null = null;
+
+  editingStage: StageItem | null = null;
+  draftNote: string = '';
 
   ngOnInit(): void {
     const current = this.projectContext.getActiveProject();
@@ -423,6 +427,39 @@ export class HomeProjectComponent implements OnInit, OnDestroy {
     }
   }
 
+  openNoteModal(stage: StageItem, event: Event): void {
+    event.stopPropagation();
+    this.editingStage = stage;
+    this.draftNote = stage.description || '';
+  }
+
+  closeNoteModal(): void {
+    this.editingStage = null;
+    this.draftNote = '';
+  }
+
+  saveNote(): void {
+    if (this.editingStage) {
+      this.editingStage.description = this.draftNote;
+      const pid = this.selectedProjectIdCode;
+      const storeId = (this.activeStore?.id_code || '').trim();
+
+      if (pid) {
+        const dateKey = this.timer.getDateKey(new Date());
+        this.stageHistory.updateStageNote(dateKey, pid, this.editingStage.id_code, this.draftNote);
+        
+        // Keep main list in sync too if needed (though it maps closely to history or stage list)
+      }
+      
+      const isRunning = this.isTaskRunning && this.taskRunningStageIdCode === this.editingStage.id_code && this.taskRunningProjectIdCode === pid;
+      
+      if (isRunning && this.taskTimeEntryId && storeId) {
+        this.projectService.updateTimeEntryNote(storeId, this.taskTimeEntryId, this.draftNote).subscribe();
+      }
+    }
+    this.closeNoteModal();
+  }
+
   private openStages(projectIdCode: string): void {
     if (this.closeStagesTimeoutId) clearTimeout(this.closeStagesTimeoutId);
     this.isStagesRendered = true;
@@ -740,8 +777,14 @@ export class HomeProjectComponent implements OnInit, OnDestroy {
     if (this.taskLoading) return; 
     this.taskLoading = true;
     
+    let noteDesc = null;
+    if (stageId) {
+      const matchHistory = this.stageHistoryItems.find(s => s.id_code === stageId);
+      if (matchHistory?.description) noteDesc = matchHistory.description;
+    }
+
     const payload = {
-      description: null,
+      description: noteDesc,
       project_id: projectId || null,
       stage_id: stageId || null
     };
@@ -965,6 +1008,7 @@ export class HomeProjectComponent implements OnInit, OnDestroy {
       status: null,
       due_date: null,
       color_1: s.color_1,
+      description: s.description || undefined,
     }));
     const activeId = hist.active_stage_id_code;
     if (activeId) {
@@ -992,6 +1036,7 @@ export class HomeProjectComponent implements OnInit, OnDestroy {
         title: s.title,
         acronym: s.acronym,
         color_1: s.color_1,
+        description: s.description || null
       });
     }
     this.restoreProjectStageHistory(projectIdCode);
