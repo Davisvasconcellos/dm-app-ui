@@ -53,7 +53,10 @@ export class ProjectHistoryComponent implements OnInit, OnDestroy {
   }
 
   private formatDateObj(d: Date): string {
-    return d.toISOString().slice(0, 10);
+    const y = d.getFullYear();
+    const m = (d.getMonth() + 1).toString().padStart(2, '0');
+    const day = d.getDate().toString().padStart(2, '0');
+    return `${y}-${m}-${day}`;
   }
 
   formatDateShow(dStr: string): string {
@@ -73,6 +76,7 @@ export class ProjectHistoryComponent implements OnInit, OnDestroy {
     if (event.selectedDates && event.selectedDates.length > 0) {
       const d = event.selectedDates[0];
       this.form.get('start_date')?.setValue(this.formatDateObj(d));
+      this.loadData();
     }
   }
 
@@ -80,6 +84,7 @@ export class ProjectHistoryComponent implements OnInit, OnDestroy {
     if (event.selectedDates && event.selectedDates.length > 0) {
       const d = event.selectedDates[0];
       this.form.get('end_date')?.setValue(this.formatDateObj(d));
+      this.loadData();
     }
   }
 
@@ -129,4 +134,3 @@ export class ProjectHistoryComponent implements OnInit, OnDestroy {
     });
   }
 }
-

@@ -83,6 +83,19 @@ export class ProjectService {
     );
   }
 
+  getMyTimeline(storeIdCode: string, date: string): Observable<any | null> {
+    const storeId = String(storeIdCode || '').trim();
+    if (!storeId) return of(null);
+    const headers = this.getHeaders(storeId);
+    const params = new HttpParams()
+      .set('date', date)
+      .set('_t', Date.now().toString());
+    return this.http.get<any>(`${this.API_BASE_URL}/me/timeline`, { headers, params }).pipe(
+      map((resp) => this.unwrapResponse(resp)),
+      catchError(() => of(null))
+    );
+  }
+
   checkIn(storeIdCode: string, payload?: { source?: string; device_id?: string }): Observable<any | null> {
     const storeId = String(storeIdCode || '').trim();
     if (!storeId) return of(null);

@@ -25,8 +25,13 @@
       ></app-date-picker>
     </div>
     <div class="flex-none pb-0.5">
-      <button type="submit" [disabled]="form.invalid || isLoading" class="px-5 py-2 text-[14px] font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors disabled:opacity-50 h-[44px]">
-        {{ isLoading ? '...' : 'Buscar' }}
+      <button type="submit" [disabled]="form.invalid || isLoading" class="flex items-center justify-center w-11 h-[44px] text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors disabled:opacity-50">
+        <ng-container *ngIf="isLoading; else searchIcon">
+          <div class="h-4 w-4 animate-spin rounded-full border-2 border-white/20 border-t-white"></div>
+        </ng-container>
+        <ng-template #searchIcon>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+        </ng-template>
       </button>
     </div>
   </form>
@@ -44,11 +49,11 @@
       <div *ngFor="let day of data.days">
         <!-- Day Header -->
         <div class="flex items-center justify-between mb-2">
-          <div class="flex items-center gap-2">
-            <div class="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-              <span class="text-xs font-bold text-blue-600 dark:text-blue-400 tabular-nums">{{ day.date.split('-')[2] }}</span>
+          <div class="flex items-center gap-3">
+            <div class="w-11 h-11 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center shadow-xs">
+              <span class="text-[19px] font-black text-blue-600 dark:text-blue-400 tabular-nums leading-none">{{ day.date.split('-')[2] }}</span>
             </div>
-            <span class="text-lg font-bold text-blue-600 dark:text-blue-400 tabular-nums">{{ formatSecondsToHms(getLiveDayTotalSeconds(day)) }}</span>
+            <span class="text-lg font-black text-blue-900 dark:text-blue-200 tabular-nums">{{ formatSecondsToHms(getLiveDayTotalSeconds(day)) }}</span>
           </div>
           <span class="text-xs font-medium text-gray-400">{{ formatDateShow(day.date) }}</span>
         </div>  

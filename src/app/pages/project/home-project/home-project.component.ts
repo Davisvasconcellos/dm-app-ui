@@ -810,8 +810,12 @@ export class HomeProjectComponent implements OnInit, OnDestroy {
         this.heartbeatOnce(storeId, id, 'task');
         this.startHeartbeatLoop(storeId);
       },
-      error: () => {
-        this.taskLoading = false;
+      error: (err) => {
+        if (err?.status === 409) {
+          this.loadGlobalToday(storeId);
+        } else {
+          this.taskLoading = false;
+        }
       }
     });
   }

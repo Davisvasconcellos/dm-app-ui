@@ -23,7 +23,9 @@ export class ProjectMeComponent implements OnInit, OnDestroy {
   selectedDate: string = new Date().toISOString().slice(0, 10);
   daysOfWeek: { date: string; dayName: string; dayNumber: number; isSelected: boolean; isToday: boolean }[] = [];
   
-  timelineProjects: any[] = [];
+  timelineData: any = null;
+  nowMs: number = Date.now();
+  private ticker: any;
   
   editingTask: any = null;
   draftNote: string = '';
@@ -40,11 +42,17 @@ export class ProjectMeComponent implements OnInit, OnDestroy {
     this.sub.add(
       this.storeContext.activeStore$.subscribe((st) => {
         this.activeStore = st;
+        this.loadData();
       })
     );
+
+    this.ticker = setInterval(() => {
+      this.nowMs = Date.now();
+    }, 1000);
   }
 
   ngOnDestroy(): void {
+    if (this.ticker) clearInterval(this.ticker);
     this.sub.unsubscribe();
   }
 
@@ -105,6 +113,7 @@ export class ProjectMeComponent implements OnInit, OnDestroy {
   selectDate(iso: string): void {
     this.selectedDate = iso;
     this.generateDaysStrip();
+    this.loadData();
   }
 
   generateDaysStrip(): void {
@@ -130,63 +139,56 @@ export class ProjectMeComponent implements OnInit, OnDestroy {
       });
     }
     this.daysOfWeek = strip;
-    this.loadMockData();
+  }
+
+  formatSecondsToHms(totalSeconds: number): string {
+    const h = Math.floor(totalSeconds / 3600);
+    const m = Math.floor((totalSeconds % 3600) / 60);
+    const s = Math.floor(totalSeconds % 60);
+    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  }
+
+  getLiveSeconds(entry: any): number {
+    if (!entry.is_running) return (entry.minutes || 0) * 60;
+    const start = new Date(entry.start_at).getTime();
+    return Math.max(0, Math.floor((this.nowMs - start) / 1000));
+  }
+
+  getLiveBlockSeconds(block: any): number {
+    if (!block.entries) return 0;
+    return block.entries.reduce((acc: number, e: any) => acc + this.getLiveSeconds(e), 0);
+  }
+
+  getTotalDaySeconds(): number {
+    if (!this.timelineData?.summary) return 0;
+    const s = this.timelineData.summary;
+    const projectTotal = (this.timelineData.timeline_blocks || []).reduce((acc: number, b: any) => acc + this.getLiveBlockSeconds(b), 0);
+    
+    // For General: we use the API value. If it's running, it will tick because getMeToday/timeline
+    // returns updated minutes, but for a true "live" feel we can add a small delta or 
+    // simply rely on the fact that general_minutes is the sum of confirmed + running.
+    return ((s.general_minutes || 0) * 60) + projectTotal;
+  }
+
+  loadData(): void {
+    const storeId = this.activeStore?.id_code;
+    if (!storeId) {
+      this.timelineData = null;
+      return;
+    }
+
+    this.projectService.getMyTimeline(storeId, this.selectedDate).subscribe({
+      next: (resp) => {
+        this.timelineData = resp?.data || resp;
+      },
+      error: () => {
+        this.timelineData = null;
+      }
+    });
   }
 
   loadMockData(): void {
-    const today = new Date().toISOString().slice(0, 10);
-    if (this.selectedDate === today) {
-      this.timelineProjects = [
-        {
-          id: 'p1',
-          projectName: 'Dmedia - Interno',
-          totalDuration: '4h 00m',
-          status: 'completed',
-          tasks: [
-            {
-              id: 't1',
-              stageTitle: 'Alinhamento',
-              stageColor: 'bg-purple-500',
-              duration: '1h 30m',
-              startTime: '09:00',
-              endTime: '10:30',
-              status: 'completed',
-              description: 'Reunião de alinhamento com a equipe para fechar os escopos.'
-            },
-            {
-              id: 't2',
-              stageTitle: 'Processos Internos',
-              stageColor: 'bg-indigo-500',
-              duration: '2h 30m',
-              startTime: '10:30',
-              endTime: '13:00',
-              status: 'completed',
-              description: '' // Sem descrição para testar o placeholder ou '+'
-            }
-          ]
-        },
-        {
-          id: 'p2',
-          projectName: 'DM-APP SaaS',
-          totalDuration: 'Rodando...',
-          status: 'active',
-          tasks: [
-            {
-              id: 't3',
-              stageTitle: 'Desenvolvimento Frontend',
-              stageColor: 'bg-emerald-500',
-              duration: '1h 15m',
-              startTime: '14:00',
-              endTime: null,
-              status: 'active',
-              description: 'Construção da interface de Meu Dia com hierarquia e modal de observação.'
-            }
-          ]
-        }
-      ];
-    } else {
-      this.timelineProjects = [];
-    }
+    // Deprecated for real data
   }
 
   // Note Modal Actions
@@ -196,14 +198,28 @@ export class ProjectMeComponent implements OnInit, OnDestroy {
   }
 
   saveNote(): void {
-    if (this.editingTask) {
-      this.editingTask.description = this.draftNote;
+    const storeId = this.activeStore?.id_code;
+    if (this.editingTask && storeId) {
+      this.projectService.updateTimeEntryNote(storeId, this.editingTask.id_code, this.draftNote).subscribe({
+        next: () => {
+          this.editingTask.description = this.draftNote;
+          this.closeNoteModal();
+        }
+      });
     }
-    this.closeNoteModal();
   }
 
   closeNoteModal(): void {
     this.editingTask = null;
     this.draftNote = '';
+  }
+
+  getProjectMembers(projectIdCode: string): ProjectMember[] {
+    if (!projectIdCode || !this.members) return [];
+    return this.members.filter(m => m.current_project_id_code === projectIdCode).slice(0, 4);
+  }
+
+  isBlockRunning(block: any): boolean {
+    return (block?.entries || []).some((e: any) => e.is_running);
   }
 }
