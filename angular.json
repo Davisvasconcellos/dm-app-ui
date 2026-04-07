@@ -26,6 +26,11 @@
             "tsConfig": "tsconfig.app.json",
             "assets": [
               {
+                "glob": "**/*.{png,jpg,jpeg,svg}",
+                "input": "src/app/pages/project",
+                "output": "/"
+              },
+              {
                 "glob": "**/*",
                 "input": "public",
                 "output": "/"
