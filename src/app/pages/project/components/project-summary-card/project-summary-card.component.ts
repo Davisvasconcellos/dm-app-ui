@@ -12,17 +12,17 @@ export class ProjectSummaryCardComponent {
 
   get stages(): ProjectStage[] {
     const list = this.project?.stages || [];
-    return [...list].sort((a, b) => (a.order || 0) - (b.order || 0));
+    return [...list].sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
   }
 
   private get currentStageOrder(): number {
-    const s = this.stages.find((x) => x.code === this.project?.current_stage);
-    return s?.order || 0;
+    const s = this.stages.find((x) => x.acronym === this.project?.current_stage);
+    return s?.order_index || 0;
   }
 
   segmentClass(s: ProjectStage): string {
-    const isCompleted = (s.order || 0) < this.currentStageOrder;
-    const isCurrent = s.code === this.project?.current_stage;
+    const isCompleted = (s.order_index || 0) < this.currentStageOrder;
+    const isCurrent = s.acronym === this.project?.current_stage;
     if (isCurrent) return 'bg-brand-500';
     if (isCompleted) return 'bg-emerald-500/70';
     return 'bg-gray-200 dark:bg-white/10';
@@ -57,11 +57,11 @@ export class ProjectSummaryCardComponent {
   }
 
   get currentStage(): ProjectStage | null {
-    return this.stages.find((s) => s.code === this.project?.current_stage) || null;
+    return this.stages.find((s) => s.acronym === this.project?.current_stage) || null;
   }
 
   get currentStageName(): string {
-    return this.currentStage?.name || '';
+    return this.currentStage?.title || '';
   }
 
   get currentStageDueDateLabel(): string {

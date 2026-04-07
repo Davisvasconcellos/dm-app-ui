@@ -133,6 +133,7 @@ export class AuthService {
             this.localStorageService.setCurrentUser(response.data.user);
             this.currentUserSubject.next(response.data.user);
             this.isAuthenticatedSubject.next(true);
+            this.storeContext.clearContext();
           }
         }),
         catchError(this.handleError)
@@ -148,6 +149,7 @@ export class AuthService {
             this.localStorageService.setCurrentUser(response.data.user);
             this.currentUserSubject.next(response.data.user);
             this.isAuthenticatedSubject.next(true);
+            this.storeContext.clearContext();
           }
         }),
         catchError(this.handleError)
@@ -164,6 +166,7 @@ export class AuthService {
             this.localStorageService.setCurrentUser(response.data.user);
             this.currentUserSubject.next(response.data.user);
             this.isAuthenticatedSubject.next(true);
+            this.storeContext.clearContext();
           }
         }),
         catchError(this.handleError)

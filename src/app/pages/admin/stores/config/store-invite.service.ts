@@ -18,6 +18,7 @@ export interface StoreInvite {
     member_id_code?: string; // Deprecated
     store_member_id_code?: string; // ID do vínculo real
     store_member_status?: string;
+    user_id_code?: string; // UUID do usuário (tabela users)
     store?: {
         id_code: string;
         name: string;
@@ -52,7 +53,10 @@ export class StoreInviteService {
     }
 
     listInvites(storeId: string, status?: string): Observable<{ success: boolean, data: StoreInvite[] }> {
-        let params = new HttpParams().set('store_id', storeId);
+        const time = new Date().getTime();
+        let params = new HttpParams()
+            .set('store_id', storeId)
+            .set('_t', time.toString());
         if (status) {
             params = params.set('status', status);
         }

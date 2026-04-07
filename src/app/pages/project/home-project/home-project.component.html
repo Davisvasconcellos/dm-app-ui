@@ -7,26 +7,32 @@
       </div>
     } @else {
       @if (scopeEmpty) {
-        @if (invitesLoading) {
-          <div class="flex flex-col items-center justify-center rounded-2xl border border-gray-200 bg-white p-10 text-sm text-gray-500 dark:border-gray-800 dark:bg-gray-900/40 dark:text-gray-400">
-            <div class="h-8 w-8 animate-spin rounded-full border-4 border-solid border-brand-500 border-t-transparent"></div>
-            <div class="mt-3">Carregando convites...</div>
-          </div>
-        } @else {
-          @if (pendingInvites.length > 0) {
-            <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900/40">
-              <div class="text-sm font-semibold text-gray-900 dark:text-white">Convites pendentes</div>
-              <div class="mt-2 space-y-2">
-                @for (inv of pendingInvites; track inv.id_code) {
-                  <div class="flex items-center justify-between gap-3 rounded-xl border border-gray-100 bg-gray-50 p-4 dark:border-gray-800 dark:bg-white/[0.02]">
-                    <div class="min-w-0">
-                      <div class="truncate text-sm font-semibold text-gray-900 dark:text-white">
-                        {{ inv.store?.name || 'Unidade' }}
-                      </div>
-                      <div class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
-                        {{ inv.invited_email }}
-                      </div>
+        @if (pendingInvites.length > 0) {
+          <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900/40">
+            <div class="text-sm font-semibold text-gray-900 dark:text-white">Convites pendentes</div>
+            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              Aceite ou recuse para continuar. Com convites pendentes, a unidade não é escolhida automaticamente.
+            </p>
+            <div class="mt-2 space-y-2">
+              @for (inv of pendingInvites; track inv.id_code) {
+                <div class="flex items-center justify-between gap-3 rounded-xl border border-gray-100 bg-gray-50 p-4 dark:border-gray-800 dark:bg-white/[0.02]">
+                  <div class="min-w-0">
+                    <div class="truncate text-sm font-semibold text-gray-900 dark:text-white">
+                      {{ inv.store?.name || 'Unidade' }}
                     </div>
+                    <div class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                      {{ inv.invited_email }}
+                    </div>
+                  </div>
+                  <div class="flex shrink-0 items-center gap-2">
+                    <button
+                      type="button"
+                      class="rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900/40 dark:text-gray-200 dark:hover:bg-white/5 disabled:opacity-60"
+                      (click)="rejectPendingInvite(inv)"
+                      [disabled]="processingInvites.has(inv.id_code)"
+                    >
+                      Recusar
+                    </button>
                     <button
                       type="button"
                       class="rounded-xl bg-brand-500 px-4 py-2 text-xs font-semibold text-white hover:bg-brand-600 disabled:opacity-60"
@@ -36,19 +42,52 @@
                       Aceitar
                     </button>
                   </div>
-                }
-              </div>
-              <div class="mt-3 text-xs text-gray-500 dark:text-gray-400">
-                Após aceitar, você será redirecionado para o início para selecionar a unidade.
-              </div>
+                </div>
+              }
             </div>
-          } @else {
-            <div class="rounded-2xl border border-gray-200 bg-white p-5 text-sm text-gray-600 dark:border-gray-800 dark:bg-gray-900/40 dark:text-gray-300">
-              Você ainda não é membro de nenhum projeto. Solicite ao administrador da sua unidade (store) para te adicionar em um projeto.
-            </div>
-          }
+          </div>
+        } @else {
+          <div class="rounded-2xl border border-gray-200 bg-white p-5 text-sm text-gray-600 dark:border-gray-800 dark:bg-gray-900/40 dark:text-gray-300">
+            Você ainda não é membro de nenhum projeto. Solicite ao administrador da sua unidade (store) para te adicionar em um projeto.
+          </div>
         }
       } @else {
+        @if (pendingInvites.length > 0) {
+          <div class="rounded-2xl border border-amber-200/80 bg-amber-50/80 p-5 dark:border-amber-500/25 dark:bg-amber-500/10">
+            <div class="text-sm font-semibold text-gray-900 dark:text-white">Convites para novas unidades</div>
+            <p class="mt-1 text-xs text-gray-600 dark:text-gray-400">
+              Você participa das unidades abaixo e também tem convite(s). Resolva os convites ou escolha em qual unidade deseja trabalhar agora.
+            </p>
+            <div class="mt-3 space-y-2">
+              @for (inv of pendingInvites; track inv.id_code) {
+                <div class="flex items-center justify-between gap-3 rounded-xl border border-amber-100 bg-white/90 p-4 dark:border-amber-500/20 dark:bg-white/[0.04]">
+                  <div class="min-w-0">
+                    <div class="truncate text-sm font-semibold text-gray-900 dark:text-white">{{ inv.store?.name || 'Unidade' }}</div>
+                    <div class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">{{ inv.invited_email }}</div>
+                  </div>
+                  <div class="flex shrink-0 items-center gap-2">
+                    <button
+                      type="button"
+                      class="rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900/40 dark:text-gray-200 dark:hover:bg-white/5 disabled:opacity-60"
+                      (click)="rejectPendingInvite(inv)"
+                      [disabled]="processingInvites.has(inv.id_code)"
+                    >
+                      Recusar
+                    </button>
+                    <button
+                      type="button"
+                      class="rounded-xl bg-brand-500 px-4 py-2 text-xs font-semibold text-white hover:bg-brand-600 disabled:opacity-60"
+                      (click)="acceptPendingInvite(inv)"
+                      [disabled]="processingInvites.has(inv.id_code)"
+                    >
+                      Aceitar
+                    </button>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        }
         <div class="text-sm font-semibold text-gray-900 dark:text-white">Selecione uma unidade</div>
         <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
           @for (it of scopeItems; track it.store.id_code) {
@@ -81,6 +120,39 @@
       }
     }
   } @else {
+    @if (pendingInvites.length > 0) {
+      <div class="rounded-2xl border border-amber-200/80 bg-amber-50/80 p-4 dark:border-amber-500/25 dark:bg-amber-500/10">
+        <div class="text-xs font-semibold uppercase tracking-wide text-amber-900/90 dark:text-amber-200/90">Convites pendentes</div>
+        <div class="mt-2 space-y-2">
+          @for (inv of pendingInvites; track inv.id_code) {
+            <div class="flex items-center justify-between gap-2 rounded-xl border border-amber-100 bg-white/90 p-3 dark:border-amber-500/20 dark:bg-white/[0.04]">
+              <div class="min-w-0">
+                <div class="truncate text-sm font-semibold text-gray-900 dark:text-white">{{ inv.store?.name || 'Unidade' }}</div>
+                <div class="mt-0.5 text-[11px] text-gray-500 dark:text-gray-400">{{ inv.invited_email }}</div>
+              </div>
+              <div class="flex shrink-0 items-center gap-1.5">
+                <button
+                  type="button"
+                  class="rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-[11px] font-semibold text-gray-700 dark:border-gray-700 dark:bg-gray-900/40 dark:text-gray-200 disabled:opacity-60"
+                  (click)="rejectPendingInvite(inv)"
+                  [disabled]="processingInvites.has(inv.id_code)"
+                >
+                  Recusar
+                </button>
+                <button
+                  type="button"
+                  class="rounded-lg bg-brand-500 px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-brand-600 disabled:opacity-60"
+                  (click)="acceptPendingInvite(inv)"
+                  [disabled]="processingInvites.has(inv.id_code)"
+                >
+                  Aceitar
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
     <button
       type="button"
       class="relative w-full overflow-hidden rounded-2xl border p-4 shadow-sm transition dark:bg-gray-900/40"

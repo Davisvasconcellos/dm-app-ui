@@ -33,7 +33,9 @@ export class ProjectService {
     if (!storeId) return of(this.projectsSubject.value);
 
     const headers = this.getHeaders(storeId);
-    const params = new HttpParams().set('store_id', storeId);
+    const params = new HttpParams()
+      .set('store_id', storeId)
+      .set('_t', Date.now().toString());
     return this.http.get<any>(`${this.API_BASE_URL}/projects`, { headers, params }).pipe(
       map((resp) => this.extractProjects(resp)),
       tap((items) => this.projectsSubject.next(items)),
@@ -43,7 +45,8 @@ export class ProjectService {
 
   getMyScope(): Observable<{ store: any; projects: any[] }[]> {
     const headers = this.getHeaders();
-    return this.http.get<any>(`${this.API_BASE_URL}/me/scope`, { headers }).pipe(
+    const params = new HttpParams().set('_t', Date.now().toString());
+    return this.http.get<any>(`${this.API_BASE_URL}/me/scope`, { headers, params }).pipe(
       map((resp) => {
         const root = this.unwrapResponse(resp);
         const raw = resp?.data ?? root?.data ?? root ?? [];
@@ -57,7 +60,9 @@ export class ProjectService {
     const storeId = String(storeIdCode || '').trim();
     if (!storeId) return of(null);
     const headers = this.getHeaders(storeId);
-    const params = new HttpParams().set('store_id', storeId);
+    const params = new HttpParams()
+      .set('store_id', storeId)
+      .set('_t', Date.now().toString());
     return this.http.get<any>(`${this.API_BASE_URL}/me/today`, { headers, params }).pipe(
       map((resp) => this.unwrapResponse(resp)),
       catchError(() => of(null))
@@ -111,7 +116,8 @@ export class ProjectService {
     if (!clean) return of(null);
     const storeId = (this.storeContext.getActiveStore()?.id_code || '').trim();
     const headers = this.getHeaders(storeId || undefined);
-    const params = storeId ? new HttpParams().set('store_id', storeId) : undefined;
+    let params = new HttpParams().set('_t', Date.now().toString());
+    if (storeId) params = params.set('store_id', storeId);
     return this.http.get<any>(`${this.API_BASE_URL}/projects/${encodeURIComponent(clean)}`, { headers, params }).pipe(
       map((resp) => this.extractProject(resp)),
       catchError(() => of(null))
@@ -155,7 +161,7 @@ export class ProjectService {
           team_member_ids: null,
           status: payload.status ?? 'draft',
           current_stage: 'EP',
-          stages,
+          stages: stages.map(s => ({ ...s, status: 'planned' })),
           contract_total: null,
           burn_cost_total: null,
           updated_at: now.toISOString(),
@@ -175,7 +181,16 @@ export class ProjectService {
     return this.http.post<any>(`${this.API_BASE_URL}/projects/${encodeURIComponent(id)}/stages`, payload, { headers, params });
   }
 
-  addProjectMember(projectIdCode: string, payload: { user_id: string; role: string }): Observable<any> {
+  updateProjectStage(stageIdCode: string, payload: any): Observable<any> {
+    const id = String(stageIdCode || '').trim();
+    if (!id) return of(null);
+    const storeId = (this.storeContext.getActiveStore()?.id_code || '').trim();
+    const headers = this.getHeaders(storeId || undefined);
+    const params = storeId ? new HttpParams().set('store_id', storeId) : undefined;
+    return this.http.patch<any>(`${this.API_BASE_URL}/stages/${encodeURIComponent(id)}`, payload, { headers, params });
+  }
+
+  addProjectMember(projectIdCode: string, payload: { user_id: string; role: string; hourly_rate_override?: number | null; overhead_multiplier_override?: number | null; timezone_override?: string | null }): Observable<any> {
     const id = String(projectIdCode || '').trim();
     if (!id) return of(null);
     const storeId = (this.storeContext.getActiveStore()?.id_code || '').trim();
@@ -201,6 +216,21 @@ export class ProjectService {
 
   updateProjectStatus(projectIdCode: string, status: ProjectStatus): Observable<boolean> {
     return this.updateProject(projectIdCode, { status });
+  }
+
+  deleteProject(projectIdCode: string): Observable<boolean> {
+    const id = String(projectIdCode || '').trim();
+    if (!id) return of(false);
+    const storeId = (this.storeContext.getActiveStore()?.id_code || '').trim();
+    const headers = this.getHeaders(storeId || undefined);
+    const params = storeId ? new HttpParams().set('store_id', storeId) : undefined;
+    return this.http.delete<any>(`${this.API_BASE_URL}/projects/${encodeURIComponent(id)}`, { headers, params }).pipe(
+      map(() => true),
+      tap(() => {
+        if (storeId) this.refreshProjects(storeId).subscribe();
+      }),
+      catchError(() => of(false))
+    );
   }
 
   listMembers(): Observable<ProjectMember[]> {
@@ -282,10 +312,10 @@ export class ProjectService {
 
   private seedStages(): ProjectStage[] {
     return [
-      { code: 'EP', name: 'Estudo Preliminar', order: 1 },
-      { code: 'AP', name: 'Anteprojeto', order: 2 },
-      { code: 'EX', name: 'Executivo', order: 3 },
-      { code: 'VT', name: 'Vistoria', order: 4 },
+      { acronym: 'EP', title: 'Estudo Preliminar', order_index: 1, status: 'planned' },
+      { acronym: 'AP', title: 'Anteprojeto', order_index: 2, status: 'planned' },
+      { acronym: 'EX', title: 'Executivo', order_index: 3, status: 'planned' },
+      { acronym: 'VT', title: 'Vistoria', order_index: 4, status: 'planned' },
     ];
   }
 
@@ -464,10 +494,15 @@ export class ProjectService {
   private extractProject(resp: any): Project | null {
     const root = this.unwrapResponse(resp);
     const stagesFromResp = resp?.data?.stages ?? root?.data?.stages ?? null;
+    const membersFromResp = resp?.data?.members ?? root?.data?.members ?? null;
     const rawProject = resp?.data?.project ?? root?.data?.project ?? null;
     const raw =
       rawProject && typeof rawProject === 'object'
-        ? { ...rawProject, stages: Array.isArray(stagesFromResp) ? stagesFromResp : rawProject?.stages }
+        ? {
+            ...rawProject,
+            stages: Array.isArray(stagesFromResp) ? stagesFromResp : rawProject?.stages,
+            members: Array.isArray(membersFromResp) ? membersFromResp : rawProject?.members,
+          }
         : (resp?.data ?? root?.data ?? root ?? null);
     if (!raw || typeof raw !== 'object') return null;
     return this.normalizeProject(raw);
@@ -488,11 +523,11 @@ export class ProjectService {
     const stages = Array.isArray(raw?.stages)
       ? (raw.stages as any[]).map((s, idx) => {
           const idCode = String(s?.id_code || s?.id || '').trim() || undefined;
-          const code = String(s?.code || s?.acronym || s?.id_code || s?.id || `STG${idx + 1}`).trim();
-          const name = String(s?.name || s?.title || code).trim();
+          const acronym = String(s?.acronym || s?.code || s?.id_code || s?.id || `STG${idx + 1}`).trim();
+          const title = String(s?.title || s?.name || acronym).trim();
           const order =
-            typeof s?.order === 'number' ? s.order :
             typeof s?.order_index === 'number' ? s.order_index :
+            typeof s?.order === 'number' ? s.order :
             typeof s?.order_index === 'string' ? Number(s.order_index) :
             typeof s?.order === 'string' ? Number(s.order) :
             idx + 1;
@@ -501,21 +536,25 @@ export class ProjectService {
             contractValueRaw === null || contractValueRaw === undefined || contractValueRaw === ''
               ? null
               : Number(contractValueRaw);
-          const hoursRaw = s?.hours_estimated ?? s?.estimated_hours ?? null;
-          const hours_estimated = hoursRaw === null || hoursRaw === undefined || hoursRaw === '' ? null : Number(hoursRaw);
-          const color = s?.color ?? s?.color_1 ?? null;
+          const hoursRaw = s?.estimated_hours ?? s?.hours_estimated ?? null;
+          const estimated_hours = hoursRaw === null || hoursRaw === undefined || hoursRaw === '' ? null : Number(hoursRaw);
+          const color_1 = s?.color_1 ?? s?.color ?? null;
           const due_date = s?.due_date ?? null;
           const completed_at = s?.completed_at ?? null;
+          const status = (s?.status || 'planned') as 'planned' | 'active' | 'completed' | 'canceled';
+          
           return {
             id_code: idCode,
-            code,
-            name,
-            order: Number.isFinite(order) ? order : idx + 1,
+            acronym,
+            title,
+            order_index: Number.isFinite(order) ? order : idx + 1,
             contract_value: Number.isFinite(contract_value as any) ? contract_value : null,
-            hours_estimated: Number.isFinite(hours_estimated as any) ? hours_estimated : null,
-            color,
+            estimated_hours: Number.isFinite(estimated_hours as any) ? estimated_hours : null,
+            color_1,
+            color_2: s?.color_2 || null,
             due_date,
             completed_at,
+            status
           } satisfies ProjectStage;
         })
       : null;
@@ -537,6 +576,29 @@ export class ProjectService {
       stages,
       contract_total: raw?.contract_total ?? raw?.contract_value_total ?? null,
       burn_cost_total: raw?.burn_cost_total ?? null,
+      members: Array.isArray(raw?.members) ? (raw.members as any[]).map(m => {
+        const userRaw = m.user || {};
+        return {
+          id_code: String(m.id_code || m.id || '').trim(),
+          name: userRaw.name || m.name || 'User',
+          avatar_url: userRaw.avatar_url || m.avatar_url || null,
+          email: userRaw.email || m.email || null,
+          role: m.role || 'member',
+          status: m.status || 'offline',
+          hourly_rate_override: m.hourly_rate_override ?? null,
+          overhead_multiplier_override: m.overhead_multiplier_override ?? null,
+          timezone_override: m.timezone_override ?? null,
+          user: {
+            id: String(userRaw.id || userRaw.id_code || '').trim(),
+            id_code: String(userRaw.id_code || userRaw.id || '').trim(),
+            name: userRaw.name || '',
+            email: userRaw.email || '',
+            avatar_url: userRaw.avatar_url || null
+          },
+          today_project_pct: 0,
+          today_office_pct: 0
+        } satisfies ProjectMember;
+      }) : null,
       updated_at: raw?.updated_at ?? null,
     };
   }

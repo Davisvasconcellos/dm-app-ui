@@ -2,14 +2,16 @@ export type ProjectStageCode = string;
 
 export type ProjectStage = {
   id_code?: string;
-  code: ProjectStageCode;
-  name: string;
-  order: number;
+  title: string;
+  acronym?: string | null;
+  order_index?: number;
   contract_value?: number | null;
-  hours_estimated?: number | null;
-  color?: string | null;
+  estimated_hours?: number | null;
+  color_1?: string | null;
+  color_2?: string | null;
   due_date?: string | null;
   completed_at?: string | null;
+  status: 'planned' | 'active' | 'completed' | 'canceled';
 };
 
 export type ProjectStatus = 'draft' | 'active' | 'paused' | 'canceled' | 'published';
@@ -30,6 +32,7 @@ export type Project = {
   stages?: ProjectStage[] | null;
   contract_total?: number | null;
   burn_cost_total?: number | null;
+  members?: ProjectMember[] | null;
   updated_at?: string | null;
 };
 
@@ -56,7 +59,17 @@ export type ProjectMember = {
   role?: string | null;
   avatar_url?: string | null;
   cost_per_hour?: number | null;
-  status: ProjectSessionStatus;
+  hourly_rate_override?: number | null;
+  overhead_multiplier_override?: number | null;
+  timezone_override?: string | null;
+  status: 'active' | 'inactive' | ProjectSessionStatus;
+  user?: {
+    id: string;
+    id_code: string;
+    name: string;
+    email: string;
+    avatar_url?: string | null;
+  };
   today_project_pct: number;
   today_office_pct: number;
   current_project_id_code?: string | null;

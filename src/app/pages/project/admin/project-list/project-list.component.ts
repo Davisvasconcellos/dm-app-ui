@@ -1,9 +1,10 @@
 import { Component, OnDestroy, OnInit, inject } from '@angular/core';
+import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { ToastService } from '../../../../shared/services/toast.service';
 import { StoreContextService, Store } from '../../../../shared/services/store-context.service';
 import { ProjectService } from '../../project.service';
-import { Project, ProjectMember, ProjectStatus } from '../../project.types';
+import { Project, ProjectMember, ProjectStatus, ProjectStage } from '../../project.types';
 
 type StatusFilter = 'active' | 'draft' | 'paused' | 'canceled';
 type ViewMode = 'cards' | 'columns';
@@ -83,6 +84,33 @@ export class ProjectListComponent implements OnInit, OnDestroy {
     } else {
       this.filteredProjects = this.projects.filter((p) => p.status === this.statusFilter);
     }
+  }
+
+  private router = inject(Router);
+  
+  // ... existing injects ...
+  
+  onEditProject(p: Project): void {
+    this.router.navigate(['/project/admin/projects/edit', p.id_code]);
+  }
+
+  onDeleteProject(p: Project): void {
+    if (!confirm(`Deseja realmente excluir o projeto "${p.name}"? Esta ação não pode ser desfeita.`)) return;
+    this.isUpdatingStatus = true;
+    this.projectService.deleteProject(p.id_code).subscribe({
+      next: (ok) => {
+        this.isUpdatingStatus = false;
+        if (ok) {
+          this.toast.triggerToast('success', 'Excluído', 'Projeto removido com sucesso.');
+        } else {
+          this.toast.triggerToast('error', 'Erro', 'Falha ao excluir projeto.');
+        }
+      },
+      error: () => {
+        this.isUpdatingStatus = false;
+        this.toast.triggerToast('error', 'Erro', 'Falha ao excluir projeto.');
+      }
+    });
   }
 
   onPublishProject(p: Project): void {
@@ -169,24 +197,27 @@ export class ProjectListComponent implements OnInit, OnDestroy {
   }
 
   progressPct(p: Project): number {
-    const stages = Array.isArray(p?.stages) ? p.stages : [];
+    const stages = Array.isArray(p?.stages) ? (p.stages as ProjectStage[]) : [];
     const total = stages.length || 0;
     if (!total) return 0;
-    const current = stages.find((s) => s.code === p.current_stage);
-    const order = Number(current?.order || 0);
-    const maxOrder = Math.max(...stages.map((s) => Number(s.order || 0)));
+    const current = stages.find((s) => s.acronym === p.current_stage);
+    const order = Number(current?.order_index || 0);
+    const maxOrder = Math.max(...stages.map((s) => Number(s.order_index || 0)));
     if (!maxOrder) return 0;
     const pct = Math.max(0, Math.min(1, order / maxOrder));
     return Math.round(pct * 100);
   }
 
   teamForProject(p: Project): ProjectMember[] {
+    if (Array.isArray(p.members) && p.members.length > 0) return p.members;
+    
+    // Fallback para IDs se necessário
     const ids = Array.isArray(p.team_member_ids) ? p.team_member_ids : [];
     if (ids.length > 0) {
       const byId = new Map(this.members.map((m) => [m.id_code, m]));
       return ids.map((id) => byId.get(id)).filter((x): x is ProjectMember => !!x);
     }
-    return this.members.slice(0, 3);
+    return [];
   }
 
   memberInitials(m: ProjectMember): string {

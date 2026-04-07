@@ -65,6 +65,13 @@ const routes: Routes = [
     title: 'Adicionar Projeto',
   },
   {
+    path: 'admin/projects/edit/:id_code',
+    component: ProjectCreateComponent,
+    canActivate: [AuthGuard, RoleGuard],
+    data: { expectedRoles: ['admin', 'master', 'manager'] },
+    title: 'Editar Projeto',
+  },
+  {
     path: 'admin/sessions',
     component: ProjectSessionsComponent,
     canActivate: [AuthGuard, RoleGuard],

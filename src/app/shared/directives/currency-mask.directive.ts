@@ -25,87 +25,69 @@ export class CurrencyMaskDirective implements OnInit {
 
   @HostListener('input', ['$event'])
   onInput(event: any) {
-    const input = event.target as HTMLInputElement;
-    const value = input.value;
+    const input = this.el.nativeElement as HTMLInputElement;
+    let digits = input.value.replace(/\D/g, '');
 
-    const parsed = this.parseCurrencyInput(value);
-    if (parsed === null) {
-      input.value = '';
-      this.control.control?.setValue(null, { emitEvent: false, emitModelToViewChange: false, emitViewToModelChange: false });
+    if (!digits) {
+      this.updateModel(null);
       return;
     }
 
-    const formatted = this.formatCurrency(parsed);
-    
-    // Update view and model
-    input.value = formatted;
-    this.control.control?.setValue(parsed, { emitEvent: false, emitModelToViewChange: false, emitViewToModelChange: true });
+    // Estilo centavos: digitou 1500 -> 15.00
+    const cents = parseInt(digits, 10);
+    const parsedValue = cents / 100;
+    const formatted = this.formatCurrency(parsedValue);
 
-    // Force cursor to end immediately
+    if (input.value !== formatted) {
+      input.value = formatted;
+      this.updateModel(parsedValue);
+    }
+
     this.setCursorToEnd();
   }
 
   @HostListener('focus')
   onFocus() {
-    // Ensure cursor goes to end on focus
-    // Small delay to handle browser focus behavior
     setTimeout(() => this.setCursorToEnd(), 0);
   }
 
   @HostListener('blur')
   onBlur() {
     if (this.control.value !== null && this.control.value !== undefined) {
-      this.el.nativeElement.value = this.formatCurrency(this.control.value);
+      const val = Number(this.control.value);
+      this.el.nativeElement.value = this.formatCurrency(val);
     }
+  }
+
+  private updateModel(value: number | null) {
+    this.control.control?.setValue(value, { 
+      emitEvent: false, 
+      emitModelToViewChange: false, 
+      emitViewToModelChange: true 
+    });
   }
 
   private setCursorToEnd() {
     const input = this.el.nativeElement;
-    // Only set if input is focused to avoid stealing focus
     if (document.activeElement === input) {
-        const len = input.value.length;
-        if (input.setSelectionRange) {
-            input.setSelectionRange(len, len);
-        }
+      const len = input.value.length;
+      input.setSelectionRange(len, len);
     }
   }
 
   private format(value: number | string) {
     const num = typeof value === 'string' ? parseFloat(value) : value;
-    if (!isNaN(num)) {
-       this.el.nativeElement.value = this.formatCurrency(num);
+    if (num !== null && !isNaN(num)) {
+      this.el.nativeElement.value = this.formatCurrency(num);
     }
   }
 
   private formatCurrency(value: number): string {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
-      currency: 'BRL'
-    }).format(value);
-  }
-
-  private parseCurrencyInput(raw: string): number | null {
-    const s = String(raw || '').trim();
-    if (!s) return null;
-
-    const cleaned = s.replace(/[^\d,.\-]/g, '');
-    if (!cleaned) return null;
-
-    const negative = cleaned.includes('-');
-    const core = cleaned.replace(/-/g, '');
-    if (!core) return null;
-
-    let normalized: string;
-    if (core.includes(',')) {
-      normalized = core.replace(/\./g, '').replace(',', '.');
-    } else if (/^\d+\.\d{1,2}$/.test(core)) {
-      normalized = core;
-    } else {
-      normalized = core.replace(/\./g, '');
-    }
-
-    const n = Number.parseFloat(normalized);
-    if (!Number.isFinite(n)) return null;
-    return negative ? -n : n;
+      currency: 'BRL',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(value || 0);
   }
 }

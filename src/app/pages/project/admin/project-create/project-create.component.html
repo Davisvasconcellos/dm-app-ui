@@ -1,7 +1,9 @@
 <div class="space-y-6">
   <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
     <div>
-      <div class="text-lg font-semibold text-gray-900 dark:text-white">Adicionar projeto</div>
+      <div class="text-lg font-semibold text-gray-900 dark:text-white">
+        {{ projectIdCode ? 'Editar projeto' : 'Adicionar projeto' }}
+      </div>
       <div class="text-xs text-gray-500 dark:text-gray-400">
         Cadastre o projeto, etapas e equipe.
       </div>
@@ -14,13 +16,15 @@
       >
         Voltar
       </a>
-      <button
-        (click)="save()"
-        class="rounded-lg bg-brand-500 px-4 py-3 text-sm font-medium text-white hover:bg-brand-600 disabled:opacity-60"
-        [disabled]="isSubmitting || !name.trim() || !activeStore"
-      >
-        Salvar
-      </button>
+      @if (!projectIdCode) {
+        <button
+          (click)="save()"
+          class="rounded-lg bg-brand-500 px-4 py-3 text-sm font-medium text-white hover:bg-brand-600 disabled:opacity-60"
+          [disabled]="isSubmitting || !name.trim() || !activeStore"
+        >
+          Salvar e Criar Projeto
+        </button>
+      }
     </div>
   </div>
 
@@ -187,6 +191,18 @@
           </div>
         </div>
       </div>
+
+      @if (projectIdCode) {
+        <div class="mt-8 flex justify-end">
+          <button
+            class="rounded-lg bg-brand-600 px-6 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50"
+            (click)="saveProjectOnly()"
+            [disabled]="isSubmitting"
+          >
+            {{ isSubmitting ? 'Gravando...' : 'Gravar Dados do Projeto' }}
+          </button>
+        </div>
+      }
     </div>
   }
 
@@ -252,10 +268,10 @@
                 <div class="text-xs font-medium text-gray-700 dark:text-gray-200">Valor de recebimento</div>
                 <input
                   class="mt-1 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-brand-500 dark:border-gray-800 dark:bg-gray-900/40 dark:text-white"
-                  appCurrencyMask
+                  type="number"
                   [(ngModel)]="s.contract_value"
                   [ngModelOptions]="{ standalone: true }"
-                  placeholder="R$ 0,00"
+                  placeholder="0.00"
                 />
               </div>
 
@@ -300,50 +316,95 @@
           </div>
         }
       </div>
+
+      @if (projectIdCode) {
+        <div class="mt-8 flex justify-end">
+          <button
+            class="rounded-lg bg-brand-600 px-6 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50"
+            (click)="saveStagesOnly()"
+            [disabled]="isSubmitting"
+          >
+            {{ isSubmitting ? 'Gravando...' : 'Gravar Etapas' }}
+          </button>
+        </div>
+      }
     </div>
   }
 
   @if (activeTab === 'team') {
     <div class="rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900/40">
-      <div class="text-sm font-semibold text-gray-900 dark:text-white">Equipe</div>
-      <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-        Selecione colaboradores da unidade para vincular ao projeto.
+      <div class="text-sm font-semibold text-gray-900 dark:text-white">Equipe do Projeto</div>
+      
+      <div class="mt-3 flex items-start gap-3 rounded-xl border border-blue-100 bg-blue-50/30 p-4 text-sm text-blue-700 dark:border-blue-900/40 dark:bg-blue-900/10 dark:text-blue-300">
+        <i class="mt-0.5 text-lg">💡</i>
+        <div>
+          Os dados financeiros abaixo são os valores padrão do colaborador na unidade. 
+          Você pode <strong>personalizar</strong> estes valores para este projeto clicando no botão editar.
+        </div>
       </div>
 
-      <div class="mt-4 overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800">
+      <div class="mt-6 overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800">
         <div class="overflow-x-auto">
           <table class="w-full text-sm">
             <thead class="bg-gray-50 dark:bg-white/[0.03]">
               <tr>
-                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Selecionar</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Ativo</th>
                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Email</th>
                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Role</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Valor Hora (Base)</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Timezone</th>
+                <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400">Ações</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
               @for (c of collaborators; track c.user_id) {
                 <tr class="hover:bg-gray-50 dark:hover:bg-white/[0.03]">
                   <td class="px-4 py-3">
-                    <input type="checkbox" [(ngModel)]="c.selected" />
+                    <input type="checkbox" [(ngModel)]="c.selected" class="h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500" />
                   </td>
                   <td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-200">
-                    {{ c.email }}
+                    <div class="font-medium">{{ c.email }}</div>
                   </td>
                   <td class="px-4 py-3">
                     <select
-                      class="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-brand-500 dark:border-gray-800 dark:bg-gray-900/40 dark:text-white"
+                      class="rounded-lg border border-gray-200 bg-white px-2 py-1 text-sm text-gray-900 outline-none focus:border-brand-500 dark:border-gray-800 dark:bg-gray-900/40 dark:text-white"
                       [(ngModel)]="c.role"
                     >
-                      <option value="member">member</option>
-                      <option value="manager">manager</option>
+                      <option value="member">Membro</option>
+                      <option value="manager">Gestor</option>
+                      <option value="viewer">Visualizador</option>
                     </select>
+                  </td>
+                  <td class="px-4 py-3 text-gray-600 dark:text-gray-400">
+                    <div class="flex flex-col">
+                      <span [class.line-through]="c.hourly_rate_override">R$ {{ c.base_hourly_rate | number:'1.2-2' }}</span>
+                      @if (c.hourly_rate_override) {
+                        <span class="font-semibold text-brand-600 dark:text-brand-400 text-xs">Projeto: R$ {{ c.hourly_rate_override | number:'1.2-2' }}</span>
+                      }
+                    </div>
+                  </td>
+                  <td class="px-4 py-3 text-xs text-gray-500 dark:text-gray-400">
+                    <div class="flex flex-col">
+                      <span [class.line-through]="c.timezone_override">{{ c.timezone }}</span>
+                      @if (c.timezone_override) {
+                        <span class="font-semibold text-brand-600 dark:text-brand-400 text-[10px]">Projeto: {{ c.timezone_override }}</span>
+                      }
+                    </div>
+                  </td>
+                  <td class="px-4 py-3 text-right">
+                    <button
+                      class="rounded-md bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-200 dark:bg-white/10 dark:text-gray-200 dark:hover:bg-white/20"
+                      (click)="openMemberEdit(c)"
+                    >
+                      Editar overrides
+                    </button>
                   </td>
                 </tr>
               }
               @if (collaborators.length === 0) {
                 <tr>
-                  <td colspan="3" class="px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-400">
-                    Nenhum colaborador encontrado.
+                  <td colspan="6" class="px-4 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
+                    Nenhum colaborador encontrado na unidade.
                   </td>
                 </tr>
               }
@@ -351,9 +412,103 @@
           </table>
         </div>
       </div>
+
+      @if (projectIdCode) {
+        <div class="mt-8 flex justify-end">
+          <button
+            class="rounded-lg bg-brand-600 px-6 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50"
+            (click)="saveTeamOnly()"
+            [disabled]="isSubmitting"
+          >
+            {{ isSubmitting ? 'Gravando...' : 'Gravar Equipe' }}
+          </button>
+        </div>
+      }
     </div>
   }
 </div>
+
+<!-- Modal para edição de overrides do membro -->
+<app-modal [isOpen]="isMemberModalOpen" (close)="isMemberModalOpen = false" className="max-w-md p-0 overflow-hidden">
+  <div class="bg-gray-50 p-4 border-b border-gray-200 dark:bg-white/[0.03] dark:border-gray-800">
+    <div class="font-semibold text-gray-900 dark:text-white">Personalizar Membro no Projeto</div>
+    <div class="text-xs text-gray-500 dark:text-gray-400">{{ editingMember?.email }}</div>
+  </div>
+  
+  <div class="p-6 space-y-4" *ngIf="editingMember">
+    <div class="p-4 rounded-lg bg-orange-50 border border-orange-100 text-xs text-orange-800 dark:bg-orange-950/20 dark:border-orange-900/30 dark:text-orange-300">
+      <strong>Atenção:</strong> Alterações nestes valores serão válidas apenas para este projeto e futuras sessões de trabalho iniciadas nele.
+    </div>
+
+    <div>
+      <label class="text-xs font-medium text-gray-700 dark:text-gray-300">Valor Hora para este Projeto (Opcional)</label>
+      <div class="mt-1 flex items-center gap-2">
+        <input 
+          type="number" 
+          [(ngModel)]="editingMember.hourly_rate_override"
+          class="block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-brand-500 dark:border-gray-800 dark:bg-gray-900/40 dark:text-white"
+          placeholder="Ex: 85.00"
+        />
+        <button 
+          *ngIf="editingMember.hourly_rate_override !== null"
+          (click)="editingMember.hourly_rate_override = null"
+          class="text-xs text-red-500 hover:text-red-600"
+        >
+          Resetar
+        </button>
+      </div>
+      <div class="mt-1 text-[10px] text-gray-500">Valor base atual: R$ {{ editingMember.base_hourly_rate }}</div>
+    </div>
+
+    <div>
+      <label class="text-xs font-medium text-gray-700 dark:text-gray-300">Overhead Rate Multiplier (Opcional)</label>
+      <input 
+        type="number" 
+        step="0.01"
+        [(ngModel)]="editingMember.overhead_multiplier_override"
+        class="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-brand-500 dark:border-gray-800 dark:bg-gray-900/40 dark:text-white"
+        placeholder="Ex: 1.5"
+      />
+      <div class="mt-1 text-[10px] text-gray-500">Rate base atual: {{ editingMember.base_overhead_multiplier }}x</div>
+    </div>
+
+    <div>
+      <label class="text-xs font-medium text-gray-700 dark:text-gray-300">Timezone para este Projeto (Opcional)</label>
+      <div class="mt-1 flex items-center gap-2">
+        <select 
+          [(ngModel)]="editingMember.timezone_override"
+          class="block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-brand-500 dark:border-gray-800 dark:bg-gray-900/40 dark:text-white"
+        >
+          <option [ngValue]="null">Usar padrão da unidade</option>
+          <option *ngFor="let tz of timezones" [value]="tz.value">{{ tz.label }}</option>
+        </select>
+        <button 
+          *ngIf="editingMember.timezone_override"
+          (click)="editingMember.timezone_override = null"
+          class="text-xs text-red-500 hover:text-red-600"
+        >
+          Resetar
+        </button>
+      </div>
+      <div class="mt-1 text-[10px] text-gray-500">Timezone base atual: {{ editingMember.timezone }}</div>
+    </div>
+  </div>
+
+  <div class="flex items-center justify-end gap-3 border-t border-gray-200 bg-gray-50 p-4 dark:border-gray-800 dark:bg-white/[0.03]">
+    <button
+      class="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-800 dark:text-gray-200 dark:hover:bg-white/5"
+      (click)="isMemberModalOpen = false"
+    >
+      Cancelar
+    </button>
+    <button
+      class="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700"
+      (click)="saveMemberEdit()"
+    >
+      Confirmar Alterações
+    </button>
+  </div>
+</app-modal>
 
 <app-modal [isOpen]="isProgressModalOpen" (close)="closeProgressModal()" className="max-w-lg p-6">
   <div class="text-lg font-semibold text-gray-900 dark:text-white">Processando</div>

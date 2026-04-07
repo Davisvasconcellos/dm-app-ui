@@ -1,5 +1,6 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { forkJoin } from 'rxjs';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { OrganizationService } from './organization.service';
 import { ImageUploadService } from '../../../shared/services/image-upload.service';
@@ -11,6 +12,7 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { LocalStorageService } from '../../../shared/services/local-storage.service';
 import { StoreInviteService, StoreInvite, CreateInvitePayload } from '../stores/config/store-invite.service';
 import { StoreContextService } from '../../../shared/services/store-context.service';
+import { MemberCostsService, MemberCost } from './member-costs.service';
 import { LabelComponent } from '../../../shared/components/form/label/label.component';
 import { InputFieldComponent } from '../../../shared/components/form/input/input-field.component';
 import { SelectComponent } from '../../../shared/components/form/select/select.component';
@@ -336,6 +338,7 @@ import { NgClass } from '@angular/common';
                         <tr>
                           <th class="px-4 py-2 text-left font-medium text-gray-500 dark:text-gray-400">Usuário</th>
                           <th class="px-4 py-2 text-left font-medium text-gray-500 dark:text-gray-400">Role</th>
+                          <th class="px-4 py-2 text-left font-medium text-gray-500 dark:text-gray-400">Valor Hora</th>
                           <th class="px-4 py-2 text-left font-medium text-gray-500 dark:text-gray-400">Ações</th>
                         </tr>
                       </thead>
@@ -348,9 +351,10 @@ import { NgClass } from '@angular/common';
                             </div>
                           </td>
                           <td class="px-4 py-3 capitalize text-gray-600 dark:text-gray-300">{{ colab.role }}</td>
+                          <td class="px-4 py-3 text-gray-600 dark:text-gray-300">{{ colab.hourly_rate ? (colab.hourly_rate | currency:'BRL') : 'Não definido' }}</td>
                           <td class="px-4 py-3">
                             <div class="flex items-center gap-4">
-                               <a [routerLink]="['/admin/stores', st.id_code, 'config']" [queryParams]="{tab: 'collaborators'}" class="text-brand-500 hover:text-brand-600 text-xs font-medium">Gerenciar</a>
+                               <button (click)="openMemberCostModal(st.id_code, colab)" class="text-brand-500 hover:text-brand-600 text-xs font-medium">Gerenciar Colaborador</button>
                                <button (click)="openDeleteCollaboratorModal(st.id_code, colab)" class="text-gray-400 hover:text-error-500 transition-colors" title="Excluir da Store">
                                  <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                                </button>
@@ -478,6 +482,50 @@ import { NgClass } from '@angular/common';
             </div>
           </div>
         </app-modal>
+        
+        <!-- Member Cost Modal -->
+        <app-modal [isOpen]="isMemberCostModalOpen" (close)="closeMemberCostModal()" className="max-w-[400px] w-full mx-auto">
+          <div class="p-6">
+            <h3 class="mb-5 text-xl font-bold text-gray-800 dark:text-white">Gerenciar Colaborador</h3>
+            <p class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-5">{{ editingColab?.email }}</p>
+            <form [formGroup]="memberCostForm" (ngSubmit)="submitMemberCost()" class="space-y-4">
+              
+              <div>
+                <app-label>Cargo (Role)</app-label>
+                <app-select [value]="memberCostForm.get('role')?.value"
+                  (valueChange)="memberCostForm.get('role')?.setValue($event)"
+                  [options]="[{value: 'manager', label: 'Gerente'}, {value: 'collaborator', label: 'Colaborador'}, {value: 'viewer', label: 'Observador'}]" />
+              </div>
+
+              <div>
+                <app-label>Fuso Horário</app-label>
+                <app-select [value]="memberCostForm.get('timezone')?.value"
+                  (valueChange)="memberCostForm.get('timezone')?.setValue($event)"
+                  [options]="timezoneOptions"
+                  placeholder="Selecione o fuso horário" />
+                <p class="text-xs text-gray-400 mt-1 dark:text-gray-500">Padrão da organização caso vazio.</p>
+              </div>
+
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <app-label>Valor Hora (R$)*</app-label>
+                  <app-input-field type="number" formControlName="hourly_rate" placeholder="0.00" />
+                </div>
+                <div>
+                  <app-label>Impostos (+%)</app-label>
+                  <app-input-field type="number" formControlName="overhead_multiplier" placeholder="Ex: 1.2" />
+                </div>
+              </div>
+
+              <div class="mt-6 flex justify-end gap-3 pt-4">
+                <app-button type="button" variant="outline" (click)="closeMemberCostModal()">Cancelar</app-button>
+                <app-button type="submit" [disabled]="memberCostForm.invalid || isSubmittingCost">
+                  {{ isSubmittingCost ? 'Salvando...' : 'Salvar' }}
+                </app-button>
+              </div>
+            </form>
+          </div>
+        </app-modal>
       </div>
     </div>
   `
@@ -524,6 +572,76 @@ export class OrganizationsComponent implements OnInit {
   showInviteLinkModal: boolean = false;
   private readonly INVITE_LINKS_CACHE_KEY = 'dm_invite_links_cache';
 
+  isMemberCostModalOpen = false;
+  editingColab: any = null;
+  editingColabStoreId: string = '';
+  memberCostForm: FormGroup;
+  isSubmittingCost = false;
+  activeCostRecord: MemberCost | null = null;
+  
+  timezoneOptions = [
+    // --- BRASIL ---
+    { value: "America/Sao_Paulo", label: "Brasil - Brasília (SP, RJ, Sul, MG, NE)" },
+    { value: "America/Manaus", label: "Brasil - Amazonas (AM, RR, RO)" },
+    { value: "America/Cuiaba", label: "Brasil - Mato Grosso (MT)" },
+    { value: "America/Campo_Grande", label: "Brasil - Mato Grosso do Sul (MS)" },
+    { value: "America/Rio_Branco", label: "Brasil - Acre (AC)" },
+    { value: "America/Noronha", label: "Brasil - Fernando de Noronha" },
+
+    // --- PORTUGAL & EUROPA (Forte presença brasileira) ---
+    { value: "Europe/Lisbon", label: "Portugal - Lisboa/Porto" },
+    { value: "Atlantic/Madeira", label: "Portugal - Ilha da Madeira" },
+    { value: "Atlantic/Azores", label: "Portugal - Açores" },
+    { value: "Europe/London", label: "Reino Unido - Londres" },
+    { value: "Europe/Madrid", label: "Espanha - Madrid/Barcelona" },
+    { value: "Europe/Paris", label: "França - Paris" },
+    { value: "Europe/Berlin", label: "Alemanha - Berlim" },
+    { value: "Europe/Zurich", label: "Suíça - Zurique/Genebra" },
+    { value: "Europe/Dublin", label: "Irlanda - Dublin" },
+    { value: "Europe/Rome", label: "Itália - Roma/Milão" },
+
+    // --- OCEANIA (Seus clientes na Austrália) ---
+    { value: "Australia/Sydney", label: "Austrália - Sydney, Melbourne, Canberra" },
+    { value: "Australia/Adelaide", label: "Austrália - Adelaide" },
+    { value: "Australia/Brisbane", label: "Austrália - Brisbane (Queensland)" },
+    { value: "Australia/Perth", label: "Austrália - Perth" },
+    { value: "Pacific/Auckland", label: "Nova Zelândia - Auckland/Wellington" },
+
+    // --- AMÉRICA DO NORTE ---
+    { value: "America/New_York", label: "EUA - Nova York, Miami, Orlando (Eastern)" },
+    { value: "America/Chicago", label: "EUA - Chicago, Texas (Central)" },
+    { value: "America/Denver", label: "EUA - Denver (Mountain)" },
+    { value: "America/Los_Angeles", label: "EUA - Los Angeles, San Francisco (Pacific)" },
+    { value: "America/Toronto", label: "Canadá - Toronto, Montreal" },
+    { value: "America/Vancouver", label: "Canadá - Vancouver" },
+
+    // --- AMÉRICA DO SUL & CENTRAL ---
+    { value: "America/Argentina/Buenos_Aires", label: "Argentina - Buenos Aires" },
+    { value: "America/Montevideo", label: "Uruguai - Montevidéu" },
+    { value: "America/Santiago", label: "Chile - Santiago" },
+    { value: "America/Asuncion", label: "Paraguai - Assunção" },
+    { value: "America/La_Paz", label: "Bolívia - La Paz" },
+    { value: "America/Bogota", label: "Colômbia - Bogotá" },
+    { value: "America/Lima", label: "Peru - Lima" },
+    { value: "America/Mexico_City", label: "México - Cidade do México" },
+
+    // --- ÁSIA & ORIENTE MÉDIO ---
+    { value: "Asia/Tokyo", label: "Japão - Tóquio" },
+    { value: "Asia/Shanghai", label: "China - Xangai/Pequim" },
+    { value: "Asia/Dubai", label: "EAU - Dubai" },
+    { value: "Asia/Qatar", label: "Catar - Doha" },
+    { value: "Asia/Jerusalem", label: "Israel - Jerusalém/Tel Aviv" },
+    { value: "Asia/Singapore", label: "Singapura" },
+
+    // --- ÁFRICA ---
+    { value: "Africa/Luanda", label: "Angola - Luanda" },
+    { value: "Africa/Maputo", label: "Moçambique - Maputo" },
+    { value: "Africa/Johannesburg", label: "África do Sul - Joanesburgo" },
+    { value: "Africa/Cairo", label: "Egito - Cairo" }
+  ];
+
+  private memberCostsService = inject(MemberCostsService);
+
   private fb = inject(FormBuilder);
   private orgService = inject(OrganizationService);
   private storeService = inject(StoreService);
@@ -547,6 +665,14 @@ export class OrganizationsComponent implements OnInit {
       role: ['collaborator', Validators.required],
       modules: [[]],
       expires_in_days: [7]
+    });
+
+    const today = new Date().toISOString().substring(0, 10);
+    this.memberCostForm = this.fb.group({
+      hourly_rate: [null, [Validators.required, Validators.min(0)]],
+      overhead_multiplier: [null],
+      timezone: ['America/Sao_Paulo'],
+      role: ['collaborator', Validators.required]
     });
 
     this.recomputeModuleOptions();
@@ -870,23 +996,124 @@ export class OrganizationsComponent implements OnInit {
         this.storeUserGroups[storeId].pendingInvites = allInvites.filter(i => i.status !== 'accepted');
         this.storeUserGroups[storeId].collaborators = allInvites.filter(i => i.status === 'accepted' && i.store_member_status === 'active').map(i => {
           const memberId = i.store_member_id_code || i.member_id_code;
+          
+          const raw = i as any;
+          const userObj = raw.user || raw.invited_user || {};
+          const userId = userObj.id_code || userObj.id || raw.user_id_code || raw.user_id || i.member_id_code;
 
           return {
             id: i.id_code,
             member_id: memberId,
+            user_id: userId,
             name: i.invited_email.split('@')[0],
             email: i.invited_email,
             role: i.role,
-            permissions: i.permissions
+            permissions: i.permissions,
+            hourly_rate: null,
+            cost_record: null
           };
         });
 
-        this.storeUserGroups[storeId].isLoading = false;
-        this.storeUserGroups[storeId].hasLoaded = true;
+        // Buscar Custos de Membros e mesclar
+        this.memberCostsService.getMemberCosts(storeId).subscribe({
+          next: (costRes) => {
+            const costs = Array.isArray(costRes?.data) ? costRes.data : [];
+            console.log('--- FETCH COSTS FOR STORE', storeId, '---', costs);
+            this.storeUserGroups[storeId].collaborators = this.storeUserGroups[storeId].collaborators.map(c => {
+               const cost = costs.find((x: any) => String(x.user_id) === String(c.user_id)) || 
+                            costs.find((x: any) => String(x.user_id) === String(c.member_id));
+               if (cost) {
+                 console.log('Found cost for colab:', c.user_id, '-> timezone:', cost.timezone);
+                 c.hourly_rate = cost.hourly_rate;
+                 c.cost_record = cost;
+               }
+               return c;
+            });
+          },
+          complete: () => {
+             this.storeUserGroups[storeId].isLoading = false;
+             this.storeUserGroups[storeId].hasLoaded = true;
+          }
+        });
       },
       error: () => {
         this.storeUserGroups[storeId].isLoading = false;
         this.toast.triggerToast('error', 'Erro', 'Falha ao carregar usuários da loja.');
+      }
+    });
+  }
+
+  // --- Member Cost Management ---
+
+  openMemberCostModal(storeId: string, colab: any) {
+    this.editingColab = colab;
+    this.editingColabStoreId = storeId;
+    this.activeCostRecord = colab.cost_record || null;
+    
+    // Assegurar que role vai casar com as options do select convertendo pra minúsculo
+    const currentRole = colab.role ? String(colab.role).toLowerCase().trim() : 'collaborator';
+    
+    if (this.activeCostRecord) {
+      this.memberCostForm.patchValue({
+        hourly_rate: this.activeCostRecord.hourly_rate,
+        overhead_multiplier: this.activeCostRecord.overhead_multiplier || null,
+        timezone: this.activeCostRecord.timezone || 'America/Sao_Paulo',
+        role: currentRole
+      });
+    } else {
+      this.memberCostForm.reset({
+        hourly_rate: null,
+        overhead_multiplier: null,
+        timezone: 'America/Sao_Paulo',
+        role: currentRole
+      });
+    }
+    
+    this.isMemberCostModalOpen = true;
+  }
+
+  closeMemberCostModal() {
+    this.isMemberCostModalOpen = false;
+    this.editingColab = null;
+    this.editingColabStoreId = '';
+    this.activeCostRecord = null;
+  }
+
+  submitMemberCost() {
+    if (this.memberCostForm.invalid || !this.editingColab) return;
+    this.isSubmittingCost = true;
+
+    const formVal = this.memberCostForm.value;
+    const payload: MemberCost = {
+      user_id: this.editingColab.user_id || this.editingColab.member_id,
+      hourly_rate: Number(formVal.hourly_rate),
+      overhead_multiplier: formVal.overhead_multiplier ? Number(formVal.overhead_multiplier) : undefined,
+      start_date: new Date().toISOString().substring(0, 10), // Required in API, hidden in UI
+      end_date: null,
+      timezone: formVal.timezone
+    };
+    
+    const cost$ = this.activeCostRecord?.id_code
+      ? this.memberCostsService.updateMemberCost(this.editingColabStoreId, this.activeCostRecord.id_code, payload)
+      : this.memberCostsService.createMemberCost(this.editingColabStoreId, payload);
+
+    const storeMemberIdCode = this.editingColab.member_id;
+    const requests = [cost$];
+    
+    if (formVal.role && storeMemberIdCode && String(formVal.role).toLowerCase() !== String(this.editingColab.role).toLowerCase()) {
+      requests.push(this.storeService.updateStoreMember(this.editingColabStoreId, storeMemberIdCode, { role: formVal.role }));
+    }
+
+    forkJoin(requests).subscribe({
+      next: () => {
+        this.toast.triggerToast('success', 'Sucesso', 'Configurações atualizadas com sucesso.');
+        this.isSubmittingCost = false;
+        this.closeMemberCostModal();
+        this.fetchStoreUsers(this.editingColabStoreId, true);
+      },
+      error: () => {
+        this.toast.triggerToast('error', 'Erro', 'Falha ao atualizar colaborador.');
+        this.isSubmittingCost = false;
       }
     });
   }

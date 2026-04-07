@@ -95,6 +95,11 @@ export class StoreService {
     return this.http.put(`${this.API_BASE_URL}/stores/${idCode}/schedule`, schedule, { headers });
   }
 
+  updateStoreMember(storeIdCode: string, memberIdCode: string, data: { role?: string }): Observable<any> {
+    const headers = { 'Authorization': `Bearer ${this.authService.getAuthToken()}` };
+    return this.http.patch(`${this.API_BASE_URL}/stores/${storeIdCode}/members/${memberIdCode}`, data, { headers });
+  }
+
   removeStoreMember(storeIdCode: string, memberIdCode: string): Observable<any> {
     const headers = { 'Authorization': `Bearer ${this.authService.getAuthToken()}` };
     return this.http.delete(`${this.API_BASE_URL}/stores/${storeIdCode}/members/${memberIdCode}`, { headers });

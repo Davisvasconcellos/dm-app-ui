@@ -1,6 +1,6 @@
 import { Component, ElementRef, OnDestroy, OnInit, QueryList, ViewChildren, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { Subscription } from 'rxjs';
+import { Subscription, forkJoin, of, catchError } from 'rxjs';
 import { StoreInviteService, StoreInvite } from '../../admin/stores/config/store-invite.service';
 import { ToastService } from '../../../shared/services/toast.service';
 import { AuthService } from '../../../shared/services/auth.service';
@@ -65,7 +65,6 @@ export class HomeProjectComponent implements OnInit, OnDestroy {
   scopeLoading = true;
   scopeItems: ScopeItem[] = [];
   scopeEmpty = false;
-  invitesLoading = false;
   pendingInvites: StoreInvite[] = [];
   processingInvites = new Set<string>();
 
@@ -114,6 +113,7 @@ export class HomeProjectComponent implements OnInit, OnDestroy {
         this.stageHistoryItems = [];
         this.stopHeartbeatLoop();
         if (st?.id_code) {
+          this.refreshPendingInvitesOnly();
           if (this.selectedProjectIdCode) this.restoreProjectStageHistory(this.selectedProjectIdCode);
           this.loadGlobalToday(st.id_code);
         } else {
@@ -301,58 +301,25 @@ export class HomeProjectComponent implements OnInit, OnDestroy {
 
   private loadScope(): void {
     this.scopeLoading = true;
-    this.projectService.getMyScope().subscribe({
-      next: (itemsRaw) => {
-        const parsed = (itemsRaw || [])
-          .map((it: any) => {
-            const st = it?.store;
-            const idCode = String(st?.id_code || st?.id || '').trim();
-            if (!idCode) return null;
-            const store: ScopeStore = {
-              id_code: idCode,
-              name: String(st?.name || '').trim() || idCode,
-              slug: st?.slug ? String(st.slug) : null,
-              logo_url: st?.logo_url ? String(st.logo_url) : null,
-              banner_url: st?.banner_url ? String(st.banner_url) : null,
-              my_role: st?.my_role ? String(st.my_role) : null,
-              my_permissions: Array.isArray(st?.my_permissions) ? (st.my_permissions as string[]) : [],
-            };
-            const projects = Array.isArray(it?.projects) ? (it.projects as any[]) : [];
-            return { store, projects } satisfies ScopeItem;
-          })
-          .filter((x: any): x is ScopeItem => !!x);
 
-        this.scopeItems = parsed;
-        this.scopeLoading = false;
-        this.scopeEmpty = parsed.length === 0;
-        if (this.scopeEmpty) this.loadPendingInvites();
-        else {
-          this.pendingInvites = [];
-          this.invitesLoading = false;
-        }
+    forkJoin({
+      scope: this.projectService.getMyScope(),
+      invites: this.inviteService.getMyInvites('pending').pipe(
+        catchError(() => of({ success: true as const, data: [] as StoreInvite[] }))
+      ),
+    }).subscribe({
+      next: ({ scope: itemsRaw, invites: invRes }) => {
+        const parsed = this.parseScopeItems(itemsRaw || []);
+        const list = Array.isArray(invRes?.data) ? invRes.data : [];
+        const pending = list.filter((i) => i.status === 'pending');
 
-        const current = this.storeContext.getActiveStore();
-        if (current?.id_code) {
-          const match = parsed.find((x) => x.store.id_code === current.id_code);
-          if (match) {
-            this.applyScopeProjects(match);
-            return;
-          }
-          this.storeContext.setActiveStore(null);
-        }
-
-        if (parsed.length === 1) {
-          this.selectScopeStore(parsed[0]);
-        } else if (parsed.length === 0) {
-          this.projectService.setProjectsFromExternal([]);
-          this.isLoading = false;
-        }
+        this.applyScopeAndInvites(parsed, pending);
       },
       error: () => {
         this.scopeItems = [];
         this.scopeLoading = false;
         this.scopeEmpty = true;
-        this.loadPendingInvites();
+        this.pendingInvites = [];
         this.projectService.setProjectsFromExternal([]);
         this.storeContext.setActiveStore(null);
         this.isLoading = false;
@@ -360,19 +327,68 @@ export class HomeProjectComponent implements OnInit, OnDestroy {
     });
   }
 
-  private loadPendingInvites(): void {
-    this.invitesLoading = true;
+  private parseScopeItems(itemsRaw: any[]): ScopeItem[] {
+    return (itemsRaw || [])
+      .map((it: any) => {
+        const st = it?.store;
+        const idCode = String(st?.id_code || st?.id || '').trim();
+        if (!idCode) return null;
+        const store: ScopeStore = {
+          id_code: idCode,
+          name: String(st?.name || '').trim() || idCode,
+          slug: st?.slug ? String(st.slug) : null,
+          logo_url: st?.logo_url ? String(st.logo_url) : null,
+          banner_url: st?.banner_url ? String(st.banner_url) : null,
+          my_role: st?.my_role ? String(st.my_role) : null,
+          my_permissions: Array.isArray(st?.my_permissions) ? (st.my_permissions as string[]) : [],
+        };
+        const projects = Array.isArray(it?.projects) ? (it.projects as any[]) : [];
+        return { store, projects } satisfies ScopeItem;
+      })
+      .filter((x: any): x is ScopeItem => !!x);
+  }
+
+  /** Atualiza só a lista de convites (ex.: na Home com unidade já escolhida). */
+  private refreshPendingInvitesOnly(): void {
     this.inviteService.getMyInvites('pending').subscribe({
       next: (res) => {
         const list = Array.isArray(res?.data) ? res.data : [];
         this.pendingInvites = list.filter((i) => i.status === 'pending');
-        this.invitesLoading = false;
       },
       error: () => {
         this.pendingInvites = [];
-        this.invitesLoading = false;
       },
     });
+  }
+
+  private applyScopeAndInvites(parsed: ScopeItem[], pendingInvites: StoreInvite[]): void {
+    this.scopeItems = parsed;
+    this.scopeLoading = false;
+    this.scopeEmpty = parsed.length === 0;
+    this.pendingInvites = pendingInvites;
+
+    const hasPendingInvites = pendingInvites.length > 0;
+
+    if (hasPendingInvites) {
+      this.storeContext.setActiveStore(null);
+    } else {
+      const current = this.storeContext.getActiveStore();
+      if (current?.id_code) {
+        const match = parsed.find((x) => x.store.id_code === current.id_code);
+        if (match) {
+          this.applyScopeProjects(match);
+          return;
+        }
+        this.storeContext.setActiveStore(null);
+      }
+    }
+
+    if (!hasPendingInvites && parsed.length === 1) {
+      this.selectScopeStore(parsed[0]);
+    } else if (parsed.length === 0) {
+      this.projectService.setProjectsFromExternal([]);
+      this.isLoading = false;
+    }
   }
 
   acceptPendingInvite(inv: StoreInvite): void {
@@ -386,17 +402,37 @@ export class HomeProjectComponent implements OnInit, OnDestroy {
           next: () => {
             this.processingInvites.delete(inv.id_code);
             this.storeContext.setActiveStore(null);
-            this.router.navigate(['/'], { replaceUrl: true });
+            this.loadScope();
           },
           error: () => {
             this.processingInvites.delete(inv.id_code);
             this.storeContext.setActiveStore(null);
-            this.router.navigate(['/'], { replaceUrl: true });
+            this.loadScope();
           },
         });
       },
       error: () => {
         this.toast.triggerToast('error', 'Erro', 'Não foi possível aceitar o convite.');
+        this.processingInvites.delete(inv.id_code);
+      },
+    });
+  }
+
+  rejectPendingInvite(inv: StoreInvite): void {
+    if (!inv?.id_code) return;
+    if (this.processingInvites.has(inv.id_code)) return;
+    const name = inv.store?.name || 'esta unidade';
+    if (!confirm(`Recusar o convite para ${name}?`)) return;
+    this.processingInvites.add(inv.id_code);
+    this.inviteService.revokeMyInvite(inv.id_code).subscribe({
+      next: () => {
+        this.toast.triggerToast('success', 'Sucesso', 'Convite recusado.');
+        this.processingInvites.delete(inv.id_code);
+        this.storeContext.setActiveStore(null);
+        this.loadScope();
+      },
+      error: () => {
+        this.toast.triggerToast('error', 'Erro', 'Não foi possível recusar o convite.');
         this.processingInvites.delete(inv.id_code);
       },
     });
