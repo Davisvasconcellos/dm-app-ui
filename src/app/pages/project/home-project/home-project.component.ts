@@ -376,10 +376,19 @@ export class HomeProjectComponent implements OnInit, OnDestroy {
   }
 
   projectAvatars(p: Project): ProjectMember[] {
+    // Prefer members embedded in the project, fallback to global members list
+    if (p.members && p.members.length > 0) return p.members.slice(0, 4);
     const projectId = p?.id_code || '';
     const byProject = (this.members || []).filter((m) => m.current_project_id_code === projectId);
     const list = byProject.length ? byProject : this.members || [];
-    return list.slice(0, 3);
+    return list.slice(0, 4);
+  }
+
+  formatProjectDate(dateStr: string | null | undefined): string {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return '';
+    return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' });
   }
 
   private formatDurationHms(ms: number): string {

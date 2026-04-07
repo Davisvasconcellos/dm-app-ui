@@ -206,63 +206,74 @@
           <div class="-mx-3 overflow-x-auto px-3 pb-2">
             <div class="flex snap-x snap-mandatory gap-4">
               @for (p of projects; track p.id_code) {
-                <button #projectCardEl type="button" class="snap-start text-left" (click)="onProjectCardClick(p)">
+                <button #projectCardEl type="button" class="snap-start text-left shrink-0" (click)="onProjectCardClick(p)">
                   <div
-                    class="relative h-[148px] w-[244px] overflow-hidden rounded-2xl border bg-white shadow-sm dark:bg-white/[0.03]"
+                    class="relative w-[220px] overflow-hidden rounded-2xl border bg-white shadow-sm transition-all duration-200 dark:bg-white/[0.03]"
                     [ngClass]="p.id_code === selectedProjectIdCode
                       ? 'border-emerald-200 bg-emerald-50/40 dark:border-emerald-400/25 dark:bg-emerald-400/10'
                       : 'border-gray-200 dark:border-gray-800'"
                   >
+                    <!-- Selected left border -->
                     <div
                       class="absolute left-0 top-0 bottom-0 w-1.5"
                       [ngClass]="p.id_code === selectedProjectIdCode ? 'bg-gradient-to-b from-emerald-500 to-emerald-300' : 'bg-transparent'"
                     ></div>
 
-                    <div class="relative h-full p-4 flex flex-col justify-between">
-                      <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-2">
-                          <div class="h-9 w-9 overflow-hidden rounded-xl bg-gray-100 dark:bg-white/10 flex items-center justify-center">
-                            @if (p.logo_url) {
-                              <img [src]="p.logo_url" class="h-full w-full object-cover" alt="logo" />
-                            } @else {
-                              <div class="text-sm font-semibold text-gray-700 dark:text-gray-200">{{ projectLogoLetter(p) }}</div>
+                    <div class="flex flex-col gap-3 p-4 pl-5">
+                      <!-- Row 1: logo + name + active dot -->
+                      <div class="flex items-start gap-2.5">
+                        <!-- Logo -->
+                        <div class="h-9 w-9 shrink-0 overflow-hidden rounded-xl bg-gray-100 dark:bg-white/10 flex items-center justify-center">
+                          @if (p.logo_url) {
+                            <img [src]="p.logo_url" class="h-full w-full object-cover" alt="logo" />
+                          } @else {
+                            <span class="text-sm font-bold text-gray-600 dark:text-gray-300">{{ projectLogoLetter(p) }}</span>
+                          }
+                        </div>
+                        <!-- Name + client -->
+                        <div class="min-w-0 flex-1">
+                          <div class="flex items-center justify-between gap-1">
+                            <div class="truncate text-sm font-bold text-gray-900 dark:text-white leading-tight">{{ p.name }}</div>
+                            @if (p.id_code === selectedProjectIdCode) {
+                              <span class="relative flex h-2 w-2 shrink-0">
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                              </span>
                             }
                           </div>
-                          <div class="rounded-full bg-gray-100 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:bg-white/10 dark:text-gray-300">
-                            {{ p.status || '—' }}
-                          </div>
-                        </div>
-
-                        <div class="flex items-center gap-2">
-                          @if (p.id_code === selectedProjectIdCode) {
-                            <span class="relative flex h-2.5 w-2.5">
-                              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-70"></span>
-                              <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
-                            </span>
+                          @if (p.client_name) {
+                            <div class="mt-0.5 truncate text-[11px] text-gray-500 dark:text-gray-400">{{ p.client_name }}</div>
                           }
                         </div>
                       </div>
 
-                      <div>
-                        <div class="text-base font-semibold text-gray-900 line-clamp-2 dark:text-white">{{ p.name }}</div>
-                        @if (p.client_name) {
-                          <div class="mt-1 text-xs text-gray-600 line-clamp-1 dark:text-gray-300">{{ p.client_name }}</div>
+                      <!-- Row 2: dates + avatars -->
+                      <div class="flex items-center justify-between gap-2">
+                        <!-- Dates -->
+                        @if (p.start_date || p.end_date) {
+                          <div class="text-[10px] font-medium text-gray-400 dark:text-gray-500 tabular-nums">
+                            @if (p.start_date) { {{ formatProjectDate(p.start_date) }} }
+                            @if (p.start_date && p.end_date) { <span class="mx-0.5">→</span> }
+                            @if (p.end_date) { {{ formatProjectDate(p.end_date) }} }
+                          </div>
+                        } @else {
+                          <div></div>
                         }
-                      </div>
-                    </div>
-
-                    <div class="absolute bottom-3 right-3 flex -space-x-2">
-                      @for (m of projectAvatars(p); track m.id_code) {
-                        <div class="h-8 w-8 overflow-hidden rounded-full border-2 border-white bg-gray-100 dark:border-gray-900 dark:bg-white/10">
-                          @if (m.avatar_url) {
-                            <img [src]="m.avatar_url" class="h-full w-full object-cover" alt="avatar" />
-                          } @else {
-                            <div class="h-full w-full flex items-center justify-center text-[10px] font-bold text-gray-700 dark:text-gray-200">
-                              {{ (m.name || 'U').slice(0, 1).toUpperCase() }}
+                        <!-- Avatars -->
+                        <div class="flex -space-x-2">
+                          @for (m of projectAvatars(p); track m.id_code) {
+                            <div class="h-6 w-6 overflow-hidden rounded-full border-2 border-white bg-gray-100 dark:border-gray-900 dark:bg-white/10 flex items-center justify-center">
+                              @if (m.avatar_url || m.user?.avatar_url) {
+                                <img [src]="m.avatar_url || m.user?.avatar_url" class="h-full w-full object-cover" alt="avatar" />
+                              } @else {
+                                <span class="text-[8px] font-bold text-gray-600 dark:text-gray-300">
+                                  {{ (m.name || m.user?.name || 'U').slice(0, 1).toUpperCase() }}
+                                </span>
+                              }
                             </div>
                           }
                         </div>
-                      }
+                      </div>
                     </div>
                   </div>
                 </button>
