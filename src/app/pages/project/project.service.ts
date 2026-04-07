@@ -79,11 +79,32 @@ export class ProjectService {
     );
   }
 
-  startGlobalTimeEntry(storeIdCode: string, description: string = 'Expediente'): Observable<any | null> {
+  startTimeEntry(
+    storeIdCode: string,
+    payload: {
+      project_id?: string | null;
+      stage_id?: string | null;
+      task_id?: string | null;
+      description?: string | null;
+    }
+  ): Observable<any | null> {
     const storeId = String(storeIdCode || '').trim();
     if (!storeId) return of(null);
     const headers = this.getHeaders(storeId);
-    return this.http.post<any>(`${this.API_BASE_URL}/time-entries/start`, { description }, { headers }).pipe(
+    const isTask = !!(payload.project_id || payload.stage_id || payload.task_id);
+    const endpoint = isTask ? 'start-task' : 'start';
+    return this.http.post<any>(`${this.API_BASE_URL}/time-entries/${endpoint}`, payload, { headers }).pipe(
+      map((resp) => this.unwrapResponse(resp)),
+      catchError(() => of(null))
+    );
+  }
+
+  stopTaskEntry(storeIdCode: string, timeEntryId: string): Observable<any | null> {
+    const storeId = String(storeIdCode || '').trim();
+    const id = String(timeEntryId || '').trim();
+    if (!storeId || !id) return of(null);
+    const headers = this.getHeaders(storeId);
+    return this.http.post<any>(`${this.API_BASE_URL}/time-entries/${encodeURIComponent(id)}/stop-task`, {}, { headers }).pipe(
       map((resp) => this.unwrapResponse(resp)),
       catchError(() => of(null))
     );
@@ -554,7 +575,9 @@ export class ProjectService {
             color_2: s?.color_2 || null,
             due_date,
             completed_at,
-            status
+            status,
+            total_minutes: s?.total_minutes !== undefined ? Number(s.total_minutes) : 0,
+            total_amount: s?.total_amount !== undefined ? Number(s.total_amount) : 0
           } satisfies ProjectStage;
         })
       : null;
@@ -576,6 +599,7 @@ export class ProjectService {
       stages,
       contract_total: raw?.contract_total ?? raw?.contract_value_total ?? null,
       burn_cost_total: raw?.burn_cost_total ?? null,
+      burn_minutes: raw?.burn_minutes ?? 0,
       members: Array.isArray(raw?.members) ? (raw.members as any[]).map(m => {
         const userRaw = m.user || {};
         return {

@@ -47,6 +47,23 @@ export class ProjectStageHistoryService {
     this.persist(next);
   }
 
+  reorderStages(dateKey: string, projectIdCode: string, newOrder: StageSnapshot[]): void {
+    const st = this.load();
+    const day = st.by_date[dateKey] || {};
+    const proj = day[projectIdCode] || { active_stage_id_code: null, stages: [] };
+    const next: StageHistoryState = {
+      version: 1,
+      by_date: {
+        ...st.by_date,
+        [dateKey]: {
+          ...day,
+          [projectIdCode]: { ...proj, stages: newOrder.slice(0, this.MAX_STAGES) },
+        },
+      },
+    };
+    this.persist(next);
+  }
+
   addStage(dateKey: string, projectIdCode: string, stage: StageSnapshot): void {
     const st = this.load();
     const day = st.by_date[dateKey] || {};

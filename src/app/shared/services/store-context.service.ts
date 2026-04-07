@@ -9,6 +9,7 @@ export interface Store {
     logo_url: string | null;
     banner_url?: string | null;
     city?: string | null;
+    timezone?: string;
     organization?: {
         id_code: string;
         name: string;

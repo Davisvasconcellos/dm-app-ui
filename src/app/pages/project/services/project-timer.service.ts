@@ -88,7 +88,26 @@ export class ProjectTimerService {
   }
 
   getDateKey(date: Date): string {
-    return date.toISOString().slice(0, 10);
+    const saved = localStorage.getItem('selectedStore');
+    let tz = 'America/Sao_Paulo';
+    if (saved) {
+      try {
+        const store = JSON.parse(saved);
+        if (store.timezone) tz = store.timezone;
+      } catch (e) {}
+    }
+
+    try {
+      const formatter = new Intl.DateTimeFormat('en-CA', {
+        timeZone: tz,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      });
+      return formatter.format(date);
+    } catch (e) {
+      return date.toISOString().slice(0, 10);
+    }
   }
 
   stopAllRunning(): void {

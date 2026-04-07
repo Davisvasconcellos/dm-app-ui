@@ -18,6 +18,8 @@ interface StageItem {
   status: string | null;
   due_date: string | null;
   color_1: string | null;
+  total_minutes?: number;
+  total_amount?: number;
 }
 
 interface ScopeStore {
@@ -78,13 +80,26 @@ export class HomeProjectComponent implements OnInit, OnDestroy {
   stageHistoryItems: StageItem[] = [];
   nowMs = Date.now();
   globalLoading = false;
-  globalRunning = false;
-  globalTimeEntryId = '';
-  globalConfirmedMinutes = 0;
-  globalRunningMinutesEstimated = 0;
-  globalHeartbeatLocalMs = 0;
+  isGeneralRunning = false;
+  generalTimeEntryId = '';
+  generalConfirmedMinutes = 0;
+  generalRunningMinutesEstimated = 0;
+  generalHeartbeatLocalMs = 0;
+  
+  isTaskRunning = false;
+  taskTimeEntryId = '';
+  taskConfirmedMinutes = 0;
+  taskRunningMinutesEstimated = 0;
+  taskRunningProjectIdCode = '';
+  taskRunningStageIdCode = '';
+  taskHeartbeatLocalMs = 0;
+  
   globalLastSyncLocalMs = 0;
   globalSyncing = false;
+  sessionCheckInAt: string | null = null;
+  taskLoading = false;
+  dragIndex: number | null = null;
+  dragOverIndex: number | null = null;
 
   ngOnInit(): void {
     const current = this.projectContext.getActiveProject();
@@ -118,13 +133,17 @@ export class HomeProjectComponent implements OnInit, OnDestroy {
           this.loadGlobalToday(st.id_code);
         } else {
           this.globalLoading = false;
-          this.globalRunning = false;
-          this.globalTimeEntryId = '';
-          this.globalConfirmedMinutes = 0;
-          this.globalRunningMinutesEstimated = 0;
-          this.globalHeartbeatLocalMs = 0;
-          this.globalLastSyncLocalMs = 0;
+          this.isGeneralRunning = false;
+          this.generalTimeEntryId = '';
+          this.generalConfirmedMinutes = 0;
+          this.generalRunningMinutesEstimated = 0;
+          this.isTaskRunning = false;
+          this.taskTimeEntryId = '';
+          this.taskRunningProjectIdCode = '';
+          this.taskRunningStageIdCode = '';
           this.globalSyncing = false;
+          this.sessionCheckInAt = null;
+          this.taskLoading = false;
         }
       })
     );
@@ -172,40 +191,62 @@ export class HomeProjectComponent implements OnInit, OnDestroy {
 
   onStageClick(s: StageItem): void {
     const pid = this.selectedProjectIdCode;
-    if (!pid) return;
+    const storeId = (this.activeStore?.id_code || '').trim();
+    if (!pid || !storeId || this.globalLoading || this.taskLoading) return;
+
     this.selectedStageIdCode = s.id_code;
     this.selectedStage = s;
     this.upsertStageHistory(pid, s);
-    const dateKey = this.timer.getDateKey(new Date());
-    if (this.globalRunning) this.timer.start(pid, dateKey, s.id_code);
+    
+    // Close the stages modal immediately as requested
     this.closeStages();
+
+    // Start or Switch API task
+    this.performTaskSwitch(storeId, pid, s.id_code);
   }
 
   toggleTimer(): void {
     const storeId = (this.activeStore?.id_code || '').trim();
-    if (!storeId) return;
-    if (this.globalRunning) {
+    if (!storeId || this.globalLoading || this.taskLoading) return;
+    if (this.isGeneralRunning) {
       this.stopGlobal(storeId);
     } else {
-      this.startGlobal(storeId);
+      this.startTask(storeId);
     }
   }
 
   get isTimerRunning(): boolean {
-    return this.globalRunning;
+    return this.isGeneralRunning;
   }
 
   get todayTotalLabel(): string {
-    const totalSeconds =
-      Math.max(0, Math.floor(this.globalConfirmedMinutes * 60)) +
-      (this.globalRunning
-        ? Math.max(0, Math.floor(this.globalRunningMinutesEstimated * 60) + Math.floor((this.nowMs - this.globalHeartbeatLocalMs) / 1000))
-        : 0);
-    return this.formatDurationHms(totalSeconds * 1000);
+    // Base from confirmed (closed) entries + server-synced running estimate
+    const confirmedSeconds = this.generalConfirmedMinutes * 60;
+    const serverEstimatedSeconds = this.isGeneralRunning ? this.generalRunningMinutesEstimated * 60 : 0;
+    
+    // Add live seconds ticking locally since the last heartbeat
+    const liveExtraSeconds = this.isGeneralRunning && this.generalHeartbeatLocalMs
+      ? Math.floor(Math.max(0, this.nowMs - this.generalHeartbeatLocalMs) / 1000)
+      : 0;
+
+    const totalSeconds = confirmedSeconds + serverEstimatedSeconds + liveExtraSeconds;
+    return this.formatSecondsToHms(totalSeconds);
+  }
+
+  private formatSecondsToHms(totalSeconds: number): string {
+    const s = Math.floor(totalSeconds);
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    const sec = s % 60;
+    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+  }
+
+  get isTaskActive(): boolean {
+    return this.isTaskRunning;
   }
 
   get globalHeartbeatProgressPercent(): number {
-    if (!this.globalRunning) return 0;
+    if (!this.isGeneralRunning && !this.isTaskRunning) return 0;
     if (!this.globalLastSyncLocalMs) return 0;
     const elapsedMs = Math.max(0, this.nowMs - this.globalLastSyncLocalMs);
     return Math.min(100, Math.floor((elapsedMs / 60_000) * 100));
@@ -230,17 +271,107 @@ export class HomeProjectComponent implements OnInit, OnDestroy {
 
   onStageCardClick(s: StageItem): void {
     const pid = this.selectedProjectIdCode;
-    if (!pid) return;
-    if (this.selectedStageIdCode === s.id_code) {
+    const storeId = (this.activeStore?.id_code || '').trim();
+    if (!pid || !storeId || this.globalLoading || this.taskLoading) return;
+
+    // Ignore if we just finished a drag (dragIndex gets cleared on dragend)
+    if (this.dragIndex !== null) return;
+
+    // Toggle logic: If clicking the one that's already running, do nothing
+    if (this.isTaskRunning && this.taskRunningStageIdCode === s.id_code && this.taskRunningProjectIdCode === pid) {
       this.openStagesForSelectedProject();
       return;
     }
+
+    // Otherwise, perform switch
     this.selectedStageIdCode = s.id_code;
     this.selectedStage = s;
     this.upsertStageHistory(pid, s);
-    if (this.globalRunning) {
+    this.performTaskSwitch(storeId, pid, s.id_code);
+  }
+
+  onDragStart(index: number): void {
+    if (this.taskLoading) return;
+    this.dragIndex = index;
+  }
+
+  onDragOver(index: number, event: DragEvent): void {
+    event.preventDefault();
+    this.dragOverIndex = index;
+  }
+
+  onDrop(targetIndex: number): void {
+    if (this.dragIndex === null || this.dragIndex === targetIndex) {
+      this.dragIndex = null;
+      this.dragOverIndex = null;
+      return;
+    }
+
+    const items = [...this.stageHistoryItems];
+    const [moved] = items.splice(this.dragIndex, 1);
+    items.splice(targetIndex, 0, moved);
+    this.stageHistoryItems = items;
+
+    // Persist new order
+    const pid = this.selectedProjectIdCode;
+    if (pid) {
       const dateKey = this.timer.getDateKey(new Date());
-      this.timer.start(pid, dateKey, s.id_code);
+      this.stageHistory.reorderStages(dateKey, pid, items.map((s) => ({
+        id_code: s.id_code,
+        title: s.title,
+        acronym: s.acronym,
+        color_1: s.color_1 ?? null,
+      })));
+    }
+
+    this.dragIndex = null;
+    this.dragOverIndex = null;
+  }
+
+  onDragEnd(): void {
+    this.dragIndex = null;
+    this.dragOverIndex = null;
+  }
+
+  private performTaskSwitch(storeId: string, projectId: string, stageId: string): void {
+    if (this.isTaskRunning) {
+      if (this.taskRunningStageIdCode === stageId && this.taskRunningProjectIdCode === projectId) return;
+      
+      this.taskLoading = true;
+      this.projectService.stopTaskEntry(storeId, this.taskTimeEntryId).subscribe({
+        next: (resp) => {
+          const dataArr = Array.isArray(resp?.data) ? resp.data : [resp?.data];
+          dataArr.forEach((d: any) => {
+            if (d.time_entry_id === this.generalTimeEntryId) {
+              this.generalConfirmedMinutes += Number(d.minutes || 0);
+            } else if (d.time_entry_id === this.taskTimeEntryId) {
+              this.taskConfirmedMinutes += Number(d.minutes || 0);
+            }
+          });
+          
+          // Local timer stop
+          const dateKey = this.timer.getDateKey(new Date());
+          this.timer.stop(this.taskRunningProjectIdCode, dateKey, this.taskRunningStageIdCode);
+
+          this.isTaskRunning = false;
+          this.taskTimeEntryId = '';
+          this.taskRunningProjectIdCode = '';
+          this.taskRunningStageIdCode = '';
+          this.stopHeartbeatLoop();
+          
+          this.taskLoading = false;
+          this.startTask(storeId, projectId, stageId);
+        },
+        error: (err) => {
+          if (err?.status === 409) {
+            this.loadGlobalToday(storeId);
+          } else {
+            this.taskLoading = false;
+          }
+        }
+      });
+    } else {
+      this.startTask(storeId, projectId, stageId);
     }
   }
 
@@ -257,6 +388,12 @@ export class HomeProjectComponent implements OnInit, OnDestroy {
     const m = Math.floor((totalSeconds % 3600) / 60);
     const s = totalSeconds % 60;
     return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  }
+
+  protected formatMinutesToHms(minutes: number): string {
+    const h = Math.floor(minutes / 60);
+    const m = Math.floor(minutes % 60);
+    return `${h}:${String(m).padStart(2, '0')}h`;
   }
 
   private scrollSelectedProjectIntoView(): void {
@@ -498,6 +635,8 @@ export class HomeProjectComponent implements OnInit, OnDestroy {
               status: s?.status ? String(s.status) : null,
               due_date: s?.due_date ? String(s.due_date) : null,
               color_1: s?.color_1 ? String(s.color_1) : (s?.color ? String(s.color) : null),
+              total_minutes: s?.total_minutes !== undefined ? Number(s.total_minutes) : 0,
+              total_amount: s?.total_amount !== undefined ? Number(s.total_amount) : 0,
             } as StageItem;
           })
           .filter((x): x is StageItem => !!x);
@@ -516,97 +655,211 @@ export class HomeProjectComponent implements OnInit, OnDestroy {
     this.globalLoading = true;
     this.projectService.getMeToday(storeId).subscribe({
       next: (resp) => {
-        const data = resp?.data || resp?.body?.data || null;
-        const metaTotals = resp?.meta?.totals || resp?.body?.meta?.totals || null;
-        const confirmed = Number(metaTotals?.confirmed_minutes ?? data?.meta?.totals?.confirmed_minutes ?? 0);
-        const running = data?.running || null;
-        const id = String(running?.id || running?.time_entry_id || '').trim();
-        const minutesEstimated = Number(running?.minutes_estimated ?? 0);
+        const data = resp?.data || {};
+        const meta = resp?.meta?.totals || {};
+        
+        this.sessionCheckInAt = data?.session?.check_in_at || null;
+        
+        this.generalConfirmedMinutes = Number(meta.confirmed_general_minutes || 0);
+        const rg = data.running_general;
+        this.isGeneralRunning = !!rg;
+        this.generalTimeEntryId = rg?.id_code || '';
+        this.generalRunningMinutesEstimated = Number(rg?.minutes_estimated || 0);
+        this.generalHeartbeatLocalMs = Date.now();
 
-        this.globalConfirmedMinutes = Number.isFinite(confirmed) ? confirmed : 0;
-        this.globalRunning = !!id;
-        this.globalTimeEntryId = id || '';
-        this.globalRunningMinutesEstimated = this.globalRunning && Number.isFinite(minutesEstimated) ? minutesEstimated : 0;
-        this.globalHeartbeatLocalMs = Date.now();
+        this.taskConfirmedMinutes = Number(meta.confirmed_task_minutes || 0);
+        const rt = data.running_task;
+        this.isTaskRunning = !!rt;
+        this.taskTimeEntryId = rt?.id_code || '';
+        this.taskRunningProjectIdCode = rt?.project?.id_code || '';
+        this.taskRunningStageIdCode = rt?.stage?.id_code || '';
+        this.taskRunningMinutesEstimated = Number(rt?.minutes_estimated || 0);
+        this.taskHeartbeatLocalMs = Date.now();
+
         this.globalLastSyncLocalMs = Date.now();
         this.globalLoading = false;
+        this.taskLoading = false;
 
-        if (this.globalRunning && this.globalTimeEntryId) {
-          this.startHeartbeatLoop(storeId, this.globalTimeEntryId);
+        if (this.isGeneralRunning || this.isTaskRunning) {
+          // Sync local timer for ticking
+          const dateKey = this.timer.getDateKey(new Date());
+          if (this.isTaskRunning) {
+            this.timer.start(this.taskRunningProjectIdCode, dateKey, this.taskRunningStageIdCode);
+          }
+          this.startHeartbeatLoop(storeId);
         } else {
           this.stopHeartbeatLoop();
         }
       },
       error: () => {
         this.globalLoading = false;
-        this.globalRunning = false;
-        this.globalTimeEntryId = '';
-        this.globalRunningMinutesEstimated = 0;
-        this.stopHeartbeatLoop();
-      },
+        this.taskLoading = false;
+      }
     });
   }
 
-  private startGlobal(storeId: string): void {
-    if (this.globalLoading) return;
+  private startTask(storeId: string, projectId?: string, stageId?: string): void {
+    // Session is required for any task
+    if (!this.sessionCheckInAt) {
+      if (this.globalLoading) return;
+      this.startGlobalSessionAndTask(storeId, projectId, stageId);
+      return;
+    }
+
+    if (this.taskLoading) return; 
+    this.taskLoading = true;
+    
+    const payload = {
+      description: null,
+      project_id: projectId || null,
+      stage_id: stageId || null
+    };
+
+    this.projectService.startTimeEntry(storeId, payload).subscribe({
+      next: (startResp) => {
+        const d = startResp?.data || {};
+        const id = String(d.time_entry_id || d.id || '').trim();
+        if (!id) {
+          this.taskLoading = false;
+          return;
+        }
+        this.isTaskRunning = true;
+        this.taskTimeEntryId = id;
+        this.taskRunningProjectIdCode = d.project?.id_code || projectId || '';
+        this.taskRunningStageIdCode = d.stage?.id_code || stageId || '';
+        this.taskRunningMinutesEstimated = 0;
+        // Sync local timer for ticking
+        const dateKey = this.timer.getDateKey(new Date());
+        this.timer.start(this.taskRunningProjectIdCode, dateKey, this.taskRunningStageIdCode);
+
+        this.taskLoading = false;
+        this.heartbeatOnce(storeId, id, 'task');
+        this.startHeartbeatLoop(storeId);
+      },
+      error: () => {
+        this.taskLoading = false;
+      }
+    });
+  }
+
+  private startGlobalSessionAndTask(storeId: string, projectId?: string, stageId?: string): void {
     this.globalLoading = true;
     this.projectService.checkIn(storeId, { source: 'web' }).subscribe({
-      next: () => {
-        this.projectService.startGlobalTimeEntry(storeId, 'Expediente').subscribe({
+      next: (resp) => {
+        const d = resp?.data || {};
+        this.sessionCheckInAt = d.check_in_at || new Date().toISOString();
+        
+        const payload = {
+          description: null,
+          project_id: projectId || null,
+          stage_id: stageId || null
+        };
+
+        this.projectService.startTimeEntry(storeId, payload).subscribe({
           next: (startResp) => {
-            const id = String(startResp?.data?.time_entry_id || startResp?.data?.id || startResp?.data?.timeEntryId || '').trim();
+            const sd = startResp?.data || {};
+            const id = String(sd.time_entry_id || sd.id || '').trim();
             if (!id) {
               this.globalLoading = false;
               return;
             }
-            this.globalRunning = true;
-            this.globalTimeEntryId = id;
-            this.globalRunningMinutesEstimated = 0;
-            this.globalHeartbeatLocalMs = Date.now();
+
+            const isTask = !!(projectId || stageId);
+            if (isTask) {
+              this.isTaskRunning = true;
+              this.taskTimeEntryId = id;
+              this.taskRunningProjectIdCode = sd.project?.id_code || projectId || '';
+              this.taskRunningStageIdCode = sd.stage?.id_code || stageId || '';
+              this.taskRunningMinutesEstimated = 0;
+              this.taskHeartbeatLocalMs = Date.now();
+              const dateKey = this.timer.getDateKey(new Date());
+              this.timer.start(this.taskRunningProjectIdCode, dateKey, this.taskRunningStageIdCode);
+            } else {
+              this.isGeneralRunning = true;
+              this.generalTimeEntryId = id;
+              this.generalRunningMinutesEstimated = 0;
+              this.generalHeartbeatLocalMs = Date.now();
+            }
+
             this.globalLastSyncLocalMs = Date.now();
             this.globalLoading = false;
-            this.heartbeatOnce(storeId, id);
-            this.startHeartbeatLoop(storeId, id);
+            
+            // Immediate sync
+            if (isTask) this.heartbeatOnce(storeId, id, 'task');
+            else this.heartbeatOnce(storeId, id, 'general');
+            
+            this.startHeartbeatLoop(storeId);
           },
-          error: () => {
-            this.globalLoading = false;
-          },
+          error: (err) => {
+            if (err?.status === 409) {
+              this.loadGlobalToday(storeId);
+            } else {
+              this.globalLoading = false;
+            }
+          }
         });
       },
       error: () => {
         this.globalLoading = false;
-      },
+      }
     });
   }
 
   private stopGlobal(storeId: string): void {
-    const id = String(this.globalTimeEntryId || '').trim();
-    if (!id || this.globalLoading) return;
+    if (!this.isGeneralRunning || this.globalLoading) return;
     this.globalLoading = true;
-    this.projectService.stopTimeEntry(storeId, id).subscribe({
+    this.projectService.stopTimeEntry(storeId, this.generalTimeEntryId).subscribe({
       next: (resp) => {
-        const minutes = Number(resp?.data?.minutes ?? 0);
-        if (Number.isFinite(minutes) && minutes > 0) this.globalConfirmedMinutes += minutes;
-        this.globalRunning = false;
-        this.globalTimeEntryId = '';
-        this.globalRunningMinutesEstimated = 0;
-        this.globalHeartbeatLocalMs = Date.now();
+        const dataArr = Array.isArray(resp?.data) ? resp.data : [resp?.data];
+        
+        dataArr.forEach((d: any) => {
+          if (d.time_entry_id === this.generalTimeEntryId) {
+            this.generalConfirmedMinutes += Number(d.minutes || 0);
+          } else if (d.time_entry_id === this.taskTimeEntryId) {
+            this.taskConfirmedMinutes += Number(d.minutes || 0);
+          }
+        });
+
+        this.isGeneralRunning = false;
+        this.generalTimeEntryId = '';
+        this.generalRunningMinutesEstimated = 0;
+        
+        this.isTaskRunning = false;
+        this.taskTimeEntryId = '';
+        this.taskRunningProjectIdCode = '';
+        this.taskRunningStageIdCode = '';
+        this.taskRunningMinutesEstimated = 0;
+
+        this.sessionCheckInAt = null; 
         this.globalLastSyncLocalMs = Date.now();
         this.globalLoading = false;
+        // Clear task selection — closed tasks should not appear selected on next session start
+        this.selectedStageIdCode = '';
+        this.selectedStage = null;
+        if (this.selectedProjectIdCode) {
+          const dateKey = this.timer.getDateKey(new Date());
+          this.stageHistory.setActiveStage(dateKey, this.selectedProjectIdCode, null);
+        }
         this.stopHeartbeatLoop();
         this.timer.stopAllRunning();
         this.closeStages();
       },
-      error: () => {
-        this.globalLoading = false;
+      error: (err) => {
+        if (err?.status === 409) {
+          this.loadGlobalToday(storeId);
+        } else {
+          this.globalLoading = false;
+        }
       },
     });
   }
 
-  private startHeartbeatLoop(storeId: string, timeEntryId: string): void {
+  private startHeartbeatLoop(storeId: string): void {
     this.stopHeartbeatLoop();
     this.heartbeatIntervalId = setInterval(() => {
-      this.heartbeatOnce(storeId, timeEntryId);
+      if (this.isGeneralRunning) this.heartbeatOnce(storeId, this.generalTimeEntryId, 'general');
+      if (this.isTaskRunning) this.heartbeatOnce(storeId, this.taskTimeEntryId, 'task');
+      this.globalLastSyncLocalMs = Date.now();
     }, 60_000);
   }
 
@@ -616,18 +869,54 @@ export class HomeProjectComponent implements OnInit, OnDestroy {
     this.globalSyncing = false;
   }
 
-  private heartbeatOnce(storeId: string, timeEntryId: string): void {
-    if (!this.globalRunning) return;
+  private heartbeatOnce(storeId: string, timeEntryId: string, type: 'general' | 'task'): void {
     this.globalSyncing = true;
     this.projectService.heartbeatTimeEntry(storeId, timeEntryId).subscribe({
       next: (resp) => {
-        const minutesEstimated = Number(resp?.data?.minutes_estimated ?? 0);
-        const id = String(resp?.data?.time_entry_id || timeEntryId).trim();
-        if (!id || id !== timeEntryId) return;
-        if (Number.isFinite(minutesEstimated)) this.globalRunningMinutesEstimated = minutesEstimated;
-        this.globalHeartbeatLocalMs = Date.now();
+        const d = resp?.data || {};
+        const minutesEstimated = Number(d.minutes_estimated ?? 0);
+
+        if (type === 'general') {
+          this.generalRunningMinutesEstimated = minutesEstimated;
+          this.generalHeartbeatLocalMs = Date.now();
+        } else {
+          this.taskRunningMinutesEstimated = minutesEstimated;
+          this.taskHeartbeatLocalMs = Date.now();
+        }
+
         this.globalLastSyncLocalMs = Date.now();
         this.globalSyncing = false;
+
+        // Update live stats from heartbeat
+        if (d.project && d.project.id_code) {
+          const pIdx = this.projects.findIndex(p => p.id_code === d.project.id_code);
+          if (pIdx > -1) {
+            this.projects[pIdx] = {
+              ...this.projects[pIdx],
+              burn_minutes: d.project.burn_minutes,
+              burn_cost_total: d.project.burn_cost_total
+            };
+          }
+        }
+
+        if (d.stage && d.stage.id_code) {
+          const sIdx = this.stages.findIndex(s => s.id_code === d.stage.id_code);
+          if (sIdx > -1) {
+            this.stages[sIdx] = {
+              ...this.stages[sIdx],
+              total_minutes: d.stage.total_minutes,
+              total_amount: d.stage.total_amount
+            };
+          }
+          const hIdx = this.stageHistoryItems.findIndex(s => s.id_code === d.stage.id_code);
+          if (hIdx > -1) {
+            this.stageHistoryItems[hIdx] = {
+              ...this.stageHistoryItems[hIdx],
+              total_minutes: d.stage.total_minutes,
+              total_amount: d.stage.total_amount
+            };
+          }
+        }
       },
       error: () => {
         this.globalSyncing = false;
@@ -659,12 +948,21 @@ export class HomeProjectComponent implements OnInit, OnDestroy {
 
   private upsertStageHistory(projectIdCode: string, s: StageItem): void {
     const dateKey = this.timer.getDateKey(new Date());
-    this.stageHistory.addStage(dateKey, projectIdCode, {
-      id_code: s.id_code,
-      title: s.title,
-      acronym: s.acronym,
-      color_1: s.color_1,
-    });
+    const hist = this.stageHistory.getProjectHistory(dateKey, projectIdCode);
+    const alreadyInList = hist.stages.some((x) => x.id_code === s.id_code);
+
+    if (alreadyInList) {
+      // Only update the active pointer — DO NOT reorder
+      this.stageHistory.setActiveStage(dateKey, projectIdCode, s.id_code);
+    } else {
+      // New stage: add to top of list
+      this.stageHistory.addStage(dateKey, projectIdCode, {
+        id_code: s.id_code,
+        title: s.title,
+        acronym: s.acronym,
+        color_1: s.color_1,
+      });
+    }
     this.restoreProjectStageHistory(projectIdCode);
   }
 }

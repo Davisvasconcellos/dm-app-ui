@@ -12,6 +12,8 @@ export type ProjectStage = {
   due_date?: string | null;
   completed_at?: string | null;
   status: 'planned' | 'active' | 'completed' | 'canceled';
+  total_minutes?: number;
+  total_amount?: number;
 };
 
 export type ProjectStatus = 'draft' | 'active' | 'paused' | 'canceled' | 'published';
@@ -32,6 +34,7 @@ export type Project = {
   stages?: ProjectStage[] | null;
   contract_total?: number | null;
   burn_cost_total?: number | null;
+  burn_minutes?: number | null;
   members?: ProjectMember[] | null;
   updated_at?: string | null;
 };

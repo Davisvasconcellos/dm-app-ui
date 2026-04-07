@@ -154,20 +154,33 @@
       </div>
     }
     <button
+      id="btn-toggle-timer"
       type="button"
       class="relative w-full overflow-hidden rounded-2xl border p-4 shadow-sm transition dark:bg-gray-900/40"
       [ngClass]="isTimerRunning
         ? 'border-emerald-200 bg-emerald-50/70 hover:bg-emerald-50 dark:border-emerald-400/30 dark:bg-emerald-400/15 dark:hover:bg-emerald-400/20'
         : 'border-gray-200 bg-white hover:bg-gray-50/50 dark:border-gray-800 dark:hover:bg-white/5'"
       (click)="toggleTimer()"
+      [disabled]="globalLoading || taskLoading"
     >
-      <div class="text-center text-4xl font-bold tracking-tight text-gray-900 tabular-nums dark:text-white">
-        {{ todayTotalLabel }}
+      <div class="flex items-center justify-center gap-3">
+        @if (globalLoading) {
+          <div class="h-6 w-6 animate-spin rounded-full border-4 border-emerald-500/20 border-t-emerald-500 dark:border-emerald-400/20 dark:border-t-emerald-400"></div>
+        }
+        @if (isTimerRunning && !globalLoading) {
+          <span class="relative flex h-2.5 w-2.5">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+          </span>
+        }
+        <div class="text-4xl font-bold tracking-tight text-gray-900 tabular-nums dark:text-white" [class.opacity-50]="globalLoading">
+          {{ todayTotalLabel }}
+        </div>
       </div>
-      @if (isTimerRunning) {
-        <div class="absolute bottom-0 left-0 right-0 h-[2px] bg-emerald-500/10 dark:bg-emerald-400/15">
+      @if (isTimerRunning && !globalLoading) {
+        <div class="absolute bottom-0 left-0 right-0 h-[3px] bg-emerald-500/10 dark:bg-emerald-400/15">
           <div
-            class="h-full bg-emerald-500/60 dark:bg-emerald-300/70"
+            class="h-full bg-emerald-500/60 dark:bg-emerald-300/70 transition-all duration-1000 ease-linear"
             [style.width.%]="globalHeartbeatProgressPercent"
           ></div>
         </div>
@@ -189,6 +202,7 @@
             Nenhum projeto encontrado.
           </div>
         } @else {
+          <p class="text-[11px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Projetos</p>
           <div class="-mx-3 overflow-x-auto px-3 pb-2">
             <div class="flex snap-x snap-mandatory gap-4">
               @for (p of projects; track p.id_code) {
@@ -259,33 +273,87 @@
       }
 
       @if (stageHistoryItems.length > 0) {
-        <div class="space-y-2">
-          @for (s of stageHistoryItems; track s.id_code) {
-            <button
-              type="button"
-              class="relative w-full rounded-2xl border p-4 text-left shadow-sm transition"
-              [ngClass]="s.id_code === selectedStageIdCode
-                ? 'border-emerald-200 bg-emerald-50/60 hover:bg-emerald-50 dark:border-emerald-400/30 dark:bg-emerald-400/15 dark:hover:bg-emerald-400/20'
-                : 'border-gray-200 bg-white hover:bg-gray-50/50 dark:border-gray-800 dark:bg-gray-900/40 dark:hover:bg-white/5'"
-              (click)="onStageCardClick(s)"
-            >
-              <div
-                class="absolute left-0 top-0 bottom-0 w-1.5 rounded-l-2xl"
-                [ngClass]="s.id_code === selectedStageIdCode ? 'bg-gradient-to-b from-emerald-500 to-emerald-300' : 'bg-transparent'"
-              ></div>
-              <div class="flex items-center justify-between gap-3 pl-2">
-                <div class="min-w-0">
-                  <div class="truncate text-sm font-semibold text-gray-900 dark:text-white">{{ s.title }}</div>
-                  <div class="mt-0.5 text-xs text-gray-600 dark:text-gray-300">
-                    @if (s.acronym) { {{ s.acronym }} } @else { Etapa }
-                  </div>
-                </div>
-                <div class="text-lg font-bold tabular-nums text-gray-900 dark:text-white">
-                  {{ stageHistoryLabel(s.id_code) }}
-                </div>
+        <p class="text-[11px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Tarefas recentes</p>
+        <div class="relative">
+          <!-- Loading overlay while switching tasks -->
+          @if (taskLoading) {
+            <div class="absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-white/70 dark:bg-gray-900/70 backdrop-blur-[2px]">
+              <div class="flex flex-col items-center gap-2">
+                <div class="h-7 w-7 animate-spin rounded-full border-[3px] border-emerald-500/20 border-t-emerald-500 dark:border-emerald-400/20 dark:border-t-emerald-400"></div>
+                <span class="text-[11px] font-medium text-emerald-600 dark:text-emerald-400">Alternando tarefa...</span>
               </div>
-            </button>
+            </div>
           }
+          <div class="space-y-1.5" [class.pointer-events-none]="taskLoading" [class.opacity-60]="taskLoading">
+            @for (s of stageHistoryItems; track s.id_code; let i = $index) {
+              @let isActive = isTaskRunning && taskRunningStageIdCode === s.id_code;
+              @let isDragging = dragIndex === i;
+              @let isDropTarget = dragOverIndex === i && dragIndex !== null && dragIndex !== i;
+              <div
+                [draggable]="!taskLoading"
+                (dragstart)="onDragStart(i)"
+                (dragover)="onDragOver(i, $event)"
+                (drop)="onDrop(i)"
+                (dragend)="onDragEnd()"
+                class="transition-all duration-150"
+                [class.opacity-40]="isDragging"
+                [class.scale-[0.98]]="isDragging"
+              >
+                <!-- Drop zone indicator -->
+                @if (isDropTarget) {
+                  <div class="mb-1 h-0.5 w-full rounded-full bg-emerald-400 dark:bg-emerald-500"></div>
+                }
+                <button
+                  type="button"
+                  class="group relative w-full rounded-2xl border p-4 text-left shadow-sm transition-all duration-200"
+                  [ngClass]="isActive
+                    ? 'border-emerald-300 bg-emerald-50/70 shadow-emerald-100 dark:border-emerald-500/40 dark:bg-emerald-500/10 dark:shadow-none'
+                    : 'border-gray-200 bg-white hover:bg-gray-50/50 dark:border-gray-800 dark:bg-gray-900/40 dark:hover:bg-white/5'"
+                  (click)="onStageCardClick(s)"
+                  [disabled]="taskLoading"
+                >
+                  <!-- Active left border -->
+                  <div
+                    class="absolute left-0 top-0 bottom-0 w-1.5 rounded-l-2xl transition-all duration-200"
+                    [ngClass]="isActive ? 'bg-gradient-to-b from-emerald-500 to-emerald-300' : 'bg-transparent'"
+                  ></div>
+                  <div class="flex items-center gap-2 pl-2">
+                    <!-- Drag handle -->
+                    <div
+                      class="shrink-0 cursor-grab text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity duration-150 dark:text-gray-600 active:cursor-grabbing"
+                      title="Arrastar para reordenar"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 8h16M4 16h16" />
+                      </svg>
+                    </div>
+                    <div class="flex flex-1 items-center justify-between gap-3 min-w-0">
+                      <div class="min-w-0 flex-1">
+                        <div class="truncate text-sm font-semibold text-gray-900 dark:text-white">{{ s.title }}</div>
+                        <div class="mt-0.5 text-xs text-gray-600 dark:text-gray-300">
+                          @if (s.acronym) { {{ s.acronym }} } @else { Etapa }
+                        </div>
+                      </div>
+                      <div class="flex items-center gap-2.5 shrink-0">
+                        @if (isActive) {
+                          <span class="relative flex h-2 w-2">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                          </span>
+                        }
+                        <div
+                          class="text-lg font-bold tabular-nums"
+                          [ngClass]="isActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-900 dark:text-white'"
+                        >
+                          {{ stageHistoryLabel(s.id_code) }}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </button>
+              </div>
+            }
+          </div>
         </div>
       }
     }
@@ -308,13 +376,21 @@
       <div class="mb-[88px] rounded-3xl border border-gray-200 bg-white p-5 shadow-xl dark:border-gray-800 dark:bg-gray-900">
         <div class="flex items-center justify-between">
           <div class="text-sm font-semibold text-gray-900 dark:text-white">Etapas</div>
-          <button
-            type="button"
-            class="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-900/40 dark:text-gray-200 dark:hover:bg-white/5"
-            (click)="closeStages()"
-          >
-            Fechar
-          </button>
+          <div class="flex items-center gap-3">
+            @if (taskLoading) {
+              <div class="flex items-center gap-2 text-[11px] font-medium text-brand-600 dark:text-brand-400">
+                <div class="h-3 w-3 animate-spin rounded-full border-2 border-brand-500/20 border-t-brand-500"></div>
+                Aguarde...
+              </div>
+            }
+            <button
+              type="button"
+              class="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-900/40 dark:text-gray-200 dark:hover:bg-white/5"
+              (click)="closeStages()"
+            >
+              Fechar
+            </button>
+          </div>
         </div>
 
         @if (isLoadingStages) {
@@ -327,18 +403,19 @@
               @for (s of stages; track s.id_code) {
                 <button
                   type="button"
-                  class="relative w-full rounded-2xl border px-4 py-3 text-left transition"
+                  class="relative w-full rounded-2xl border px-4 py-3 text-left transition disabled:opacity-60"
                   [ngClass]="s.id_code === selectedStageIdCode
                     ? 'border-emerald-200 bg-emerald-50/70 dark:border-emerald-900/40 dark:bg-emerald-500/10'
                     : 'border-gray-200 hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-white/5'"
                   (click)="onStageClick(s)"
+                  [disabled]="taskLoading"
                 >
                   <div
                     class="absolute left-0 top-0 bottom-0 w-1.5 rounded-l-2xl"
                     [ngClass]="s.id_code === selectedStageIdCode ? 'bg-gradient-to-b from-emerald-500 to-emerald-300' : 'bg-transparent'"
                   ></div>
                   <div class="flex items-center justify-between gap-3">
-                    <div class="min-w-0">
+                    <div class="min-w-0 flex-1">
                       <div class="truncate text-sm font-semibold text-gray-900 dark:text-white">{{ s.title }}</div>
                       <div class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
                         @if (s.acronym) { {{ s.acronym }} } @else { — }
@@ -346,12 +423,20 @@
                         @if (s.due_date) { Entrega {{ s.due_date }} } @else { Sem entrega }
                       </div>
                     </div>
-                    <div class="flex items-center gap-2">
-                      @if (s.color_1) {
-                        <span class="h-3 w-3 rounded-full" [style.background]="s.color_1"></span>
-                      }
-                      <div class="text-xs font-medium text-gray-500 dark:text-gray-400">
-                        {{ s.status || 'planned' }}
+                    <div class="flex flex-col items-end gap-0.5">
+                      <div class="flex items-center gap-2">
+                        @if (isTaskRunning && taskRunningStageIdCode === s.id_code && taskRunningProjectIdCode === selectedProjectIdCode) {
+                          <span class="relative flex h-2 w-2">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                          </span>
+                        }
+                        <div class="text-[13px] font-bold text-gray-900 dark:text-white tabular-nums">
+                          {{ formatMinutesToHms(s.total_minutes || 0) }}
+                        </div>
+                      </div>
+                      <div class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+                        {{ (s.total_amount || 0) | currency:'BRL':'symbol':'1.2-2' }}
                       </div>
                     </div>
                   </div>
