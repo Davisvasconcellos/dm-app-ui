@@ -602,6 +602,27 @@ export class HomeProjectComponent implements OnInit, OnDestroy {
         if (!idCode || !name) return null;
         const statusRaw = String(p?.status || '').trim();
         const status: any = statusRaw === 'published' ? 'active' : statusRaw || null;
+
+        // Mapear membros do scope para o formato ProjectMember
+        const scopeMembers = Array.isArray(p?.members) ? p.members : [];
+        const members = scopeMembers.map((m: any) => ({
+          id_code: String(m?.id_code || m?.id || '').trim(),
+          name: String(m?.user?.name || '').trim(),
+          email: m?.user?.email ?? null,
+          role: m?.role ?? null,
+          status: m?.status ?? 'active',
+          avatar_url: m?.user?.avatar_url ?? null,
+          user: m?.user ? {
+            id: String(m.user.id_code || m.user.id || ''),
+            id_code: String(m.user.id_code || m.user.id || ''),
+            name: String(m.user.name || ''),
+            email: String(m.user.email || ''),
+            avatar_url: m.user.avatar_url ?? null,
+          } : undefined,
+          today_project_pct: 0,
+          today_office_pct: 0,
+        })).filter((m: any) => !!m.id_code);
+
         return {
           id_code: idCode,
           name,
@@ -618,6 +639,7 @@ export class HomeProjectComponent implements OnInit, OnDestroy {
           stages: null,
           contract_total: null,
           burn_cost_total: null,
+          members: members.length ? members : null,
           updated_at: null,
         } as Project;
       })

@@ -247,33 +247,41 @@
                         </div>
                       </div>
 
-                      <!-- Row 2: dates + avatars -->
-                      <div class="flex items-center justify-between gap-2">
-                        <!-- Dates -->
-                        @if (p.start_date || p.end_date) {
-                          <div class="text-[10px] font-medium text-gray-400 dark:text-gray-500 tabular-nums">
-                            @if (p.start_date) { {{ formatProjectDate(p.start_date) }} }
-                            @if (p.start_date && p.end_date) { <span class="mx-0.5">→</span> }
-                            @if (p.end_date) { {{ formatProjectDate(p.end_date) }} }
+                      <!-- Row 2: Dates -->
+                      @if (p.start_date || p.end_date) {
+                        <div class="text-[10px] font-medium text-gray-400 dark:text-gray-500 tabular-nums">
+                          @if (p.start_date) { {{ formatProjectDate(p.start_date) }} }
+                          @if (p.start_date && p.end_date) { <span class="mx-0.5">→</span> }
+                          @if (p.end_date) { {{ formatProjectDate(p.end_date) }} }
+                        </div>
+                      }
+
+                      <!-- Row 3: Avatars -->
+                      @if (projectAvatars(p).length > 0) {
+                        <div class="flex items-center gap-1.5">
+                          <div class="flex -space-x-1.5">
+                            @for (m of projectAvatars(p).slice(0, 3); track m.id_code) {
+                              <div
+                                class="h-6 w-6 overflow-hidden rounded-full border-2 border-white bg-gray-200 dark:border-gray-900 dark:bg-white/10 flex items-center justify-center"
+                                [title]="m.user?.name || m.name || ''"
+                              >
+                                @if (m.avatar_url || m.user?.avatar_url) {
+                                  <img [src]="m.avatar_url || m.user?.avatar_url" class="h-full w-full object-cover" alt="avatar" />
+                                } @else {
+                                  <span class="text-[8px] font-bold text-gray-600 dark:text-gray-300">
+                                    {{ (m.user?.name || m.name || 'U').slice(0, 1).toUpperCase() }}
+                                  </span>
+                                }
+                              </div>
+                            }
                           </div>
-                        } @else {
-                          <div></div>
-                        }
-                        <!-- Avatars -->
-                        <div class="flex -space-x-2">
-                          @for (m of projectAvatars(p); track m.id_code) {
-                            <div class="h-6 w-6 overflow-hidden rounded-full border-2 border-white bg-gray-100 dark:border-gray-900 dark:bg-white/10 flex items-center justify-center">
-                              @if (m.avatar_url || m.user?.avatar_url) {
-                                <img [src]="m.avatar_url || m.user?.avatar_url" class="h-full w-full object-cover" alt="avatar" />
-                              } @else {
-                                <span class="text-[8px] font-bold text-gray-600 dark:text-gray-300">
-                                  {{ (m.name || m.user?.name || 'U').slice(0, 1).toUpperCase() }}
-                                </span>
-                              }
-                            </div>
+                          @if (projectAvatars(p).length > 3) {
+                            <span class="text-[10px] font-semibold text-gray-400 dark:text-gray-500">
+                              +{{ projectAvatars(p).length - 3 }}
+                            </span>
                           }
                         </div>
-                      </div>
+                      }
                     </div>
                   </div>
                 </button>
