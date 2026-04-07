@@ -46,6 +46,13 @@ export class ProjectSummaryCardComponent {
     return `${Math.round(this.burnPct * 100)}%`;
   }
 
+  get burnHoursLabel(): string {
+    const mins = Number(this.project?.burn_minutes || 0);
+    const h = Math.floor(mins / 60);
+    const m = Math.round(mins % 60);
+    return `${h}h${m.toString().padStart(2, '0')}`;
+  }
+
   get burnIndicatorClass(): string {
     if (this.burnPct >= 0.85) return 'bg-red-500';
     if (this.burnPct >= 0.7) return 'bg-amber-400';

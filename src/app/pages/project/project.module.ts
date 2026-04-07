@@ -22,6 +22,10 @@ import { ProjectMeComponent } from './me/project-me/project-me.component';
 import { ProjectSummaryCardComponent } from './components/project-summary-card/project-summary-card.component';
 import { ReactiveFormsModule } from '@angular/forms';
 
+import { NgApexchartsModule } from 'ng-apexcharts';
+import { DropdownComponent } from '../../shared/components/ui/dropdown/dropdown.component';
+import { DropdownItemComponent } from '../../shared/components/ui/dropdown/dropdown-item/dropdown-item.component';
+
 @NgModule({
   imports: [
     CommonModule,
@@ -33,6 +37,9 @@ import { ReactiveFormsModule } from '@angular/forms';
     DatePickerComponent,
     CurrencyMaskDirective,
     ProjectHistoryComponent,
+    NgApexchartsModule,
+    DropdownComponent,
+    DropdownItemComponent,
   ],
   declarations: [
     HomeProjectComponent,

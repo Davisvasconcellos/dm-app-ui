@@ -67,8 +67,12 @@
             <span class="font-medium">{{ currency(contractTotal) }}</span>
           </div>
           <div class="mt-1 flex items-center justify-between">
-            <span>Custo (horas)</span>
-            <span class="font-medium">{{ currency(burnCostTotal) }}</span>
+            <span>Horas (Burn)</span>
+            <span class="font-medium">{{ burnHoursLabel }}</span>
+          </div>
+          <div class="mt-1 flex items-center justify-between">
+            <span>Custo Total</span>
+            <span class="font-medium text-red-600 dark:text-red-400">{{ currency(burnCostTotal) }}</span>
           </div>
         </div>
       }

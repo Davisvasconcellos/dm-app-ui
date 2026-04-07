@@ -44,11 +44,16 @@ const routes: Routes = [
     title: 'Meu dia (Projetos)',
   },
   {
-    path: 'admin',
+    path: 'admin/dashboard',
     component: ProjectAdminDashboardComponent,
     canActivate: [AuthGuard, RoleGuard],
     data: { expectedRoles: ['admin', 'master', 'manager'] },
     title: 'Projetos (Admin)',
+  },
+  {
+    path: 'admin',
+    redirectTo: 'admin/dashboard',
+    pathMatch: 'full'
   },
   {
     path: 'admin/projects',

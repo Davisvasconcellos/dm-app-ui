@@ -1,183 +1,294 @@
 <div class="space-y-6">
-  <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-    <div>
-      <div class="text-lg font-semibold text-gray-900 dark:text-white">Projetos</div>
-      <div class="text-xs text-gray-500 dark:text-gray-400">
-        Feed de projetos ativos, faturamento e workload.
-      </div>
-    </div>
-
-    <div class="flex flex-wrap items-center gap-2">
-      <div class="inline-flex overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900/40">
-        <button
-          class="px-3 py-2 text-xs font-medium"
-          [ngClass]="viewMode === 'financial' ? 'bg-gray-100 text-gray-900 dark:bg-white/10 dark:text-white' : 'text-gray-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-white/5'"
-          (click)="viewMode = 'financial'"
-        >
-          Visão Financeira
+  <!-- Filters Bar -->
+  <div class="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 dark:border-gray-800 dark:bg-white/[0.03]">
+    <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div class="flex flex-wrap items-center gap-2">
+        <button type="button"
+                (click)="toggleProject(ALL_PROJECTS_KEY)"
+                [disabled]="isLoading"
+                [ngClass]="isProjectSelected(ALL_PROJECTS_KEY)
+                  ? 'border-brand-300 bg-brand-100 text-brand-800 dark:border-brand-500 dark:bg-brand-500 dark:text-white'
+                  : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-white/[0.03]'"
+                class="inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-xs font-medium disabled:opacity-60 disabled:cursor-not-allowed">
+          @if (isProjectSelected(ALL_PROJECTS_KEY)) {
+            <span class="inline-flex h-4 w-4 items-center justify-center rounded bg-brand-600 text-white dark:bg-white/20">
+              <svg viewBox="0 0 20 20" fill="currentColor" class="h-3.5 w-3.5">
+                <path fill-rule="evenodd" d="M16.704 5.29a1 1 0 010 1.415l-7.2 7.2a1 1 0 01-1.415 0l-3.6-3.6a1 1 0 011.414-1.415l2.893 2.893 6.493-6.493a1 1 0 011.415 0z" clip-rule="evenodd"></path>
+              </svg>
+            </span>
+          }
+          <span>Todos</span>
         </button>
-        <button
-          class="px-3 py-2 text-xs font-medium"
-          [ngClass]="viewMode === 'deadline' ? 'bg-gray-100 text-gray-900 dark:bg-white/10 dark:text-white' : 'text-gray-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-white/5'"
-          (click)="viewMode = 'deadline'"
-        >
-          Visão de Prazo
-        </button>
-      </div>
-
-      <a
-        routerLink="/project/admin/projects"
-        class="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-900/40 dark:text-gray-200 dark:hover:bg-white/5"
-      >
-        Lista
-      </a>
-      <a
-        routerLink="/project/admin/sessions"
-        class="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-900/40 dark:text-gray-200 dark:hover:bg-white/5"
-      >
-        Sessões
-      </a>
-      <a
-        routerLink="/project/admin/backoffice"
-        class="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-900/40 dark:text-gray-200 dark:hover:bg-white/5"
-      >
-        Backoffice
-      </a>
-    </div>
-  </div>
-
-  @if (!activeStore) {
-    <div class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-100">
-      Selecione uma unidade (store) para carregar os colaboradores do projeto.
-    </div>
-  }
-
-  <div class="grid grid-cols-1 gap-6 xl:grid-cols-3">
-    <div class="space-y-3 xl:col-span-2">
-      <div class="text-sm font-semibold text-gray-900 dark:text-white">Projetos Ativos</div>
-      @if (isLoadingProjects) {
-        <div class="rounded-xl border border-gray-200 bg-white p-4 text-sm text-gray-500 dark:border-gray-800 dark:bg-gray-900/40 dark:text-gray-400">
-          Carregando...
-        </div>
-      } @else {
-        @for (p of projects; track p.id_code) {
-          <app-project-summary-card [project]="p" [viewMode]="viewMode" />
+        
+        @for (p of availableProjects.slice(0, 5); track p.id_code) {
+          <button type="button"
+                  (click)="toggleProject(p.id_code)"
+                  [disabled]="isLoading"
+                  [ngClass]="isProjectSelected(p.id_code) && !isProjectSelected(ALL_PROJECTS_KEY)
+                    ? 'border-brand-300 bg-brand-100 text-brand-800 dark:border-brand-500 dark:bg-brand-500 dark:text-white'
+                    : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-white/[0.03]'"
+                  class="inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-xs font-medium disabled:opacity-60 disabled:cursor-not-allowed">
+            @if (isProjectSelected(p.id_code) && !isProjectSelected(ALL_PROJECTS_KEY)) {
+              <span class="inline-flex h-4 w-4 items-center justify-center rounded bg-brand-600 text-white dark:bg-white/20">
+                <svg viewBox="0 0 20 20" fill="currentColor" class="h-3.5 w-3.5">
+                  <path fill-rule="evenodd" d="M16.704 5.29a1 1 0 010 1.415l-7.2 7.2a1 1 0 01-1.415 0l-3.6-3.6a1 1 0 011.414-1.415l2.893 2.893 6.493-6.493a1 1 0 011.415 0z" clip-rule="evenodd"></path>
+                </svg>
+              </span>
+            }
+            <span>{{ p.name }}</span>
+          </button>
         }
-        @if (projects.length === 0) {
-          <div class="rounded-xl border border-gray-200 bg-white p-4 text-sm text-gray-500 dark:border-gray-800 dark:bg-gray-900/40 dark:text-gray-400">
-            Nenhum projeto ativo.
+      </div>
+
+      <div class="flex items-center gap-2">
+        <!-- Period Dropdown -->
+        <div class="relative inline-block">
+          <button
+            type="button"
+            (click)="togglePeriodDropdown()"
+            [disabled]="isLoading"
+            class="dropdown-toggle inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-60 disabled:cursor-not-allowed dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-white/[0.03]"
+          >
+            {{ selectedPeriod === 'custom' ? 'Custom' : selectedPeriod + ' dias' }}
+            <svg class="h-4 w-4 duration-200 ease-in-out stroke-current" [ngClass]="{ 'rotate-180': isPeriodDropdownOpen }" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M4.79199 7.396L10.0003 12.6043L15.2087 7.396" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </button>
+
+          <app-dropdown
+            [isOpen]="isPeriodDropdownOpen"
+            (close)="isPeriodDropdownOpen = false"
+            className="absolute right-0 top-full z-40 mt-2 w-[200px] rounded-2xl border border-gray-200 bg-white p-2 shadow-theme-lg dark:border-gray-800 dark:bg-[#1E2635]"
+          >
+            <ul class="flex flex-col gap-1">
+              @for (p of periods; track $index) {
+                <li>
+                  <app-dropdown-item
+                    (click)="selectPeriod(p); isPeriodDropdownOpen = false"
+                    className="flex items-center justify-between rounded-lg px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-white/5"
+                  >
+                    <span>{{ p === 'custom' ? 'Custom' : p + ' dias' }}</span>
+                    @if (selectedPeriod === p) {
+                      <span class="inline-flex h-4 w-4 items-center justify-center rounded bg-brand-600 text-white">
+                        <svg viewBox="0 0 20 20" fill="currentColor" class="h-3.5 w-3.5">
+                          <path fill-rule="evenodd" d="M16.704 5.29a1 1 0 010 1.415l-7.2 7.2a1 1 0 01-1.415 0l-3.6-3.6a1 1 0 011.414-1.415l2.893 2.893 6.493-6.493a1 1 0 011.415 0z" clip-rule="evenodd"></path>
+                        </svg>
+                      </span>
+                    }
+                  </app-dropdown-item>
+                </li>
+              }
+            </ul>
+          </app-dropdown>
+        </div>
+
+        @if (selectedPeriod === 'custom') {
+          <div class="flex items-center gap-2">
+            <div class="w-32">
+              <app-date-picker
+                [label]="undefined"
+                placeholder="Início"
+                dateFormat="Y-m-d"
+                [defaultDate]="start_date"
+                (dateChange)="onDateChange($event, 'start')"
+              />
+            </div>
+            <span class="text-xs text-gray-500">até</span>
+            <div class="w-32">
+              <app-date-picker
+                [label]="undefined"
+                placeholder="Fim"
+                dateFormat="Y-m-d"
+                [defaultDate]="end_date"
+                (dateChange)="onDateChange($event, 'end')"
+              />
+            </div>
+            <button type="button" (click)="applyCustomRange()" [disabled]="isLoading" class="rounded-lg bg-brand-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-brand-600 disabled:opacity-60 disabled:cursor-not-allowed">
+              <svg xmlns="http://www.w3.org/2000/svg" width="1.2em" height="1.2em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
+            </button>
           </div>
         }
+      </div>
+    </div>
+  </div>
+
+  <!-- KPI Cards Grid -->
+  <div class="grid grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-6">
+    <!-- Card 1 -->
+    <div class="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-white/[0.03]">
+      <p class="text-xs text-gray-500 dark:text-gray-400">Total em Contrato</p>
+      <h3 class="mt-1 text-xl font-semibold text-gray-900 dark:text-white">{{ kpis.total_contract | currency:'BRL' }}</h3>
+      @if (compare_to_previous) {
+        <p class="mt-1 text-xs" [ngClass]="getDeltaSign('total_contract') === 'up' ? 'text-emerald-600' : (getDeltaSign('total_contract') === 'down' ? 'text-red-500' : 'text-gray-500 dark:text-gray-400')">
+          {{ formatDeltaPct('total_contract') }}
+        </p>
       }
     </div>
 
-    <div class="space-y-3">
-      <div class="flex items-center justify-between">
-        <div class="text-sm font-semibold text-gray-900 dark:text-white">Workload</div>
-        <div class="text-xs text-gray-500 dark:text-gray-400">{{ members.length }} colaboradores</div>
+    <!-- Card 2 -->
+    <div class="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-white/[0.03]">
+      <p class="text-xs text-gray-500 dark:text-gray-400">Custo Total (Burn)</p>
+      <h3 class="mt-1 text-xl font-semibold text-red-500">{{ kpis.total_burn_cost | currency:'BRL' }}</h3>
+      @if (compare_to_previous) {
+        <p class="mt-1 text-xs" [ngClass]="getDeltaSign('total_burn_cost') === 'down' ? 'text-emerald-600' : (getDeltaSign('total_burn_cost') === 'up' ? 'text-red-500' : 'text-gray-500 dark:text-gray-400')">
+          {{ formatDeltaPct('total_burn_cost') }}
+        </p>
+      }
+    </div>
+
+    <!-- Card 3 -->
+    <div class="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-white/[0.03]">
+      <p class="text-xs text-gray-500 dark:text-gray-400">Margem Estimada</p>
+      <h3 class="mt-1 text-xl font-semibold" [ngClass]="kpis.margin_value >= 0 ? 'text-emerald-600' : 'text-red-500'">
+        {{ kpis.margin_value | currency:'BRL' }}
+      </h3>
+      @if (compare_to_previous) {
+        <p class="mt-1 text-xs" [ngClass]="getDeltaSign('margin_value') === 'up' ? 'text-emerald-600' : (getDeltaSign('margin_value') === 'down' ? 'text-red-500' : 'text-gray-500 dark:text-gray-400')">
+          {{ formatDeltaPct('margin_value') }}
+        </p>
+      }
+    </div>
+
+    <!-- Card 4 -->
+    <div class="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-white/[0.03]">
+      <p class="text-xs text-gray-500 dark:text-gray-400">Horas Burned</p>
+      <h3 class="mt-1 text-xl font-semibold text-gray-900 dark:text-white">{{ formatMinutes(kpis.total_burn_minutes) }}</h3>
+    </div>
+
+    <!-- Card 5 -->
+    <div class="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-white/[0.03]">
+      <p class="text-xs text-gray-500 dark:text-gray-400">Projetos Ativos</p>
+      <h3 class="mt-1 text-xl font-semibold text-gray-900 dark:text-white">{{ kpis.active_projects }}</h3>
+    </div>
+
+    <!-- Card 6 -->
+    <div class="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-white/[0.03]">
+      <p class="text-xs text-gray-500 dark:text-gray-400">Membros Alocados</p>
+      <h3 class="mt-1 text-xl font-semibold text-gray-900 dark:text-white">{{ kpis.active_members }}</h3>
+    </div>
+  </div>
+
+  <!-- Main Chart Area -->
+  <div class="grid grid-cols-1 gap-6 lg:grid-cols-12">
+    <div class="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 dark:border-gray-800 dark:bg-white/[0.03] lg:col-span-8">
+      <div class="mb-4 flex items-center justify-between gap-4">
+        <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Custo Histórico (Burn Cost)</h4>
+      </div>
+      @if (isLoading) {
+        <div class="flex h-[320px] items-center justify-center">
+          <div class="h-8 w-8 animate-spin rounded-full border-2 border-brand-500 border-t-transparent"></div>
+        </div>
+      } @else {
+        <apx-chart
+          [series]="chartSeries"
+          [chart]="chartOptions.chart"
+          [dataLabels]="chartOptions.dataLabels"
+          [stroke]="chartOptions.stroke"
+          [xaxis]="chartOptions.xaxis"
+          [yaxis]="chartOptions.yaxis"
+          [tooltip]="chartOptions.tooltip"
+          [grid]="chartOptions.grid"
+          [legend]="chartOptions.legend"
+          [colors]="chartOptions.colors">
+        </apx-chart>
+      }
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="space-y-6 lg:col-span-4">
+      <div class="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 dark:border-gray-800 dark:bg-white/[0.03]">
+        <h4 class="mb-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Resumo de Seleção</h4>
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-gray-500">Escopo do Período</span>
+            <span class="text-xs font-medium text-gray-700 dark:text-gray-200">{{ start_date | date:'dd/MM' }} - {{ end_date | date:'dd/MM/yy' }}</span>
+          </div>
+          <div class="border-t border-gray-100 pt-4 dark:border-gray-800">
+            <div class="mb-2 flex items-center justify-between">
+              <span class="text-xs text-gray-500">Burn Rate Médio</span>
+              <span class="text-xs font-semibold text-gray-900 dark:text-white">{{ (kpis.total_burn_cost / (kpis.total_burn_minutes / 60 || 1)) | currency:'BRL' }}/h</span>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div class="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900/40">
+      <div class="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 dark:border-gray-800 dark:bg-white/[0.03]">
+        <h4 class="mb-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Top Members (Custo)</h4>
         <div class="space-y-3">
-          @for (m of members; track m.id_code) {
-            <div class="rounded-lg border border-gray-100 p-3 dark:border-gray-800">
-              <div class="flex items-center justify-between gap-3">
-                <div class="min-w-0">
-                  <div class="truncate text-sm font-medium text-gray-900 dark:text-white">{{ m.name }}</div>
-                  <div class="mt-0.5 truncate text-xs text-gray-500 dark:text-gray-400">
-                    {{ m.current_project_name || 'Sem projeto ativo' }}
-                  </div>
-                </div>
-                <div class="flex items-center gap-3">
-                  <div class="hidden text-right sm:block">
-                    <div class="text-[11px] text-gray-500 dark:text-gray-400">Custo/h</div>
-                    <div class="text-xs font-semibold text-gray-900 dark:text-white">
-                      {{ currency(m.cost_per_hour || 0) }}
-                    </div>
-                  </div>
-                  <span class="rounded-md px-2 py-1 text-[11px] font-medium" [ngClass]="statusClass(m.status)">
-                    {{ statusLabel(m.status) }}
-                  </span>
-                </div>
+          @for (m of top_members.slice(0, 4); track m.id_code) {
+            <div class="flex items-center justify-between gap-3">
+              <div class="flex items-center gap-2 truncate">
+                <img [src]="m.avatar_url || 'assets/media/avatars/01.png'" class="h-7 w-7 rounded-full bg-gray-100 object-cover" alt="">
+                <span class="truncate text-xs font-medium text-gray-700 dark:text-gray-200">{{ m.name }}</span>
               </div>
-
-              <div class="mt-3">
-                <div class="flex h-2 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-white/10">
-                  <div class="h-full bg-brand-500" [style.width.%]="clampPct(m.today_project_pct)"></div>
-                  <div class="h-full bg-gray-300 dark:bg-white/20" [style.width.%]="clampPct(m.today_office_pct)"></div>
-                </div>
-                <div class="mt-1 flex justify-between text-[11px] text-gray-500 dark:text-gray-400">
-                  <span>{{ clampPct(m.today_project_pct) }}% projetos</span>
-                  <span>{{ clampPct(m.today_office_pct) }}% escritório</span>
-                </div>
-              </div>
+              <span class="text-xs font-semibold text-gray-900 dark:text-white">{{ m.cost | currency:'BRL' }}</span>
             </div>
-          }
-          @if (members.length === 0) {
-            <div class="text-sm text-gray-500 dark:text-gray-400">Nenhum colaborador encontrado.</div>
           }
         </div>
       </div>
     </div>
   </div>
 
-  <div class="space-y-3">
-    <div class="flex items-center justify-between">
-      <div class="text-sm font-semibold text-gray-900 dark:text-white">Timeline de Faturamento (Cash Flow)</div>
-      <a routerLink="/project/admin/backoffice" class="text-xs font-medium text-brand-600 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300">
-        Abrir vencimentos
-      </a>
+  <!-- Detailed Tables -->
+  <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+    <div class="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 dark:border-gray-800 dark:bg-white/[0.03]">
+      <h4 class="mb-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Projetos com Maior Queima</h4>
+      <div class="overflow-x-auto">
+        <table class="min-w-full text-sm">
+          <thead class="text-left text-xs text-gray-500 dark:text-gray-400">
+            <tr>
+              <th class="pb-3 pr-4 font-medium">Projeto</th>
+              <th class="pb-3 pr-4 font-medium text-right">Burn (Custo)</th>
+              <th class="pb-3 font-medium text-right">Margem</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+            @for (p of top_projects; track p.id_code) {
+              <tr class="group hover:bg-gray-50/50 dark:hover:bg-white/[0.02]">
+                <td class="py-3 pr-4">
+                  <div class="truncate font-medium text-gray-800 dark:text-gray-200">{{ p.name }}</div>
+                  <div class="text-[10px] text-gray-500">{{ formatMinutes(p.burn_minutes) }} alocadas</div>
+                </td>
+                <td class="py-3 pr-4 text-right font-medium text-red-500">{{ p.burn_cost | currency:'BRL' }}</td>
+                <td class="py-3 text-right">
+                  <span [ngClass]="p.margin_pct > 30 ? 'text-emerald-600' : (p.margin_pct > 10 ? 'text-amber-600' : 'text-red-500')" class="font-semibold">
+                    {{ p.margin_pct }}%
+                  </span>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
     </div>
 
-    <div class="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900/40">
-      @for (group of cashFlowGroups; track group.month) {
-        <div class="border-b border-gray-100 p-3 text-xs font-semibold text-gray-700 dark:border-gray-800 dark:text-gray-200">
-          {{ monthLabel(group.month) }}
-        </div>
-        <div class="overflow-x-auto">
-          <table class="w-full text-sm">
-            <thead class="bg-gray-50 dark:bg-white/[0.03]">
-              <tr>
-                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Projeto</th>
-                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Etapa</th>
-                <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-400">Previsto</th>
-                <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-400">Pago</th>
+    <div class="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 dark:border-gray-800 dark:bg-white/[0.03]">
+      <h4 class="mb-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Tempo Alocado por Membro</h4>
+      <div class="overflow-x-auto">
+        <table class="min-w-full text-sm">
+          <thead class="text-left text-xs text-gray-500 dark:text-gray-400">
+            <tr>
+              <th class="pb-3 pr-4 font-medium">Colaborador</th>
+              <th class="pb-3 pr-4 font-medium text-right">Tempo Total</th>
+              <th class="pb-3 font-medium text-right">Custo Estimado</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+            @for (m of top_members; track m.id_code) {
+              <tr class="hover:bg-gray-50/50 dark:hover:bg-white/[0.02]">
+                <td class="py-3 pr-4">
+                  <div class="flex items-center gap-3">
+                    <img [src]="m.avatar_url || 'assets/media/avatars/01.png'" class="h-8 w-8 rounded-full border border-gray-200 dark:border-gray-700" alt="">
+                    <span class="font-medium text-gray-800 dark:text-gray-200">{{ m.name }}</span>
+                  </div>
+                </td>
+                <td class="py-3 pr-4 text-right text-gray-700 dark:text-gray-300">{{ formatMinutes(m.minutes) }}</td>
+                <td class="py-3 text-right font-semibold text-gray-900 dark:text-white">{{ m.cost | currency:'BRL' }}</td>
               </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
-              @for (r of group.rows; track r.id_code) {
-                <tr class="hover:bg-gray-50 dark:hover:bg-white/[0.03]">
-                  <td class="px-4 py-3">
-                    <div class="text-sm font-medium text-gray-900 dark:text-white">{{ r.project_name }}</div>
-                    <div class="text-xs text-gray-500 dark:text-gray-400">{{ r.expected_date || '—' }}</div>
-                  </td>
-                  <td class="px-4 py-3">
-                    <div class="text-sm text-gray-900 dark:text-white">{{ r.stage_name }}</div>
-                    <div class="text-xs text-gray-500 dark:text-gray-400">{{ r.stage_code }}</div>
-                  </td>
-                  <td class="px-4 py-3 text-right">
-                    <div class="text-sm font-medium text-gray-900 dark:text-white">{{ currency(r.expected_value) }}</div>
-                    <div class="text-[11px] text-gray-500 dark:text-gray-400">Previsão</div>
-                  </td>
-                  <td class="px-4 py-3 text-right">
-                    @if (r.paid_date) {
-                      <div class="text-sm font-medium text-emerald-700 dark:text-emerald-400">{{ currency(r.paid_value || 0) }}</div>
-                      <div class="text-[11px] text-gray-500 dark:text-gray-400">{{ r.paid_date }}</div>
-                    } @else {
-                      <div class="text-sm font-medium text-amber-700 dark:text-amber-400">—</div>
-                      <div class="text-[11px] text-gray-500 dark:text-gray-400">Previsão</div>
-                    }
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
-      }
-
-      @if (cashFlowGroups.length === 0) {
-        <div class="p-4 text-sm text-gray-500 dark:text-gray-400">Nenhum vencimento cadastrado.</div>
-      }
+            }
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 </div>

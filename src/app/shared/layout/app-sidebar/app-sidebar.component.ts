@@ -111,8 +111,8 @@ export class AppSidebarComponent implements OnInit, OnDestroy {
       name: 'Projetos',
       moduleSlug: 'project',
       subItems: [
-        { name: 'Lista', path: '/project/admin/projects', roles: ['admin', 'master', 'manager'] },
-        { name: 'Admin (Feed)', path: '/project/admin', roles: ['admin', 'master', 'manager'] },
+        { name: 'Dashboard', path: '/project/admin/dashboard', roles: ['admin', 'master', 'manager'] },
+        { name: 'Lista de Projetos', path: '/project/admin/projects', roles: ['admin', 'master', 'manager'] },
         { name: 'Sessões', path: '/project/admin/sessions', roles: ['admin', 'master', 'manager'] },
         { name: 'Backoffice', path: '/project/admin/backoffice', roles: ['admin', 'master', 'manager'] },
         { name: 'Meu dia', path: '/project/me' },

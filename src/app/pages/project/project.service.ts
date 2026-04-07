@@ -13,9 +13,9 @@ export class ProjectService {
   private storeContext = inject(StoreContextService);
   private readonly API_BASE_URL = `${environment.apiUrl}/api/v1/project`;
 
-  private readonly projectsSubject = new BehaviorSubject<Project[]>(this.seedProjects());
-  private readonly membersSubject = new BehaviorSubject<ProjectMember[]>(this.seedMembers());
-  private readonly invoicesSubject = new BehaviorSubject<ProjectInvoiceRow[]>(this.seedInvoices());
+  private readonly projectsSubject = new BehaviorSubject<Project[]>([]);
+  private readonly membersSubject = new BehaviorSubject<ProjectMember[]>([]);
+  private readonly invoicesSubject = new BehaviorSubject<ProjectInvoiceRow[]>([]);
   private readonly memberCostHistorySubject = new BehaviorSubject<Record<string, { cost_per_hour: number | null; effective_from: string }[]>>({});
 
   listProjects(): Observable<Project[]> {
@@ -40,6 +40,43 @@ export class ProjectService {
       map((resp) => this.extractProjects(resp)),
       tap((items) => this.projectsSubject.next(items)),
       catchError(() => of(this.projectsSubject.value))
+    );
+  }
+
+  refreshAdminDashboard(filters?: { start_date?: string; end_date?: string; project_ids?: string[] }): Observable<any> {
+    const storeId = (this.storeContext.getActiveStore()?.id_code || '').trim();
+    if (!storeId) return of(null);
+
+    const headers = this.getHeaders(storeId);
+    let params = new HttpParams().set('_t', Date.now().toString());
+    
+    if (filters) {
+      if (filters.start_date) params = params.set('start_date', filters.start_date);
+      if (filters.end_date) params = params.set('end_date', filters.end_date);
+      if (filters.project_ids && filters.project_ids.length > 0) {
+        params = params.set('project_ids', filters.project_ids.join(','));
+      }
+    }
+
+    return this.http.get<any>(`${this.API_BASE_URL}/admin/dashboard`, { headers, params }).pipe(
+      map(resp => {
+        const root = this.unwrapResponse(resp);
+        return root?.data || null;
+      }),
+      tap(data => {
+        if (data) {
+          if (Array.isArray(data.projects)) {
+            this.projectsSubject.next(data.projects.map((p: any) => this.normalizeProject(p)));
+          }
+          if (Array.isArray(data.members)) {
+            this.membersSubject.next(data.members);
+          }
+          if (Array.isArray(data.invoices)) {
+            this.invoicesSubject.next(data.invoices);
+          }
+        }
+      }),
+      catchError(() => of(null))
     );
   }
 
