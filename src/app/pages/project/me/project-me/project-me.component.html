@@ -45,12 +45,8 @@
           class="relative flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-gray-100 text-gray-600 transition-colors hover:bg-gray-200 dark:bg-white/[0.06] dark:text-gray-300 dark:hover:bg-white/[0.12]"
           title="Escolher data">
           <div class="absolute inset-0 z-20" style="opacity: 0.01;">
-            <app-date-picker 
-              dateFormat="Y-m-d" 
-              position="below right" 
-              [defaultDate]="selectedDate"
-              (dateChange)="onDatePickerChange($event)"
-            ></app-date-picker>
+            <app-date-picker dateFormat="Y-m-d" position="below right" [defaultDate]="selectedDate"
+              (dateChange)="onDatePickerChange($event)"></app-date-picker>
           </div>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
             stroke-linecap="round" stroke-linejoin="round">
@@ -97,7 +93,7 @@
     <div class="mb-5 overflow-hidden rounded-[2.5rem] bg-brand-600 p-5 shadow-2xl shadow-brand-500/20">
       <div class="relative z-10">
         <!-- Header of Summary Card -->
-        <div class="flex items-start justify-between mb-5">
+        <div class="flex items-start justify-between mb-2">
           <div>
             <h2 class="text-2xl font-medium text-white tracking-tight">Resumo do Dia</h2>
             <div class="flex items-center gap-2 mt-1">
@@ -122,13 +118,13 @@
         <div class="grid grid-cols-2 gap-4">
           <div class="rounded-3xl bg-white/10 p-4 backdrop-blur-md">
             <div class="text-[11px] font-black uppercase tracking-wider text-brand-200/80 mb-2">Projetos</div>
-            <div class="text-3xl font-medium text-white tabular-nums">
+            <div class="text-2xl font-medium text-white tabular-nums">
               {{ formatSecondsToHms(timelineData.summary.project_minutes * 60) }}
             </div>
           </div>
           <div class="rounded-3xl bg-black/10 p-4 backdrop-blur-md">
             <div class="text-[11px] font-black uppercase tracking-wider text-brand-200/80 mb-2">Office / Geral</div>
-            <div class="text-3xl font-medium text-white tabular-nums">
+            <div class="text-2xl font-medium text-white tabular-nums">
               {{ formatSecondsToHms((timelineData.summary.general_minutes - timelineData.summary.project_minutes) * 60)
               }}
             </div>
@@ -136,7 +132,7 @@
         </div>
 
         <!-- Enhanced Progress Bar -->
-        <div class="mt-8">
+        <div class="mt-2">
           <div class="flex justify-between text-[11px] font-black text-white uppercase mb-3">
             <span class="tracking-widest">Distribuição de Horas</span>
             <span class="tracking-widest">{{ clampPct((timelineData.summary.project_minutes /
