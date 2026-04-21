@@ -967,6 +967,56 @@ export class EventService {
     );
   }
 
+  getPublicPlannedJams(eventId: string | number): Observable<{ jams: any[]; meta?: any }> {
+    const token = this.authService.getAuthToken();
+    const headers: HttpHeaders = new HttpHeaders(token ? { Authorization: `Bearer ${token}` } : {});
+    const safeEventId = encodeURIComponent(String(eventId).trim().replace(/`/g, ''));
+    const url = `${this.PUBLIC_API_BASE_URL}/events/${safeEventId}/jams/planned`;
+    return this.http.get<any>(url, { headers }).pipe(
+      map((resp) => {
+        const jams = resp?.data?.jams ?? resp?.data ?? [];
+        return {
+          jams: Array.isArray(jams) ? jams : [],
+          meta: resp?.meta ?? resp?.data?.meta ?? undefined,
+        };
+      }),
+      catchError(() => of({ jams: [] as any[] }))
+    );
+  }
+
+  togglePublicPlannedSongLike(eventId: string | number, jamId: string | number, songId: string | number): Observable<{ liked: boolean; like_count: number } | null> {
+    const token = this.authService.getAuthToken();
+    if (!token) return of(null);
+    const headers: HttpHeaders = new HttpHeaders({ Authorization: `Bearer ${token}` });
+    const safeEventId = encodeURIComponent(String(eventId).trim().replace(/`/g, ''));
+    const safeJamId = encodeURIComponent(String(jamId).trim().replace(/`/g, ''));
+    const safeSongId = encodeURIComponent(String(songId).trim().replace(/`/g, ''));
+    const url = `${this.PUBLIC_API_BASE_URL}/events/${safeEventId}/jams/${safeJamId}/songs/${safeSongId}/like`;
+    return this.http.post<any>(url, {}, { headers }).pipe(
+      map((resp) => {
+        const liked = !!resp?.data?.liked;
+        const like_count = Number(resp?.data?.like_count ?? 0);
+        return { liked, like_count: Number.isFinite(like_count) ? like_count : 0 };
+      }),
+      catchError(() => of(null))
+    );
+  }
+
+  getPublicMyLikes(eventId: string | number): Observable<string[]> {
+    const token = this.authService.getAuthToken();
+    if (!token) return of([]);
+    const headers: HttpHeaders = new HttpHeaders({ Authorization: `Bearer ${token}` });
+    const safeEventId = encodeURIComponent(String(eventId).trim().replace(/`/g, ''));
+    const url = `${this.PUBLIC_API_BASE_URL}/events/${safeEventId}/jams/my-likes`;
+    return this.http.get<any>(url, { headers }).pipe(
+      map((resp) => {
+        const ids = resp?.data?.liked_song_ids ?? [];
+        return Array.isArray(ids) ? (ids.map((x: any) => String(x)) as string[]) : [];
+      }),
+      catchError(() => of([]))
+    );
+  }
+
   private mapApiEventToListItem(ev: ApiEvent): EventListItem {
     const eventName = ev.name || ev.title || 'Evento';
     const description = ev.description ?? ev.details ?? 'Sem descrição';
