@@ -43,7 +43,10 @@
   <script>
     (function() {
       const hostname = window.location.hostname;
-      const isEvents = hostname.startsWith('events.') || hostname === 'vibe.localhost'; // Suporte para vibe.localhost também se precisar
+      // Detecção mais robusta para incluir subdomínios de produção e desenvolvimento
+      const isEvents = hostname.startsWith('events.') || 
+                       hostname.includes('vibesessions') || 
+                       hostname.includes('vibe.localhost');
       
       const manifest = document.createElement('link');
       manifest.rel = 'manifest';
@@ -61,7 +64,6 @@
         manifest.href = '/manifest.webmanifest';
         appleTouchIcon.href = '/favicon.ico';
       }
-
       
       document.head.appendChild(manifest);
       document.head.appendChild(appleTouchIcon);
@@ -70,15 +72,25 @@
 </head>
 <body>
   <div id="app-loader">
+    <div id="loader-img-container"></div>
     <script>
       (function() {
-        const isEvents = window.location.hostname.startsWith('events.') || window.location.hostname === 'vibe.localhost';
+        const hostname = window.location.hostname;
+        const isEvents = hostname.startsWith('events.') || 
+                         hostname.includes('vibesessions') || 
+                         hostname.includes('vibe.localhost');
         const logoSrc = isEvents ? '/images/icons/events/logo-light.png' : '/favicon.ico';
-        document.write(`<img src="${logoSrc}" alt="Loading...">`);
+        const container = document.getElementById('loader-img-container');
+        if (container) {
+          const img = document.createElement('img');
+          img.src = logoSrc;
+          img.alt = "Loading...";
+          container.appendChild(img);
+        }
       })();
     </script>
-
   </div>
+
 
   <app-root></app-root>
 
