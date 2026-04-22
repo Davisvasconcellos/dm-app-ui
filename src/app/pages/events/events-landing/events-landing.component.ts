@@ -9,6 +9,7 @@ import { forkJoin, of } from 'rxjs';
 import { catchError, map, switchMap } from 'rxjs/operators';
 import { EventTicketsService, MyTicket } from '../event-tickets.service';
 import { filter } from 'rxjs/operators';
+import { TranslateModule, TranslatePipe } from '@ngx-translate/core';
 
 export interface EventCardVm {
   id_code: string;
@@ -45,7 +46,7 @@ type MyTicketVm = {
 @Component({
   selector: 'app-events-landing',
   standalone: true,
-  imports: [CommonModule, RouterModule, QRCodeComponent],
+  imports: [CommonModule, RouterModule, QRCodeComponent, TranslateModule, TranslatePipe],
   templateUrl: './events-landing.component.html',
 })
 export class EventsLandingComponent implements OnInit {

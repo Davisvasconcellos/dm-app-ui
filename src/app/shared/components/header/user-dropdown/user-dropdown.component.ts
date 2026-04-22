@@ -59,6 +59,10 @@ export class UserDropdownComponent implements OnInit, OnDestroy {
   }
 
   loadUserData(): void {
+    if (!this.authService.isAuthenticated()) {
+      this.user = null;
+      return;
+    }
     this.user = this.authService.getCurrentUser();
 
     this.authService.getUserMe().subscribe({

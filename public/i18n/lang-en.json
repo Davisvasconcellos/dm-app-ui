@@ -224,12 +224,10 @@
       },
       "actions": {
         "save": "Save Settings",
-        "saveCard": "Save Card"
-      },
-      "actions": {
-        "save": "Save",
+        "saveCard": "Save Card",
         "cancel": "Cancel"
       },
+
       "answers": {
         "title": "Responses",
         "actions": {
@@ -460,5 +458,79 @@
         "andSeparator": " and "
       }
     }
+  },
+  "eventsApp": {
+    "landing": {
+      "title": "Explore events",
+      "subtitle": "Access your events, check in and choose your jams.",
+      "popular": "Popular",
+      "myEvents": "My events",
+      "loginPrompt": "Log in to see the events you participate in.",
+      "noneFound": "No tickets found."
+    },
+    "reserve": {
+      "liveExperience": "Live Experience",
+      "going": "I'M GOING",
+      "wantToGo": "I WANT TO GO",
+      "reservedTicket": "Your Reserved Ticket",
+      "yourQr": "Your QR code",
+      "presentHint": "Present this code at the event entrance",
+      "trendingTracks": "Trending Tracks",
+      "noSongs": "No songs available for voting.",
+      "unknownArtist": "Unknown Artist",
+      "status": {
+        "paused": "Paused",
+        "canceled": "Canceled",
+        "draft": "Draft",
+        "published": "Published"
+      }
+    },
+    "checkin": {
+      "title": "Event Check-in",
+      "subtitle": "Confirm your details and proceed to the questionnaire.",
+      "takeSelfie": "Take Selfie",
+      "nameHint": "How you prefer to be called",
+      "confirmAction": "Confirm Check-in",
+      "successMessage": "Check-in successful!",
+      "errorCamera": "Could not access the camera.",
+      "errorCapture": "Could not capture the image.",
+      "errorFail": "Failed to perform check-in.",
+      "nameRequired": "Please let us know how you prefer to be called."
+    },
+    "selfCheckin": {
+      "title": "Self-checkin",
+      "subtitle": "Scan the event QR Code to enter.",
+      "confirming": "Confirming check-in...",
+      "hint": "Use the event QR Code to validate your ticket and enter.",
+      "alreadyCheckedIn": "You already had a confirmed check-in.",
+      "confirmed": "Check-in confirmed.",
+      "needTicket": "You need to reserve a ticket before check-in.",
+      "failTryAgain": "Failed to confirm check-in. Try again."
+    },
+    "common": {
+      "event": "Event",
+      "open": "Open",
+      "close": "Close",
+      "back": "Back",
+      "viewOnMap": "View on map",
+      "viewAll": "View all",
+      "tryAgain": "Try again",
+      "oops": "Oops! An error occurred",
+      "fullName": "Your full name",
+      "emailPlaceholder": "your@email.com",
+      "phone": "Phone",
+      "phonePlaceholder": "(00) 00000-0000",
+      "sending": "Sending...",
+      "cancel": "Cancel",
+      "capture": "Capture",
+      "requiredField": "Required field"
+    },
+
+    "auth": {
+      "login": "Log in",
+      "logout": "Log out"
+    }
   }
 }
+
+

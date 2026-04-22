@@ -8,11 +8,13 @@ import { InputFieldComponent } from '../../../shared/components/form/input/input
 import { AuthService } from '../../../shared/services/auth.service';
 import { ThemeService } from '../../../shared/services/theme.service';
 import { ImageUploadService } from '../../../shared/services/image-upload.service';
+import { TranslateModule, TranslateService, TranslatePipe } from '@ngx-translate/core';
+
 
 @Component({
   selector: 'app-event-checkin',
   standalone: true,
-  imports: [CommonModule, FormsModule, ButtonComponent, InputFieldComponent],
+  imports: [CommonModule, FormsModule, ButtonComponent, InputFieldComponent, TranslateModule, TranslatePipe],
   templateUrl: './checkin.component.html',
   styleUrls: ['./checkin.component.css']
 })
@@ -50,6 +52,7 @@ export class CheckinComponent implements OnInit, OnDestroy {
     private themeService: ThemeService,
     private imageUploadService: ImageUploadService,
     private cdr: ChangeDetectorRef,
+    private translate: TranslateService,
   ) {}
 
   ngOnInit(): void {
@@ -245,7 +248,7 @@ export class CheckinComponent implements OnInit, OnDestroy {
     if (!this.idCode) return;
     this.nameError = !this.displayName?.trim();
     if (this.nameError) {
-      this.submitError = 'Por favor, informe como prefere ser chamado.';
+      this.submitError = this.translate.instant('eventsApp.checkin.nameRequired');
       return;
     }
     this.submitting = true;
@@ -269,7 +272,7 @@ export class CheckinComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         this.submitting = false;
-        this.submitError = err?.error?.message || 'Falha ao realizar check-in.';
+        this.submitError = err?.error?.message || this.translate.instant('eventsApp.checkin.errorFail');
         try { console.log('[CHECKIN][Submit] Erro no check-in', { idCode: this.idCode, error: this.submitError }); } catch {}
       }
     });
@@ -299,7 +302,7 @@ export class CheckinComponent implements OnInit, OnDestroy {
       this.cameraOpen = false;
       this.cameraLoading = false;
       this.cdr.detectChanges();
-      this.submitError = 'Não foi possível acessar a câmera.';
+      this.submitError = this.translate.instant('eventsApp.checkin.errorCamera');
     }
   }
 
@@ -336,7 +339,7 @@ export class CheckinComponent implements OnInit, OnDestroy {
     // Converte para Blob e faz upload
     canvasEl.toBlob(async (blob) => {
       if (!blob) {
-        this.submitError = 'Não foi possível capturar a imagem.';
+        this.submitError = this.translate.instant('eventsApp.checkin.errorCapture');
         return;
       }
       const file = new File([blob], 'selfie.jpg', { type: 'image/jpeg' });

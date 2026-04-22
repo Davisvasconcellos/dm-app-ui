@@ -532,5 +532,78 @@
         "results": "resultados"
       }
     }
+  },
+  "eventsApp": {
+    "landing": {
+      "title": "Explore eventos",
+      "subtitle": "Acesse seus eventos, faça check-in e escolha suas jams.",
+      "popular": "Popular",
+      "myEvents": "Meus eventos",
+      "loginPrompt": "Faça login para ver os eventos em que você participa.",
+      "noneFound": "Nenhum ingresso encontrado."
+    },
+    "reserve": {
+      "liveExperience": "Live Experience",
+      "going": "EU VOU",
+      "wantToGo": "QUERO IR",
+      "reservedTicket": "Seu Ingresso Reservado",
+      "yourQr": "Seu QR code",
+      "presentHint": "Apresente este código na entrada do evento",
+      "trendingTracks": "Trending Tracks",
+      "noSongs": "Nenhuma música disponível para votação.",
+      "unknownArtist": "Artista Desconhecido",
+      "status": {
+        "paused": "Pausado",
+        "canceled": "Cancelado",
+        "draft": "Rascunho",
+        "published": "Publicado"
+      }
+    },
+    "checkin": {
+      "title": "Check-in do Evento",
+      "subtitle": "Confirme seus dados e prossiga ao questionário.",
+      "takeSelfie": "Tirar Selfie",
+      "nameHint": "Como vc prefere ser chamado",
+      "confirmAction": "Confirmar Check-in",
+      "successMessage": "Check-in realizado com sucesso!",
+      "errorCamera": "Não foi possível acessar a câmera.",
+      "errorCapture": "Não foi possível capturar a imagem.",
+      "errorFail": "Falha ao realizar check-in.",
+      "nameRequired": "Por favor, informe como prefere ser chamado."
+    },
+    "selfCheckin": {
+      "title": "Self-checkin",
+      "subtitle": "Leia o QR Code do evento para entrar.",
+      "confirming": "Confirmando check-in...",
+      "hint": "Use o QR Code do evento para validar seu ingresso e entrar.",
+      "alreadyCheckedIn": "Você já estava com check-in confirmado.",
+      "confirmed": "Check-in confirmado.",
+      "needTicket": "Você precisa reservar um ingresso antes do check-in.",
+      "failTryAgain": "Falha ao confirmar check-in. Tente novamente."
+    },
+    "common": {
+      "event": "Evento",
+      "open": "Abrir",
+      "close": "Fechar",
+      "back": "Voltar",
+      "viewOnMap": "Ver no mapa",
+      "viewAll": "Ver todas",
+      "tryAgain": "Tentar novamente",
+      "oops": "Ops! Ocorreu um erro",
+      "fullName": "Seu nome completo",
+      "emailPlaceholder": "seu@email.com",
+      "phone": "Telefone",
+      "phonePlaceholder": "(00) 00000-0000",
+      "sending": "Enviando...",
+      "cancel": "Cancelar",
+      "capture": "Capturar",
+      "requiredField": "Campo obrigatório"
+    },
+
+    "auth": {
+      "login": "Entrar",
+      "logout": "Sair"
+    }
   }
 }
+

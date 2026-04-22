@@ -6,11 +6,13 @@ import { LocalStorageService } from '../../../shared/services/local-storage.serv
 import { AuthService } from '../../../shared/services/auth.service';
 import { EventService, ApiEvent } from '../event.service';
 import { EventTicketsService } from '../event-tickets.service';
+import { TranslateModule, TranslatePipe } from '@ngx-translate/core';
+
 
 @Component({
   selector: 'app-tickets-reserve',
   standalone: true,
-  imports: [CommonModule, RouterModule, QRCodeComponent],
+  imports: [CommonModule, RouterModule, QRCodeComponent, TranslateModule, TranslatePipe],
   template: `
     <!-- Top Padding for fixed layout header if needed, but since it's inside EventsLayout we assume layout handled it.
          Actually, the user said preserve header/footer, so we just provide the content. -->
@@ -24,9 +26,9 @@ import { EventTicketsService } from '../event-tickets.service';
       } @else if (errorMessage) {
         <div class="mx-auto max-w-2xl px-6 py-20">
           <div class="rounded-2xl border border-error/20 bg-error/10 p-6 text-sm text-error select-none">
-            <h3 class="font-headline font-bold text-lg mb-2">Ops! Ocorreu um erro</h3>
+            <h3 class="font-headline font-bold text-lg mb-2">{{ 'eventsApp.common.oops' | translate }}</h3>
             {{ errorMessage }}
-            <button (click)="ngOnInit()" class="mt-4 block text-primary font-bold hover:underline">Tentar novamente</button>
+            <button (click)="ngOnInit()" class="mt-4 block text-primary font-bold hover:underline">{{ 'eventsApp.common.tryAgain' | translate }}</button>
           </div>
         </div>
       } @else {
@@ -44,10 +46,10 @@ import { EventTicketsService } from '../event-tickets.service';
             
             <div class="absolute bottom-0 left-0 w-full px-6 md:px-12 pb-12">
               <span class="inline-block px-3 py-1 mb-4 text-[10px] font-bold tracking-[0.2em] uppercase bg-primary text-[#002108] rounded-full">
-                Live Experience
+                {{ 'eventsApp.reserve.liveExperience' | translate }}
               </span>
               <h1 class="font-headline font-bold text-4xl md:text-7xl tracking-tighter leading-none mb-6 text-gray-900 dark:text-white">
-                {{ event?.title || event?.name || 'Evento' }}
+                {{ event?.title || event?.name || ('eventsApp.common.event' | translate) }}
               </h1>
               <div class="flex flex-wrap items-center gap-6 font-medium text-gray-600 dark:text-gray-300">
                 <div class="flex items-center gap-2">
@@ -56,7 +58,7 @@ import { EventTicketsService } from '../event-tickets.service';
                 </div>
                 <div class="flex items-center gap-2">
                   <span class="material-symbols-outlined text-primary text-xl">location_on</span>
-                  <span>{{ event?.place || 'The Warehouse, Berlin' }}</span>
+                  <span>{{ event?.place || 'TBA' }}</span>
                 </div>
               </div>
             </div>
@@ -86,7 +88,7 @@ import { EventTicketsService } from '../event-tickets.service';
                   [disabled]="reserving || !!reservedTicketId"
                   class="editorial-gradient text-[#002108] font-bold px-8 py-4 rounded-2xl text-lg hover:scale-105 active:scale-95 transition-all shadow-xl shadow-primary/20 disabled:opacity-80 disabled:scale-100 disabled:cursor-default"
                 >
-                  {{ reservedTicketId ? 'EU VOU' : 'QUERO IR' }}
+                  {{ reservedTicketId ? ('eventsApp.reserve.going' | translate) : ('eventsApp.reserve.wantToGo' | translate) }}
                   <span *ngIf="reservedTicketId" class="ml-2 text-xl">✓</span>
                 </button>
                 
@@ -118,8 +120,8 @@ import { EventTicketsService } from '../event-tickets.service';
                   />
                 </div>
                 <div class="mt-6 text-center">
-                  <p class="text-sm font-bold uppercase tracking-widest text-gray-900 dark:text-white">Seu Ingresso Reservado</p>
-                  <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">Apresente este código na entrada do evento</p>
+                  <p class="text-sm font-bold uppercase tracking-widest text-gray-900 dark:text-white">{{ 'eventsApp.reserve.reservedTicket' | translate }}</p>
+                  <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">{{ 'eventsApp.reserve.presentHint' | translate }}</p>
                 </div>
               </div>
             }
@@ -128,8 +130,8 @@ import { EventTicketsService } from '../event-tickets.service';
           <!-- Trending Tracks Section -->
           <section class="mt-12 px-6 md:px-12">
             <div class="flex items-center justify-between mb-8">
-              <h2 class="font-headline font-bold text-2xl tracking-tight text-gray-900 dark:text-white">Trending Tracks</h2>
-              <button class="text-primary font-bold text-sm hover:underline">View All</button>
+              <h2 class="font-headline font-bold text-2xl tracking-tight text-gray-900 dark:text-white">{{ 'eventsApp.reserve.trendingTracks' | translate }}</h2>
+              <button class="text-primary font-bold text-sm hover:underline">{{ 'eventsApp.common.viewAll' | translate }}</button>
             </div>
 
             @if (loadingPlanned) {
@@ -139,7 +141,7 @@ import { EventTicketsService } from '../event-tickets.service';
             } @else {
               @if (!plannedSongs.length) {
                 <div class="py-12 text-center text-gray-500 dark:text-gray-400 border border-dashed border-gray-300 dark:border-white/10 rounded-2xl bg-gray-50 dark:bg-gray-900/50">
-                  Nenhuma música disponível para votação.
+                  {{ 'eventsApp.reserve.noSongs' | translate }}
                 </div>
               } @else {
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-3">
@@ -161,7 +163,7 @@ import { EventTicketsService } from '../event-tickets.service';
                         </div>
                         <div class="min-w-0">
                           <h4 class="font-bold text-gray-900 dark:text-white truncate line-clamp-1 text-sm md:text-base mb-1" [title]="s.title">{{ s.title }}</h4>
-                          <p class="text-xs md:text-sm text-gray-500 dark:text-gray-400 truncate">{{ s.artist || 'Artista Desconhecido' }}</p>
+                          <p class="text-xs md:text-sm text-gray-500 dark:text-gray-400 truncate">{{ s.artist || ('eventsApp.reserve.unknownArtist' | translate) }}</p>
                         </div>
                       </div>
                       <div class="flex items-center gap-4 ml-4">
@@ -183,7 +185,7 @@ import { EventTicketsService } from '../event-tickets.service';
 
           <!-- Venue Map Section -->
           <section class="mt-20 px-6 md:px-12">
-            <h2 class="font-headline font-bold text-2xl tracking-tight mb-8 text-gray-900 dark:text-white">Localização</h2>
+            <h2 class="font-headline font-bold text-2xl tracking-tight mb-8 text-gray-900 dark:text-white">{{ 'eventsApp.common.location' | translate }}</h2>
             <a 
               [href]="event?.lat && event?.lng ? 'https://www.google.com/maps/search/?api=1&query=' + event?.lat + ',' + event?.lng : 'https://www.google.com/maps/search/?api=1&query=' + urlEncode(event?.place || '')"
               target="_blank"
@@ -195,8 +197,8 @@ import { EventTicketsService } from '../event-tickets.service';
 
 
               <div class="min-w-0 flex-1">
-                <h3 class="font-headline font-bold text-xl text-gray-900 dark:text-white truncate mb-1">{{ event?.place || 'Local do Evento' }}</h3>
-                <p class="text-sm text-gray-500 dark:text-gray-400">Ver localização no Google Maps</p>
+                <h3 class="font-headline font-bold text-xl text-gray-900 dark:text-white truncate mb-1">{{ event?.place || ('eventsApp.common.location' | translate) }}</h3>
+                <p class="text-sm text-gray-500 dark:text-gray-400">{{ 'eventsApp.common.viewOnMap' | translate }}</p>
               </div>
               <div class="text-gray-400 dark:text-gray-600 group-hover:text-primary transition-colors">
                 <span class="material-symbols-outlined text-3xl">chevron_right</span>

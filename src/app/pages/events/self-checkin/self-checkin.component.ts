@@ -1,26 +1,28 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
+import { TranslateModule, TranslateService, TranslatePipe } from '@ngx-translate/core';
 import { ZXingScannerModule } from '@zxing/ngx-scanner';
 import { BarcodeFormat } from '@zxing/library';
 import { firstValueFrom } from 'rxjs';
 import { EventTicketsService, SelfCheckinNeedTicketError } from '../event-tickets.service';
 
+
 @Component({
   selector: 'app-self-checkin',
   standalone: true,
-  imports: [CommonModule, RouterModule, ZXingScannerModule],
+  imports: [CommonModule, RouterModule, ZXingScannerModule, TranslateModule, TranslatePipe],
   template: `
     <div class="min-h-[calc(100vh-140px)]">
       <div class="mx-auto max-w-2xl py-6">
         <div class="flex items-start justify-between gap-4">
           <div>
-            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Self-checkin</h1>
+            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ 'eventsApp.selfCheckin.title' | translate }}</h1>
             <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
-              Leia o QR Code do evento para entrar.
+              {{ 'eventsApp.selfCheckin.subtitle' | translate }}
             </p>
           </div>
-          <a routerLink="/" class="text-sm font-semibold text-brand-700 hover:underline dark:text-brand-300">Voltar</a>
+          <a routerLink="/" class="text-sm font-semibold text-brand-700 hover:underline dark:text-brand-300">{{ 'eventsApp.common.back' | translate }}</a>
         </div>
 
         @if (errorMessage) {
@@ -49,13 +51,13 @@ import { EventTicketsService, SelfCheckinNeedTicketError } from '../event-ticket
               <div class="absolute inset-0 z-20 flex items-center justify-center bg-black/70">
                 <div class="flex flex-col items-center gap-3">
                   <div class="h-10 w-10 animate-spin rounded-full border-4 border-white/20 border-t-white"></div>
-                  <div class="text-sm font-semibold text-white">Confirmando check-in...</div>
+                  <div class="text-sm font-semibold text-white">{{ 'eventsApp.selfCheckin.confirming' | translate }}</div>
                 </div>
               </div>
             }
           </div>
           <div class="mt-4 text-xs text-gray-500 dark:text-gray-500">
-            Use o QR Code do evento para validar seu ingresso e entrar.
+            {{ 'eventsApp.selfCheckin.hint' | translate }}
           </div>
         </div>
       </div>
@@ -65,6 +67,7 @@ import { EventTicketsService, SelfCheckinNeedTicketError } from '../event-ticket
 export class SelfCheckinComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private ticketsService = inject(EventTicketsService);
+  private translate = inject(TranslateService);
 
   isBusy = false;
   errorMessage = '';
@@ -118,7 +121,9 @@ export class SelfCheckinComponent implements OnInit, OnDestroy {
     try {
       const resp = await firstValueFrom(this.ticketsService.selfCheckin(eventId));
       const already = !!resp?.data?.already_checked_in;
-      this.successMessage = already ? 'Você já estava com check-in confirmado.' : 'Check-in confirmado.';
+      this.successMessage = already 
+        ? this.translate.instant('eventsApp.selfCheckin.alreadyCheckedIn') 
+        : this.translate.instant('eventsApp.selfCheckin.confirmed');
       pendingNavigation = true;
       setTimeout(() => {
         this.router.navigate([`/events/checkin/${eventId}`], { queryParams: { returnUrl: `/events/home-guest-v2/${eventId}` } });
@@ -129,13 +134,13 @@ export class SelfCheckinComponent implements OnInit, OnDestroy {
       const code = String(err?.error?.code || '');
       if (status === 409 && code === 'need_ticket') {
         const payload = err?.error as SelfCheckinNeedTicketError;
-        this.errorMessage = payload?.message || 'Você precisa reservar um ingresso antes do check-in.';
+        this.errorMessage = payload?.message || this.translate.instant('eventsApp.selfCheckin.needTicket');
         pendingNavigation = true;
         setTimeout(() => {
           this.router.navigate([`/tickets/reserve/${eventId}`]);
         }, 1500);
       } else {
-        this.errorMessage = err?.error?.message || err?.message || 'Falha ao confirmar check-in. Tente novamente.';
+        this.errorMessage = err?.error?.message || err?.message || this.translate.instant('eventsApp.selfCheckin.failTryAgain');
       }
     } finally {
       if (!pendingNavigation) this.isBusy = false;
