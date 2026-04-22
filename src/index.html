@@ -1,15 +1,94 @@
 <!doctype html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
   <meta charset="utf-8">
   <title>DM-APP</title>
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
+  <link rel="icon" type="image/x-icon" id="favicon" href="/images/favicon.ico">
+  
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet" />
+
+  <style>
+    body { background-color: #101828; margin: 0; padding: 0; }
+    #app-loader {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: #101828;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      transition: opacity 0.4s ease-out, visibility 0.4s;
+    }
+    #app-loader img {
+      width: 140px;
+      height: auto;
+      animation: loaderPulse 2s infinite ease-in-out;
+    }
+    @keyframes loaderPulse {
+      0% { transform: scale(0.95); opacity: 0.7; }
+      50% { transform: scale(1.05); opacity: 1; }
+      100% { transform: scale(0.95); opacity: 0.7; }
+    }
+    .loader-hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+  </style>
+
+  <script>
+    (function() {
+      const hostname = window.location.hostname;
+      const isEvents = hostname.startsWith('events.') || hostname === 'vibe.localhost'; // Suporte para vibe.localhost também se precisar
+      
+      const manifest = document.createElement('link');
+      manifest.rel = 'manifest';
+      
+      const appleTouchIcon = document.createElement('link');
+      appleTouchIcon.rel = 'apple-touch-icon';
+
+      if (isEvents) {
+        document.title = 'Vibe Sessions';
+        manifest.href = '/manifest-events.webmanifest';
+        document.getElementById('favicon')?.setAttribute('href', '/images/icons/events/favicon.ico');
+        appleTouchIcon.href = '/images/icons/events/apple-touch-icon.png';
+      } else {
+        document.title = 'DM-APP';
+        manifest.href = '/manifest.webmanifest';
+        appleTouchIcon.href = '/images/favicon.ico';
+      }
+      
+      document.head.appendChild(manifest);
+      document.head.appendChild(appleTouchIcon);
+    })();
+  </script>
 </head>
 <body>
+  <div id="app-loader">
+    <script>
+      (function() {
+        const isEvents = window.location.hostname.startsWith('events.') || window.location.hostname === 'vibe.localhost';
+        const logoSrc = isEvents ? '/images/icons/events/logo-light.png' : '/images/favicon.ico';
+        document.write(`<img src="${logoSrc}" alt="Loading...">`);
+      })();
+    </script>
+  </div>
+
   <app-root></app-root>
+
+  <script>
+    // Remove o loader quando o app Angular estiver pronto
+    window.addEventListener('load', function() {
+      // Pequeno delay para garantir que o Angular renderizou o básico
+      setTimeout(() => {
+        const loader = document.getElementById('app-loader');
+        if (loader) loader.classList.add('loader-hidden');
+      }, 500);
+    });
+  </script>
 </body>
 </html>
+

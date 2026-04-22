@@ -1,0 +1,16 @@
+{
+  "name": "DM-APP",
+  "short_name": "DM-APP",
+  "theme_color": "#101828",
+  "background_color": "#101828",
+  "display": "standalone",
+  "scope": "/",
+  "start_url": "/",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64",
+      "type": "image/x-icon"
+    }
+  ]
+}
