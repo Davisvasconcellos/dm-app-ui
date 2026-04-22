@@ -7,6 +7,9 @@ import { AuthService } from '../../shared/services/auth.service';
 import { environment } from '../../../environments/environment';
 
 export interface ApiEvent {
+  lat?: number | null;
+  lng?: number | null;
+  attendees_avatars?: string[];
   id: number | string;
   name?: string;
   title?: string;
@@ -520,7 +523,6 @@ export class EventService {
   private readonly NON_VERSIONED_API_BASE_URL = `${environment.apiUrl}/api`;
 
   constructor(private http: HttpClient, private authService: AuthService) { }
-
   getEvents(): Observable<EventListItem[]> {
     const token = this.authService.getAuthToken();
     const headers: HttpHeaders = new HttpHeaders(token ? { Authorization: `Bearer ${token}` } : {});
@@ -1466,4 +1468,11 @@ export class EventService {
     const url = `${this.API_BASE_URL}/events/${eventId}/jams/${jamId}/songs/${songId}/candidates/${candidateId}/reject`;
     return this.http.post<{ success: boolean }>(url, {}, { headers }).pipe(map((resp) => !!resp?.success));
   }
+
+  encodeUrl(val: string): string {
+    return encodeURIComponent(val || '');
+  }
 }
+
+
+

@@ -11,7 +11,7 @@ import { MobileFooterComponent } from '../mobile-footer/mobile-footer.component'
   template: `
     <div class="min-h-screen">
       <app-header [showSidebarToggle]="false" />
-      <div class="p-4 mx-auto max-w-(--breakpoint-2xl) md:p-6 pb-24">
+      <div class="pb-24 overflow-x-hidden">
         <router-outlet></router-outlet>
       </div>
       <app-mobile-footer />

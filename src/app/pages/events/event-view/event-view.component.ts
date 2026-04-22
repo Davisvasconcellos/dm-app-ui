@@ -30,6 +30,7 @@ interface TableRowData {
   checkin?: boolean;
   checkinAt?: string | null;
   checkinMethod?: string;
+  originStatus?: string;
 }
 
 interface EventData {
@@ -146,6 +147,7 @@ export class EventViewComponent implements OnInit {
         ((item.email || '').toLowerCase().includes(this.searchTerm.toLowerCase())) ||
         ((item.phone || '').toLowerCase().includes(this.searchTerm.toLowerCase())) ||
         (item.guestType?.toLowerCase().includes(this.searchTerm.toLowerCase()) ?? false) ||
+        (item.source?.toLowerCase().includes(this.searchTerm.toLowerCase()) ?? false) ||
         (item.documentNumber?.toLowerCase().includes(this.searchTerm.toLowerCase()) ?? false)
       )
       .sort((a, b) => {
@@ -245,7 +247,8 @@ export class EventViewComponent implements OnInit {
   columns = [
     { key: 'name', label: 'Convidado' },
     { key: 'phone', label: 'Telefone' },
-    { key: 'guestType', label: 'Tipo de convidado' },
+    { key: 'guestType', label: 'Tipo' },
+    { key: 'source', label: 'Origem' },
     { key: 'rsvp', label: 'RSVP' },
     { key: 'checkin', label: 'Check-in' },
     { key: 'actions', label: 'Ações' }
@@ -608,12 +611,13 @@ export class EventViewComponent implements OnInit {
             status: guest.status,
             documentNumber: g?.document?.number || '',
             guestType: g?.type || '',
-            source: g?.source || '',
+            source: this.formatOrigin(g),
             rsvp: rsvpBool,
             rsvpAt: rsvpAtVal,
             checkin: !!checkInAt,
             checkinAt: checkInAt,
-            checkinMethod: g?.check_in_method || ''
+            checkinMethod: g?.check_in_method || '',
+            originStatus: g?.origin_status || ''
           } as TableRowData;
         });
         // Guardar KPIs de convidados
@@ -750,6 +754,13 @@ export class EventViewComponent implements OnInit {
       // Caso venha já no formato correto ou outro, retorna como está
       return iso;
     }
+  }
+  
+  formatOrigin(g: ApiGuest): string {
+    if (g.origin_status === 'ticket_reserved') return 'Site';
+    if (g.source === 'walk_in') return 'Manual (Portaria)';
+    if (g.source === 'invited') return 'Convite/Lista';
+    return g.source || g.origin_status || '-';
   }
 
   toLocalTime(iso?: string | null): string {

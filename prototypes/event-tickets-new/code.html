@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+                  "inverse-surface": "#e5e2e1",
+                  "on-secondary": "#303030",
+                  "tertiary": "#34e36a",
+                  "on-primary-fixed": "#002108",
+                  "surface-container": "#201f1f",
+                  "secondary-fixed": "#e4e2e1",
+                  "surface-container-low": "#1c1b1b",
+                  "on-primary-container": "#004118",
+                  "secondary-container": "#474746",
+                  "inverse-on-surface": "#313030",
+                  "error": "#ffb4ab",
+                  "on-background": "#e5e2e1",
+                  "on-secondary-fixed": "#1b1c1c",
+                  "background": "#131313",
+                  "tertiary-container": "#00ba4f",
+                  "on-primary": "#003914",
+                  "on-secondary-container": "#b7b5b4",
+                  "surface": "#131313",
+                  "surface-tint": "#53e076",
+                  "outline": "#869585",
+                  "secondary-fixed-dim": "#c8c6c5",
+                  "on-primary-fixed-variant": "#005320",
+                  "primary": "#53e076",
+                  "on-error": "#690005",
+                  "surface-container-high": "#2a2a2a",
+                  "error-container": "#93000a",
+                  "on-error-container": "#ffdad6",
+                  "inverse-primary": "#006e2d",
+                  "surface-dim": "#131313",
+                  "surface-bright": "#393939",
+                  "tertiary-fixed-dim": "#34e36a",
+                  "secondary": "#c8c6c5",
+                  "on-tertiary-fixed": "#002108",
+                  "on-tertiary-fixed-variant": "#00531f",
+                  "surface-container-lowest": "#0e0e0e",
+                  "on-secondary-fixed-variant": "#474746",
+                  "primary-container": "#1db954",
+                  "on-tertiary": "#003913",
+                  "on-surface": "#e5e2e1",
+                  "outline-variant": "#3d4a3d",
+                  "on-surface-variant": "#bccbb9",
+                  "primary-fixed": "#72fe8f",
+                  "surface-container-highest": "#353534",
+                  "surface-variant": "#353534",
+                  "on-tertiary-container": "#004217",
+                  "primary-fixed-dim": "#53e076",
+                  "tertiary-fixed": "#69ff89"
+          },
+          "borderRadius": {
+                  "DEFAULT": "1rem",
+                  "lg": "2rem",
+                  "xl": "3rem",
+                  "full": "9999px"
+          },
+          "fontFamily": {
+                  "headline": ["Plus Jakarta Sans"],
+                  "body": ["Inter"],
+                  "label": ["Inter"]
+          }
+        },
+      },
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    .editorial-gradient {
+      background: linear-gradient(135deg, #53e076 0%, #1db954 100%);
+    }
+    .glass-effect {
+      backdrop-filter: blur(40px);
+      -webkit-backdrop-filter: blur(40px);
+    }
+    body::-webkit-scrollbar {
+      display: none;
+    }
+    body {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface font-body selection:bg-primary selection:text-on-primary">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-[#131313]/80 backdrop-blur-xl flex justify-between items-center px-6 py-4 w-full">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full overflow-hidden bg-surface-container-high ring-2 ring-primary/20">
+<img alt="User profile avatar" class="w-full h-full object-cover" data-alt="close-up portrait of a professional man with a friendly expression in clean studio lighting with dark background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuANsuyt1jaqVb0VcsLvteYm0TeDB0N7zvjkebjLQitABjtBFU9ix-VXD5w4WBI7wRTt9zGwZW7Wno0prWTh6e4jf-hSgZcb6AY2vN8YsVxtDsZsn8NDyKPQToQIP2GBzNN-abOvZUQSPGj5kqbZzLjHzu1r87Pt0VvyIlVhemTVE6xeUqMGFv6yIbp5WAmnWwYVJNf8S9Xs0QACMJkWG-wTlnXR5swM91hpGt2qa88x3Q7VN9BwCPHVXQ6PNiLMiw-fuFQdQrim6UM"/>
+</div>
+<span class="font-headline font-black tracking-tighter text-2xl text-[#53e076]">SonicEditorial</span>
+</div>
+<div class="flex items-center gap-4">
+<button class="hover:scale-105 transition-transform duration-200 active:scale-95 text-gray-400 hover:text-white">
+<span class="material-symbols-outlined text-2xl">notifications</span>
+</button>
+</div>
+</header>
+<main class="pb-32">
+<!-- Hero Image Section -->
+<div class="relative w-full h-[530px] md:h-[618px] overflow-hidden">
+<img alt="Event Hero" class="w-full h-full object-cover scale-105" data-alt="dramatic wide shot of a music festival stage with vibrant green laser lights and a dense energetic crowd silhouettes in haze" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD8hexPMDL9Wgr-jxTta0e2Qn_CQMf_uu4wG0PPKZSWEUgXT-dwDLKcjRWzgCfvzjkETL6nHbPUpJSXgAR6DH6NFLp8-IDPbBB0v1uzcoWf-XqTWE9ugmVoCblhxsBZ2kKg3-x2U7ayOMfXrtT_bU4UB7goj0LJzF9RwgS4XK-vFVLvKKysLt7Yf4PhCDVMSiQ4X5FAmj3OCWjWc7wMhrmRYTapqg8zTS7S_XZ6Hl2jvzXNZHu8GrvYrk0By2m3q79A3KqkRlRJ1wo"/>
+<div class="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent"></div>
+<div class="absolute bottom-0 left-0 w-full px-6 md:px-12 pb-12">
+<span class="inline-block px-3 py-1 mb-4 text-[10px] font-bold tracking-[0.2em] uppercase bg-primary text-on-primary rounded-full">
+          Live Experience
+        </span>
+<h1 class="font-headline font-bold text-5xl md:text-8xl tracking-tighter leading-none mb-6">
+          Vibe Sessions
+        </h1>
+<div class="flex flex-wrap items-center gap-6 text-on-surface-variant font-medium">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">calendar_today</span>
+<span>Oct 24, 2024</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">location_on</span>
+<span>The Warehouse, Berlin</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Action Section -->
+<section class="px-6 md:px-12 -mt-6 relative z-10">
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-8 py-10">
+<div class="max-w-2xl">
+<p class="text-on-surface-variant text-lg leading-relaxed mb-4">
+            An immersive journey through deep melodic techno and visual arts. Join us for a 12-hour curated experience featuring world-class artists and bespoke light installations.
+          </p>
+<div class="flex items-center -space-x-3 mt-6">
+<img alt="Attendee 1" class="w-10 h-10 rounded-full border-4 border-background" data-alt="portrait of a smiling man" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAK7EemkZ3f1tKJTCi5yQWhgckUhkLN2JgAtlmJMfKIgO67EPDEJbR5u-CPvquO4A-EsHzDgUtB8gzOovLNK5XpOKByhXbD2tigK5jsLtM-BzkkLJDEF6pLnCdVhwKnAtG60d-UayRaZ6VeN_dJfVxbl0RCJRzOJx2Z2z8aktysDLqCtSrcdHnwFIEK_ForomHzNi4a2qR-Jjdx55tNQxRb3Da5Flyvl6ZowyYsAatVLjvdvycyr2rGGHt88zw661pRdHXqw8IT5Ng"/>
+<img alt="Attendee 2" class="w-10 h-10 rounded-full border-4 border-background" data-alt="portrait of a smiling woman" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAFJ1haSfMv8_nJgSZvLQt8C2b75HQvIiL8QpGGubr5HAqRFxX4JGJbofAGrWR75PEI7BJxAHz7VIMfj3cyVsrb5xzjdPF2MhOXVydetUFwxfHt78ALpW-6Y2XSFiryLW1cAG6IeWoONJsnNNqnVx6d2W-ndCZxNrj8HJf3uHowlcMou3oFef541mcxRdWLpFGu5JbVzNNsPCHsYVDJKfG1PCRUzHv0TYJrgfmPP9mr3VfEu57V17WyHOn1rQT1YvmGD71zd9hC5I8"/>
+<img alt="Attendee 3" class="w-10 h-10 rounded-full border-4 border-background" data-alt="portrait of a man with beard" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCRox7sCS5ttfPsH9IndTvetXD3uM1uByeNCjwu0w5MZ8Yo6TJp3BtQmx_z14GM_cADBd6P1xPmskJJWh9vNplCRDP_L2aHvG815BA763Qb7idZlHwx9EURL9jTwu-9v4BnhvxML7RzaVmSEKDfcDe3ClnMVTrVGr8qbYHopw8-JIyec9mBsmn-3omWOI-bYV6mBoTuD_lx6N-el_aAMBY2qbkfLBjo5NF0ju5Fa0ZFXdoMprpcXdX4HwdazJI7Bz2MXZh5q8xq7os"/>
+<div class="w-10 h-10 rounded-full border-4 border-background bg-surface-container-high flex items-center justify-center text-xs font-bold text-primary">+420</div>
+<span class="ml-6 text-sm font-medium text-on-surface-variant">Friends are going</span>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="editorial-gradient text-on-primary-fixed font-bold px-10 py-5 rounded-full text-lg hover:scale-105 active:scale-95 transition-all shadow-xl shadow-primary/20">
+            I'm Going
+          </button>
+<button class="p-5 rounded-full bg-surface-container-high text-on-surface hover:bg-surface-bright transition-colors">
+<span class="material-symbols-outlined">share</span>
+</button>
+</div>
+</div>
+</section>
+<!-- Trending Tracks Section -->
+<section class="mt-12 px-6 md:px-12">
+<div class="flex items-center justify-between mb-8">
+<h2 class="font-headline font-bold text-2xl tracking-tight">Trending Tracks</h2>
+<button class="text-primary font-bold text-sm hover:underline">View All</button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-2">
+<!-- Track 1 -->
+<div class="group flex items-center justify-between p-3 rounded-xl hover:bg-surface-container transition-colors cursor-pointer">
+<div class="flex items-center gap-4">
+<div class="relative w-14 h-14 rounded-lg overflow-hidden flex-shrink-0">
+<img alt="Album Art" class="w-full h-full object-cover" data-alt="abstract 3d render of flowing liquid metal with neon green and purple lighting highlights" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCUUIdB-cwtl49SgkFQzies3tGzcuSCq4-6lFBJb9qD8a8eat5ZD5g9jDxQNMhtVjepGBjIrfYRGb22FmiYAeeenZRWK-Y4A1FFjSaB3-OX6wbHhJxEoUK9JZqyTFdQlTnbQ0Yg826QuuynKFHMHjE0jxpMUCheMwegTpqjsBiZcFbeDhKsBwnxRMs9BnRTUJjvMbC60k-HXyd3DvsVJdo1DZdvidHgb44iaNqD3EKptMqk8DJtB7tzhejOex2w8FWNnMbi4PK1LwA"/>
+<div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+<span class="material-symbols-outlined text-white" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</div>
+</div>
+<div>
+<h4 class="font-semibold text-on-surface">Neon Horizon</h4>
+<p class="text-sm text-on-surface-variant">The Alchemist</p>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<span class="material-symbols-outlined text-on-surface-variant text-xl hover:text-primary">favorite</span>
+<span class="text-sm font-mono text-on-surface-variant">3:45</span>
+</div>
+</div>
+<!-- Track 2 -->
+<div class="group flex items-center justify-between p-3 rounded-xl hover:bg-surface-container transition-colors cursor-pointer">
+<div class="flex items-center gap-4">
+<div class="relative w-14 h-14 rounded-lg overflow-hidden flex-shrink-0">
+<img alt="Album Art" class="w-full h-full object-cover" data-alt="minimalist photography of a single bright green laser beam cutting through dark smoke in a void" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAHvk1ZB6qzCD1WT_m1_JUUF73eFZaLEWsLgR9x1hwE9o984LBvJYGysKXwWG4Jk_jaYgS58Z4fY_TYVgw5V_kUJAHbbj3cC5opW7K2nO1T67_BjtWcamChn7ODvVMyUDy2o0SXpqJRbv5RnIIyKXIc3yLKS57-Nc7wQJipaMhqTwcK365bajJf90URpGfbrGUTCBJbJ77vbPDfPJUyMHunXNOkMcO197debAwg358o1wxBEgAqL6j12mR8cvElZcyLNgw8C6yw-Xo"/>
+<div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+<span class="material-symbols-outlined text-white" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</div>
+</div>
+<div>
+<h4 class="font-semibold text-on-surface">Cyber Pulse</h4>
+<p class="text-sm text-on-surface-variant">Ether Echo</p>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<span class="material-symbols-outlined text-primary text-xl" style="font-variation-settings: 'FILL' 1;">favorite</span>
+<span class="text-sm font-mono text-on-surface-variant">4:12</span>
+</div>
+</div>
+<!-- Track 3 -->
+<div class="group flex items-center justify-between p-3 rounded-xl hover:bg-surface-container transition-colors cursor-pointer">
+<div class="flex items-center gap-4">
+<div class="relative w-14 h-14 rounded-lg overflow-hidden flex-shrink-0">
+<img alt="Album Art" class="w-full h-full object-cover" data-alt="dark atmospheric close-up of vinyl record grooves with a sharp green light reflecting on the surface" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC2v8iym4y6fQxn2xFLSVQ6ehRwFGOCiAon2rFP9OFcJ6kg8EM587S_ZkZ_x7Z8Rz2RmDox83NcJHf2uxGR66nrXv3xMN2kqXK-O_i9Rqj2ur1FcAbtsnIt-6ZYZIybYCwtNAYX_Gpc2nctjwqr2nK9lmtQkrJAN61jJh5PCMYIcdCLSKjPSXfXPws1KzWHRUu8Bt6S5sG4K83sfnXJv_dDkBsiOLklaJI67SqrqSh-oi61cLfmS8PvXE-Yuwo-J8FXYIAnBw9aFdE"/>
+<div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+<span class="material-symbols-outlined text-white" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</div>
+</div>
+<div>
+<h4 class="font-semibold text-on-surface">Midnight Void</h4>
+<p class="text-sm text-on-surface-variant">Signal Decay</p>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<span class="material-symbols-outlined text-on-surface-variant text-xl hover:text-primary">favorite</span>
+<span class="text-sm font-mono text-on-surface-variant">5:58</span>
+</div>
+</div>
+<!-- Track 4 -->
+<div class="group flex items-center justify-between p-3 rounded-xl hover:bg-surface-container transition-colors cursor-pointer">
+<div class="flex items-center gap-4">
+<div class="relative w-14 h-14 rounded-lg overflow-hidden flex-shrink-0">
+<img alt="Album Art" class="w-full h-full object-cover" data-alt="geometric gradient pattern of deep charcoal and forest green with subtle grain and noise texture" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB5KcSO7fQaP_yhaTYmj1uLcwdGcDCqv07By4ndKpmazpcIXAliQvFRXj1w5gjHpHqAOw3KwXclEHHRSmw7rMkmbGvyt8JFWoA0SNIu9jWVc7DOgdYWof1V2D63_xPWPFQFFWWHhmUJPDqcErHsYF_jFe0SudqsegZCoClka22Jt-l3s10AkRQbwMRgJdTlx0PT5ZymTVPB81xiJdqGH6iTo-IpeAqTR45kqTFnhtLferCfijIIMqb-X919ds0DwhwCDKd_yWGjBmA"/>
+<div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+<span class="material-symbols-outlined text-white" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</div>
+</div>
+<div>
+<h4 class="font-semibold text-on-surface">Digital Bloom</h4>
+<p class="text-sm text-on-surface-variant">Flora System</p>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<span class="material-symbols-outlined text-on-surface-variant text-xl hover:text-primary">favorite</span>
+<span class="text-sm font-mono text-on-surface-variant">3:20</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Venue Map Section -->
+<section class="mt-20 px-6 md:px-12">
+<h2 class="font-headline font-bold text-2xl tracking-tight mb-8">Location</h2>
+<div class="relative w-full h-80 rounded-xl overflow-hidden grayscale hover:grayscale-0 transition-all duration-700">
+<img alt="Map Location" class="w-full h-full object-cover" data-alt="overhead satellite view of an industrial district in berlin at dusk with orange street lights and deep shadows" data-location="Berlin" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAW0haAgTRYtokRnthAIpcMWyRXM-PgoE6VCyrYi2KUqoDGraw5DIai_fwMQIrbh8MbQelitma8P9teOi7BdEfnpAQiJ3Nl6kjeLL6eILlKQT_lrJ2y1FRmYr4YoTNBDg4VzzNfVKTOOY3Wgg1jjN3PZIT_Cv5nhEzmBY1sb1Ucsn5rCyJph5RY0yPltZ-9UCKdUqJNxbpHIFuXCwurURMNb_6Wd8-P6Dv04HVZZcoVzOD8WBj8RFbaK1imFUvmlZJ2YmZYOhAJXX8"/>
+<div class="absolute inset-0 flex items-center justify-center">
+<div class="bg-primary p-4 rounded-full animate-pulse shadow-2xl shadow-primary/40">
+<span class="material-symbols-outlined text-on-primary text-3xl" style="font-variation-settings: 'FILL' 1;">location_on</span>
+</div>
+</div>
+<div class="absolute bottom-6 left-6 right-6 p-6 glass-effect bg-[#131313]/60 rounded-xl border border-white/5">
+<h3 class="font-headline font-bold text-lg mb-1">The Warehouse</h3>
+<p class="text-sm text-on-surface-variant">Mühlenstraße 45, 10243 Berlin, Germany</p>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 w-full z-50 bg-[#131313]/90 backdrop-blur-2xl pb-safe flex justify-around items-center h-20 w-full px-4 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.5)]">
+<a class="flex flex-col items-center justify-center text-[#393939] transition-colors duration-300 hover:text-white" href="#">
+<span class="material-symbols-outlined mb-1">home</span>
+<span class="font-['Inter'] text-[10px] uppercase tracking-widest font-bold">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#53e076] transition-colors duration-300" href="#">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 1;">search</span>
+<span class="font-['Inter'] text-[10px] uppercase tracking-widest font-bold">Search</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#393939] transition-colors duration-300 hover:text-white" href="#">
+<span class="material-symbols-outlined mb-1">library_music</span>
+<span class="font-['Inter'] text-[10px] uppercase tracking-widest font-bold">Library</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#393939] transition-colors duration-300 hover:text-white" href="#">
+<span class="material-symbols-outlined mb-1">workspace_premium</span>
+<span class="font-['Inter'] text-[10px] uppercase tracking-widest font-bold">Premium</span>
+</a>
+</nav>
+</body></html>

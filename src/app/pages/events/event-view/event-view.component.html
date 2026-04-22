@@ -587,6 +587,12 @@
               </td>
               <td class="px-4 py-3 border border-gray-100 dark:border-white/[0.05] text-sm text-gray-600 dark:text-gray-300">{{ item.phone }}</td>
               <td class="px-4 py-3 border border-gray-100 dark:border-white/[0.05] text-sm text-gray-600 dark:text-gray-300">{{ item.guestType || '-' }}</td>
+              <td class="px-4 py-3 border border-gray-100 dark:border-white/[0.05] text-sm text-gray-600 dark:text-gray-300">
+                <span class="px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider" 
+                      [ngClass]="item.source === 'Site' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'">
+                  {{ item.source || '-' }}
+                </span>
+              </td>
               <td class="px-4 py-3 border border-gray-100 dark:border-white/[0.05] align-top">
                 <div class="flex flex-col items-start gap-1">
                   <button type="button" (click)="toggleRsvp(item)"
@@ -667,6 +673,7 @@
                     <span *ngIf="item.documentNumber" class="text-xs text-gray-600 dark:text-gray-300 truncate">{{ item.documentNumber }}</span>
                     <div class="flex flex-wrap gap-2 mt-1">
                       <span class="inline-block px-2 py-1 rounded bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 text-[10px]">{{ item.guestType || '-' }}</span>
+                      <span class="inline-block px-2 py-1 rounded bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300 text-[10px] font-semibold">{{ item.source || '-' }}</span>
                       <div class="flex items-start gap-2">
                         <div class="flex flex-col items-start gap-1">
                           <button type="button" (click)="toggleRsvp(item)"

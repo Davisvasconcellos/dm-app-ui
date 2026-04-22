@@ -10,7 +10,7 @@ import { catchError, map, switchMap } from 'rxjs/operators';
 import { EventTicketsService, MyTicket } from '../event-tickets.service';
 import { filter } from 'rxjs/operators';
 
-type EventCardVm = {
+export interface EventCardVm {
   id_code: string;
   title: string;
   subtitle?: string;
@@ -18,7 +18,11 @@ type EventCardVm = {
   imageUrl?: string | null;
   place?: string;
   status?: string;
-};
+  lat?: number | null;
+  lng?: number | null;
+  attendees_avatars?: string[];
+}
+
 
 type PlannedSongVm = {
   id: number | string;
@@ -52,18 +56,8 @@ export class EventsLandingComponent implements OnInit {
   private router = inject(Router);
   private readonly LIKE_CACHE_KEY = 'event_song_like_cache_v1';
 
-  categories = [
-    { key: 'music', label: 'Music' },
-    { key: 'food', label: 'Food' },
-    { key: 'sport', label: 'Sport' },
-    { key: 'movies', label: 'Movies' },
-  ];
-  activeCategoryKey = 'music';
-
   loadingPopular = false;
   popularEvents: EventCardVm[] = [];
-  plannedSongsByEvent: Record<string, PlannedSongVm[]> = {};
-  loadingPlannedSongsByEvent: Record<string, boolean> = {};
 
   loadingMy = false;
   myTickets: MyTicketVm[] = [];
@@ -84,9 +78,6 @@ export class EventsLandingComponent implements OnInit {
     return !!this.authService.getAuthToken();
   }
 
-  setActiveCategory(key: string): void {
-    this.activeCategoryKey = key;
-  }
 
   toReserveUrl(idCode: string): string {
     return `/tickets/reserve/${idCode}`;
@@ -106,7 +97,6 @@ export class EventsLandingComponent implements OnInit {
     ).subscribe((cards) => {
       this.popularEvents = cards;
       this.loadingPopular = false;
-      this.preloadPlannedSongs(cards.slice(0, 6));
     });
   }
 
@@ -181,6 +171,9 @@ export class EventsLandingComponent implements OnInit {
       imageUrl,
       place: place || undefined,
       status: (e as any)?.status || undefined,
+      lat: e?.lat ?? null,
+      lng: e?.lng ?? null,
+      attendees_avatars: e?.attendees_avatars ?? [],
     };
   }
 
@@ -202,120 +195,5 @@ export class EventsLandingComponent implements OnInit {
     }, 0);
   }
 
-  toggleSongVote(eventIdCode: string, song: PlannedSongVm, ev?: Event): void {
-    if (song?.myVote) return;
-    try {
-      if (ev) {
-        ev.preventDefault();
-        ev.stopPropagation();
-      }
-    } catch { }
-    this.eventService.togglePublicPlannedSongLike(eventIdCode, song.jam_id, song.id).subscribe({
-      next: (res) => {
-        if (!res) {
-          this.router.navigate(['/login'], { queryParams: { returnUrl: '/' } });
-          return;
-        }
-        const list = this.plannedSongsByEvent[eventIdCode] || [];
-        const idx = list.findIndex((s) => String(s.id) === String(song.id));
-        if (idx < 0) return;
-        list[idx] = { ...list[idx], myVote: res.liked, votes: res.like_count };
-        this.plannedSongsByEvent[eventIdCode] = [...list];
-        if (res.liked) this.persistLikedSong(eventIdCode, String(song.id));
-      },
-      error: () => {
-        this.router.navigate(['/login'], { queryParams: { returnUrl: '/' } });
-      }
-    });
-  }
-
-  private preloadPlannedSongs(cards: EventCardVm[]): void {
-    for (const c of cards) {
-      const id = String(c.id_code || '').trim();
-      if (!id) continue;
-      if (this.loadingPlannedSongsByEvent[id]) continue;
-      if (Array.isArray(this.plannedSongsByEvent[id])) continue;
-      this.loadPlannedSongsForEvent(id);
-    }
-  }
-
-  private loadPlannedSongsForEvent(eventIdCode: string): void {
-    const id = String(eventIdCode || '').trim();
-    if (!id) return;
-    this.loadingPlannedSongsByEvent[id] = true;
-
-    this.eventService.getPublicPlannedJams(id).pipe(
-      catchError(() => of({ jams: [] as any[] })),
-      switchMap((resp) => {
-        const token = this.authService.getAuthToken();
-        if (!token) return of({ planned: resp, likedIds: [] as string[] });
-        return forkJoin({
-          planned: of(resp),
-          likedIds: this.eventService.getPublicMyLikes(id),
-        }).pipe(catchError(() => of({ planned: resp, likedIds: [] as string[] })));
-      }),
-      map(({ planned, likedIds }) => {
-        const jams = planned?.jams || [];
-        const liked = new Set((likedIds || []).map((x) => String(x)));
-        const all: PlannedSongVm[] = [];
-        for (const j of jams) {
-          const jamId = String(j?.id_code || j?.id || '').trim();
-          if (!jamId) continue;
-          const songs = Array.isArray(j?.songs) ? (j.songs as any[]) : [];
-          for (const s of songs) {
-            const songId = String(s?.id_code || s?.id || '').trim();
-            if (!songId) continue;
-            const votes = Number(s?.like_count ?? 0);
-            all.push({
-              id: songId,
-              jam_id: jamId,
-              title: String(s?.title || ''),
-              artist: s?.artist ?? null,
-              votes: Number.isFinite(votes) ? votes : 0,
-              myVote: liked.has(songId) || !!s?.liked_by_me,
-            });
-          }
-        }
-        const sorted = all.sort((a, b) => (a.votes < b.votes ? 1 : -1)).slice(0, 4);
-        const cached = this.loadLikeCacheForEvent(id);
-        if (cached) {
-          for (const s of sorted) {
-            if (!s.myVote && cached[String(s.id)]) s.myVote = true;
-          }
-        }
-        return sorted;
-      }),
-      catchError(() => of([] as PlannedSongVm[]))
-    ).subscribe((songs) => {
-      this.plannedSongsByEvent[id] = songs || [];
-      this.loadingPlannedSongsByEvent[id] = false;
-    });
-  }
-
-  private persistLikedSong(eventIdCode: string, songIdRaw: string): void {
-    const eventId = String(eventIdCode || '').trim();
-    const songId = String(songIdRaw || '').trim();
-    if (!eventId || !songId) return;
-    const raw = this.storage.getData<any>(this.LIKE_CACHE_KEY);
-    const byEvent = raw?.version === 1 && raw?.by_event && typeof raw.by_event === 'object' ? raw.by_event : {};
-    const current = byEvent[eventId] && typeof byEvent[eventId] === 'object' ? byEvent[eventId] : {};
-    const next = {
-      version: 1,
-      by_event: {
-        ...byEvent,
-        [eventId]: { ...current, [songId]: true },
-      },
-    };
-    this.storage.saveData(this.LIKE_CACHE_KEY, next);
-  }
-
-  private loadLikeCacheForEvent(eventIdCode: string): Record<string, boolean> | null {
-    const eventId = String(eventIdCode || '').trim();
-    if (!eventId) return null;
-    const raw = this.storage.getData<any>(this.LIKE_CACHE_KEY);
-    const byEvent = raw?.version === 1 && raw?.by_event && typeof raw.by_event === 'object' ? raw.by_event : {};
-    const entry = byEvent[eventId];
-    if (!entry || typeof entry !== 'object') return null;
-    return entry as Record<string, boolean>;
-  }
 }
+

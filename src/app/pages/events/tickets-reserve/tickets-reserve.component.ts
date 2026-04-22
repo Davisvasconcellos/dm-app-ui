@@ -12,157 +12,211 @@ import { EventTicketsService } from '../event-tickets.service';
   standalone: true,
   imports: [CommonModule, RouterModule, QRCodeComponent],
   template: `
-    <div class="min-h-screen bg-white dark:bg-black">
-      <div class="mx-auto max-w-2xl px-4 py-6">
-        <div class="flex items-center justify-between gap-4">
-          <a
-            routerLink="/"
-            class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-800 hover:bg-gray-200 dark:bg-white/10 dark:text-white dark:hover:bg-white/15"
-            aria-label="Voltar"
-          >
-            <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
-          </a>
-          <div class="flex-1">
-            <div class="text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-white/60">Evento</div>
-            <div class="mt-0.5 text-sm text-gray-700 dark:text-white/70">Acesse e faça o self-check-in na entrada.</div>
-          </div>
-          <div class="h-10 w-10"></div>
-        </div>
-
+    <!-- Top Padding for fixed layout header if needed, but since it's inside EventsLayout we assume layout handled it.
+         Actually, the user said preserve header/footer, so we just provide the content. -->
+    
+    <div class="min-h-screen bg-gray-50 dark:bg-[#101828] text-gray-900 dark:text-white font-body selection:bg-primary selection:text-on-primary">
+      
       @if (loading) {
-        <div class="mt-6 space-y-3">
-          <div class="h-28 w-full rounded-3xl bg-gray-100 dark:bg-white/5"></div>
-          <div class="h-60 w-full rounded-3xl bg-gray-100 dark:bg-white/5"></div>
+        <div class="flex h-screen items-center justify-center">
+          <div class="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
         </div>
       } @else if (errorMessage) {
-        <div class="mt-6 rounded-2xl border border-red-200 bg-red-50 p-6 text-sm text-red-700 dark:border-red-900/40 dark:bg-red-900/10 dark:text-red-300">
-          {{ errorMessage }}
+        <div class="mx-auto max-w-2xl px-6 py-20">
+          <div class="rounded-2xl border border-error/20 bg-error/10 p-6 text-sm text-error select-none">
+            <h3 class="font-headline font-bold text-lg mb-2">Ops! Ocorreu um erro</h3>
+            {{ errorMessage }}
+            <button (click)="ngOnInit()" class="mt-4 block text-primary font-bold hover:underline">Tentar novamente</button>
+          </div>
         </div>
       } @else {
-        <div class="mt-6 space-y-8">
-          <div class="rounded-3xl bg-gray-50 p-4 dark:bg-white/5">
-            <div class="flex items-center gap-3">
-              <div class="h-14 w-14 shrink-0 overflow-hidden rounded-2xl bg-gray-200 dark:bg-white/10">
-                @if (event?.banner_url) {
-                  <img [src]="event?.banner_url" class="h-full w-full object-cover" alt="">
-                }
+        <main class="pb-32 overflow-hidden">
+          <!-- Hero Image Section -->
+          <div class="relative h-[480px] md:h-[618px] overflow-hidden">
+            @if (event?.banner_url) {
+              <img [src]="event?.banner_url" alt="Event Hero" class="w-full h-full object-cover" />
+            } @else {
+              <div class="w-full h-full bg-gray-200 dark:bg-gray-800 flex items-center justify-center">
+                <span class="material-symbols-outlined text-6xl text-gray-400 dark:text-gray-600">image</span>
               </div>
-
-              <div class="min-w-0 flex-1">
-                <div class="truncate text-sm font-extrabold text-gray-900 dark:text-white">
-                  {{ event?.title || event?.name || 'Evento' }}
+            }
+            <div class="absolute inset-0 bg-gradient-to-t from-gray-50 via-gray-50/20 to-transparent dark:from-[#101828] dark:via-[#101828]/40 dark:to-transparent"></div>
+            
+            <div class="absolute bottom-0 left-0 w-full px-6 md:px-12 pb-12">
+              <span class="inline-block px-3 py-1 mb-4 text-[10px] font-bold tracking-[0.2em] uppercase bg-primary text-[#002108] rounded-full">
+                Live Experience
+              </span>
+              <h1 class="font-headline font-bold text-4xl md:text-7xl tracking-tighter leading-none mb-6 text-gray-900 dark:text-white">
+                {{ event?.title || event?.name || 'Evento' }}
+              </h1>
+              <div class="flex flex-wrap items-center gap-6 font-medium text-gray-600 dark:text-gray-300">
+                <div class="flex items-center gap-2">
+                  <span class="material-symbols-outlined text-primary text-xl">calendar_today</span>
+                  <span>{{ dateLabel }}</span>
                 </div>
-                <div class="mt-0.5 truncate text-xs text-gray-600 dark:text-white/70">
-                  {{ dateLabel }}
-                </div>
-                <div class="mt-0.5 truncate text-xs text-gray-500 dark:text-white/60">
-                  {{ event?.place || '' }}
+                <div class="flex items-center gap-2">
+                  <span class="material-symbols-outlined text-primary text-xl">location_on</span>
+                  <span>{{ event?.place || 'The Warehouse, Berlin' }}</span>
                 </div>
               </div>
             </div>
-
-            <button
-              type="button"
-              (click)="reserve()"
-              [disabled]="reserving || !!reservedTicketId"
-              class="mt-4 inline-flex w-full items-center justify-center rounded-2xl px-4 py-3 text-sm font-extrabold uppercase tracking-wider shadow-sm transition disabled:cursor-not-allowed"
-              [ngClass]="reservedTicketId
-                ? 'bg-emerald-500 text-white'
-                : 'bg-white text-gray-900 hover:bg-gray-100 dark:bg-white dark:text-black'"
-            >
-              EU VOU!
-              <svg viewBox="0 0 24 24" class="ml-2 h-5 w-5" fill="none" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M20 6L9 17l-5-5" />
-              </svg>
-            </button>
           </div>
 
-          @if (reservedTicketId) {
-            <div class="rounded-3xl bg-gray-50 p-4 dark:bg-white/5">
-              <div class="flex items-center justify-center">
-                <div class="rounded-2xl bg-white p-3 shadow-sm">
+          <!-- Action Section -->
+          <section class="mt-6 relative z-10 px-6 md:px-12">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-8 py-6">
+              <div class="max-w-xl">
+                <div class="flex items-center -space-x-3">
+                  @for (avatar of (event?.attendees_avatars || []).slice(0, 3); track avatar) {
+                    <img [src]="avatar" alt="Attendee" class="w-10 h-10 rounded-full border-4 border-gray-50 dark:border-[#101828] object-cover" />
+                  }
+                  @if ((event?.attendees_avatars?.length || 0) > 3) {
+                    <div class="w-10 h-10 rounded-full border-4 border-gray-50 dark:border-[#101828] bg-gray-200 dark:bg-gray-800 flex items-center justify-center text-xs font-bold text-primary">
+                      +{{ (event?.attendees_avatars?.length || 0) - 3 }}
+                    </div>
+                  }
+                </div>
+              </div>
+
+
+
+              <div class="flex items-center gap-4">
+                <button
+                  (click)="reserve()"
+                  [disabled]="reserving || !!reservedTicketId"
+                  class="editorial-gradient text-[#002108] font-bold px-8 py-4 rounded-2xl text-lg hover:scale-105 active:scale-95 transition-all shadow-xl shadow-primary/20 disabled:opacity-80 disabled:scale-100 disabled:cursor-default"
+                >
+                  {{ reservedTicketId ? 'EU VOU' : 'QUERO IR' }}
+                  <span *ngIf="reservedTicketId" class="ml-2 text-xl">✓</span>
+                </button>
+                
+                @if (reservedTicketId) {
+                  <button (click)="showQr = !showQr" 
+                    [ngClass]="reservedTicketId ? 'bg-primary/20 text-primary border border-primary/30' : 'bg-gray-200 dark:bg-gray-800 text-gray-500'"
+                    class="p-4 rounded-2xl transition-colors shadow-lg shadow-black/5 hover:scale-105 active:scale-95">
+                    <span class="material-symbols-outlined text-3xl transition-transform" [class.rotate-180]="showQr">{{ showQr ? 'close' : 'qr_code' }}</span>
+                  </button>
+                }
+
+                <button (click)="shareEvent()" class="p-4 rounded-2xl bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors">
+                  <span class="material-symbols-outlined text-3xl">share</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- QR Code Area -->
+            @if (showQr && reservedTicketId) {
+              <div class="mt-4 mb-8 p-8 rounded-3xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-white/5 flex flex-col items-center animate-in fade-in slide-in-from-top-4 duration-300 shadow-2xl">
+                <div class="rounded-2xl bg-white p-6 shadow-xl border border-gray-100">
                   <qrcode
                     [qrdata]="reservedQrData || reservedTicketId"
-                    [width]="180"
+                    [width]="220"
                     [errorCorrectionLevel]="'M'"
                     [colorDark]="'#000000'"
                     [colorLight]="'#ffffff'"
                     class="h-full w-full"
                   />
                 </div>
+                <div class="mt-6 text-center">
+                  <p class="text-sm font-bold uppercase tracking-widest text-gray-900 dark:text-white">Seu Ingresso Reservado</p>
+                  <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">Apresente este código na entrada do evento</p>
+                </div>
               </div>
-            </div>
-          }
+            }
+          </section>
 
-          <div>
-            <div class="text-xs font-extrabold uppercase tracking-widest text-gray-500 dark:text-white/60">
-              Músicas do evento - ranking
-            </div>
-            <div class="mt-1 text-sm font-semibold text-gray-900 dark:text-white">
-              Escolha as suas músicas favoritas para o evento
+          <!-- Trending Tracks Section -->
+          <section class="mt-12 px-6 md:px-12">
+            <div class="flex items-center justify-between mb-8">
+              <h2 class="font-headline font-bold text-2xl tracking-tight text-gray-900 dark:text-white">Trending Tracks</h2>
+              <button class="text-primary font-bold text-sm hover:underline">View All</button>
             </div>
 
             @if (loadingPlanned) {
-              <div class="mt-4 space-y-3">
-                <div class="h-14 w-full rounded-2xl bg-gray-100 dark:bg-white/5"></div>
-                <div class="h-14 w-full rounded-2xl bg-gray-100 dark:bg-white/5"></div>
-                <div class="h-14 w-full rounded-2xl bg-gray-100 dark:bg-white/5"></div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4">
+                <div *ngFor="let i of [1,2,3,4]" class="h-24 w-full animate-pulse rounded-2xl bg-gray-200 dark:bg-gray-800"></div>
               </div>
             } @else {
               @if (!plannedSongs.length) {
-                <div class="mt-4 text-sm text-gray-600 dark:text-white/70">
-                  Nenhuma música planned disponível no momento.
+                <div class="py-12 text-center text-gray-500 dark:text-gray-400 border border-dashed border-gray-300 dark:border-white/10 rounded-2xl bg-gray-50 dark:bg-gray-900/50">
+                  Nenhuma música disponível para votação.
                 </div>
               } @else {
-                <div class="mt-4 divide-y divide-gray-200 dark:divide-white/10">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-3">
                   @for (s of plannedSongs; track s.song_id; let idx = $index) {
-                    <div class="flex items-center gap-3 py-3">
-                      <div class="w-7 shrink-0 text-right text-sm font-extrabold text-gray-500 dark:text-white/60">
-                        #{{ idx + 1 }}
-                      </div>
-
-                      <div class="h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-gray-200 dark:bg-white/10">
-                        @if (s.cover_image) {
-                          <img [src]="s.cover_image" class="h-full w-full object-cover" alt="">
-                        }
-                      </div>
-
-                      <div class="min-w-0 flex-1">
-                        <div class="truncate text-sm font-semibold text-gray-900 dark:text-white">
-                          {{ s.title }}
+                    <div class="group flex items-center justify-between p-4 rounded-2xl hover:bg-white dark:hover:bg-gray-900 transition-all cursor-pointer border border-transparent hover:border-gray-200 dark:hover:border-white/5 active:scale-[0.98]"
+                         (click)="toggleLike({ jam_id: s.jam_id }, s, $event)">
+                      <div class="flex items-center gap-4 min-w-0">
+                        <div class="relative w-16 h-16 md:w-20 md:h-20 rounded-xl overflow-hidden flex-shrink-0 bg-gray-200 dark:bg-gray-800 shadow-lg">
+                          @if (s.cover_image) {
+                            <img [src]="s.cover_image" class="w-full h-full object-cover" alt="Album Art">
+                          } @else {
+                            <div class="w-full h-full flex items-center justify-center">
+                              <span class="material-symbols-outlined text-gray-400 dark:text-gray-600 text-3xl">music_note</span>
+                            </div>
+                          }
+                          <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                            <span class="material-symbols-outlined text-white text-3xl" [style.font-variation-settings]="'\\'FILL\\' 1'">play_arrow</span>
+                          </div>
                         </div>
-                        <div class="truncate text-xs text-gray-600 dark:text-white/70">
-                          {{ s.artist || '' }}
+                        <div class="min-w-0">
+                          <h4 class="font-bold text-gray-900 dark:text-white truncate line-clamp-1 text-sm md:text-base mb-1" [title]="s.title">{{ s.title }}</h4>
+                          <p class="text-xs md:text-sm text-gray-500 dark:text-gray-400 truncate">{{ s.artist || 'Artista Desconhecido' }}</p>
                         </div>
                       </div>
-
-                      <button
-                        type="button"
-                        class="inline-flex items-center gap-2 rounded-full px-3 py-2 text-xs font-bold transition"
-                        [ngClass]="s.liked_by_me
-                          ? 'text-emerald-600 dark:text-emerald-400 cursor-not-allowed'
-                          : 'text-gray-700 hover:bg-gray-100 dark:text-white/80 dark:hover:bg-white/10'"
-                        (click)="toggleLike({ jam_id: s.jam_id }, s, $event)"
-                        [disabled]="s.liked_by_me || likingIds.has(likeKey({ jam_id: s.jam_id }, s))"
-                        aria-label="Curtir"
-                      >
-                        <svg viewBox="0 0 24 24" class="h-5 w-5" [attr.fill]="s.liked_by_me ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2">
-                          <path stroke-linecap="round" stroke-linejoin="round" d="M20.84 4.61c-1.54-1.41-3.77-1.44-5.33-.1L12 7.35l-3.51-2.84c-1.56-1.34-3.79-1.31-5.33.1-1.78 1.64-1.83 4.43-.16 6.14l8.05 8.33c.53.55 1.4.55 1.93 0l8.05-8.33c1.67-1.71 1.62-4.5-.19-6.14z" />
-                        </svg>
-                        <span class="tabular-nums">{{ s.like_count || 0 }}</span>
-                      </button>
+                      <div class="flex items-center gap-4 ml-4">
+                        <div class="flex flex-col items-center">
+                          <span class="material-symbols-outlined text-2xl transition-all duration-300"
+                                [ngClass]="s.liked_by_me ? 'text-primary scale-110' : 'text-gray-400 dark:text-gray-600 hover:text-primary'"
+                                [style.font-variation-settings]="s.liked_by_me ? '\\'FILL\\' 1' : ''">
+                            favorite
+                          </span>
+                          <span class="text-[10px] font-bold text-gray-400 mt-1 tabular-nums">{{ s.like_count || 0 }}</span>
+                        </div>
+                      </div>
                     </div>
                   }
                 </div>
               }
             }
-          </div>
-        </div>
+          </section>
+
+          <!-- Venue Map Section -->
+          <section class="mt-20 px-6 md:px-12">
+            <h2 class="font-headline font-bold text-2xl tracking-tight mb-8 text-gray-900 dark:text-white">Localização</h2>
+            <a 
+              [href]="event?.lat && event?.lng ? 'https://www.google.com/maps/search/?api=1&query=' + event?.lat + ',' + event?.lng : 'https://www.google.com/maps/search/?api=1&query=' + urlEncode(event?.place || '')"
+              target="_blank"
+              class="flex items-center gap-6 p-6 rounded-2xl bg-white dark:bg-white/[0.03] border border-gray-200 dark:border-white/5 shadow-lg hover:bg-gray-50 dark:hover:bg-white/[0.06] transition-all group"
+            >
+              <div class="w-16 h-16 rounded-2xl bg-primary/20 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
+                <span class="material-symbols-outlined text-primary text-4xl" [style.font-variation-settings]="'\\'FILL\\' 1'">location_on</span>
+              </div>
+
+
+              <div class="min-w-0 flex-1">
+                <h3 class="font-headline font-bold text-xl text-gray-900 dark:text-white truncate mb-1">{{ event?.place || 'Local do Evento' }}</h3>
+                <p class="text-sm text-gray-500 dark:text-gray-400">Ver localização no Google Maps</p>
+              </div>
+              <div class="text-gray-400 dark:text-gray-600 group-hover:text-primary transition-colors">
+                <span class="material-symbols-outlined text-3xl">chevron_right</span>
+              </div>
+            </a>
+
+          </section>
+        </main>
       }
-      </div>
     </div>
+
+    <style>
+      .editorial-gradient {
+        background: linear-gradient(135deg, #53e076 0%, #1db954 100%);
+      }
+      .font-headline { font-family: 'Plus Jakarta Sans', sans-serif; }
+      .font-body { font-family: 'Inter', sans-serif; }
+      .bg-primary { background-color: #53e076; }
+      .text-primary { color: #53e076; }
+    </style>
   `,
 })
 export class TicketsReserveComponent implements OnInit {
@@ -196,8 +250,11 @@ export class TicketsReserveComponent implements OnInit {
   plannedMeta: { total_songs?: number; total_likes?: number } | null = null;
   likingIds = new Set<string>();
 
+  showQr = false;
+
   ngOnInit(): void {
-    this.eventIdCode = String(this.route.snapshot.paramMap.get('id_code') || '');
+    const idParam = this.route.snapshot.paramMap.get('id_code');
+    this.eventIdCode = String(idParam || '');
     if (!this.eventIdCode) {
       this.errorMessage = 'Evento inválido.';
       this.loading = false;
@@ -283,12 +340,10 @@ export class TicketsReserveComponent implements OnInit {
   }
 
   toggleLike(jam: any, song: any, ev?: Event): void {
-    try {
-      if (ev) {
-        ev.preventDefault();
-        ev.stopPropagation();
-      }
-    } catch { }
+    if (ev) {
+      ev.preventDefault();
+      ev.stopPropagation();
+    }
     if (song?.liked_by_me) return;
     const jamId = String(jam?.id_code || jam?.id || jam?.jam_id || '').trim();
     const songId = String(song?.id_code || song?.id || song?.song_id || '').trim();
@@ -341,6 +396,7 @@ export class TicketsReserveComponent implements OnInit {
           expires_at: resp?.data?.expires_at || null,
         });
         this.reserving = false;
+        this.showQr = true; // Show QR after reservation
       },
       error: (err) => {
         const msg = err?.error?.message || 'Não foi possível reservar o ingresso.';
@@ -349,6 +405,22 @@ export class TicketsReserveComponent implements OnInit {
         this.reserving = false;
       }
     });
+  }
+
+  shareEvent(): void {
+    if (navigator.share) {
+      navigator.share({
+        title: this.event?.title || 'Evento Incrível',
+        text: `Vem comigo no evento ${this.event?.title}!`,
+        url: window.location.href,
+      }).catch(() => {});
+    } else {
+      // Fallback
+      const url = window.location.href;
+      navigator.clipboard.writeText(url).then(() => {
+        alert('Link copiado para a área de transferência!');
+      });
+    }
   }
 
   private restoreReservation(): void {
@@ -428,6 +500,13 @@ export class TicketsReserveComponent implements OnInit {
     const end = e?.end_datetime || e?.end_date || e?.endDate || '';
     const s = this.formatDateTime(start);
     const t = this.formatDateTime(end);
+    // Simple date for hero: Oct 24, 2024
+    if (start) {
+        const d = new Date(start);
+        if (!isNaN(d.getTime())) {
+            return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        }
+    }
     if (s && t) return `${s} - ${t}`;
     return s || t || '';
   }
@@ -438,4 +517,9 @@ export class TicketsReserveComponent implements OnInit {
     if (Number.isNaN(d.getTime())) return '';
     return d.toLocaleString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
   }
+
+  urlEncode(val: string): string {
+    return encodeURIComponent(val);
+  }
 }
+
