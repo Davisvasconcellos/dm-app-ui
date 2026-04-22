@@ -56,19 +56,27 @@
 
       if (isEvents) {
         document.title = 'Vibe Sessions';
-        manifest.href = '/manifest-events.webmanifest';
+        manifest.href = '/manifest-events.json';
         document.getElementById('favicon')?.setAttribute('href', '/images/icons/events/favicon.ico');
         appleTouchIcon.href = '/images/icons/events/apple-touch-icon.png';
       } else {
         document.title = 'DM-APP';
-        manifest.href = '/manifest.webmanifest';
+        manifest.href = '/manifest.json';
         appleTouchIcon.href = '/favicon.ico';
       }
       
       document.head.appendChild(manifest);
       document.head.appendChild(appleTouchIcon);
+
+      // Register Service Worker for PWA
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW registration failed:', err));
+        });
+      }
     })();
   </script>
+
 </head>
 <body>
   <div id="app-loader">

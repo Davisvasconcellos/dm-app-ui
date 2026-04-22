@@ -508,6 +508,7 @@
       "failTryAgain": "Failed to confirm check-in. Try again."
     },
     "common": {
+      "location": "Location",
       "event": "Event",
       "open": "Open",
       "close": "Close",

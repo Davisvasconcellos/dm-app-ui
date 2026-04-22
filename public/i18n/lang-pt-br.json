@@ -582,6 +582,7 @@
       "failTryAgain": "Falha ao confirmar check-in. Tente novamente."
     },
     "common": {
+      "location": "Localização",
       "event": "Evento",
       "open": "Abrir",
       "close": "Fechar",
