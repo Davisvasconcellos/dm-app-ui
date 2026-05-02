@@ -83,6 +83,7 @@ import { TranslateModule, TranslatePipe } from '@ngx-translate/core';
 
 
               <div class="flex items-center gap-4">
+                <!--
                 <button
                   (click)="reserve()"
                   [disabled]="reserving || !!reservedTicketId"
@@ -99,6 +100,15 @@ import { TranslateModule, TranslatePipe } from '@ngx-translate/core';
                     <span class="material-symbols-outlined text-3xl transition-transform" [class.rotate-180]="showQr">{{ showQr ? 'close' : 'qr_code' }}</span>
                   </button>
                 }
+                -->
+
+                <a
+                  href="https://www.eventbrite.com.au/e/vibe-sessions-open-micjam-tickets-1985774324460?aff=oddtdtcreator&keep_tld=true"
+                  target="_blank"
+                  class="editorial-gradient text-[#002108] font-bold px-8 py-4 rounded-2xl text-lg hover:scale-105 active:scale-95 transition-all shadow-xl shadow-primary/20"
+                >
+                  {{ 'eventsApp.reserve.wantToGo' | translate }}
+                </a>
 
                 <button (click)="shareEvent()" class="p-4 rounded-2xl bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors">
                   <span class="material-symbols-outlined text-3xl">share</span>

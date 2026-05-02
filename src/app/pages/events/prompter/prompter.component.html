@@ -85,13 +85,20 @@
           </div>
 
           <div class="flex-1 min-w-[220px] flex items-center gap-3">
-            <div class="text-xs font-semibold uppercase tracking-wider"
+            <div class="text-xs font-semibold uppercase tracking-wider shrink-0"
               [ngClass]="currentTheme === 'dark' ? 'text-gray-300' : 'text-gray-700'">
               Velocidade
             </div>
-            <input type="range" min="0" max="10" step="1" [value]="scrollSpeed" (input)="setScrollSpeed($any($event.target).value)"
-              class="w-full accent-red-600" />
-            <div class="w-10 text-right text-xs font-semibold tabular-nums"
+            <div class="relative w-full flex items-center">
+              <div class="absolute w-full px-[10px] flex justify-between pointer-events-none top-1/2 -translate-y-1/2">
+                @for (tick of [0,1,2,3,4,5,6,7,8,9,10]; track tick) {
+                  <div class="w-[3px] h-4 rounded-full" [ngClass]="currentTheme === 'dark' ? 'bg-white/40' : 'bg-black/40'"></div>
+                }
+              </div>
+              <input type="range" min="0" max="10" step="1" [value]="scrollSpeed" (input)="setScrollSpeed($any($event.target).value)"
+                class="relative z-10 w-full accent-red-600 bg-transparent m-0" />
+            </div>
+            <div class="w-10 shrink-0 text-right text-xs font-semibold tabular-nums"
               [ngClass]="currentTheme === 'dark' ? 'text-gray-300' : 'text-gray-700'">
               {{ scrollSpeed }}
             </div>
